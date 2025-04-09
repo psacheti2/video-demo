@@ -1,6 +1,3 @@
-// 1. MODIFY HOME COMPONENT (page.tsx)
-// First, let's update the Home component to maintain the chat message state
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -215,4 +212,3 @@ export default function Home() {
     </div>
   );
 }
-
