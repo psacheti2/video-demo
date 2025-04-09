@@ -432,7 +432,7 @@ const demographicPolygonsRef = useRef([]);
         attributionControl: false,
         minZoom: 11,
         maxZoom: 18
-      }).setView([49.269, -123.107], 13); // Vancouver coordinates
+      }).setView([49.24, -123.119], 12); 
 
       L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; OpenStreetMap contributors &copy; CARTO',

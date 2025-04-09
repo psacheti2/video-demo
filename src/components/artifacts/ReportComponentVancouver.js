@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Maximize2, Download, Edit2, Save, Menu, Minimize2, Info } from "lucide-react";
+import '../../app/globals.css';
 import VancouverFloodInfraMap from './InfrastructureFloodMap';
 import VancouverPriorityDashboard from './BudgetDashboard';
 import VancouverBCAChart from './BenefitCostAnalysisDashboard';
@@ -18,6 +19,7 @@ const ReportComponentVancouver = ({ onLayersReady, reportName = "Downtown Austin
   const infoRef = useRef(null);
 
   
+
   // Theme colors
   const COLORS = {
     primary: '#2C3E50',
@@ -271,78 +273,112 @@ useEffect(() => {
     import('html2pdf.js').then(html2pdfModule => {
       const html2pdf = html2pdfModule.default;
       
-      // Get all section elements
-      const sectionElements = sections.map(section => {
-        return document.getElementById(section.id) || document.getElementById(`fullscreen-${section.id}`);
-      }).filter(el => el); // Filter out any undefined elements
-      
-      // Create temporary container for the entire report
+      // Create a simplified document structure for PDF
       const tempContainer = document.createElement('div');
-      document.body.appendChild(tempContainer);
+      tempContainer.style.width = '100%';
+      tempContainer.style.padding = '20px';
+      tempContainer.style.boxSizing = 'border-box';
       
-      // Add each section to the container with a page break after each
-      sectionElements.forEach((section, index) => {
-        // Clone the section to avoid modifying the original
-        const sectionClone = section.cloneNode(true);
+      // Add a title
+      const title = document.createElement('h1');
+      title.textContent = reportTitle;
+      title.style.fontSize = '24px';
+      title.style.fontWeight = 'bold';
+      title.style.marginBottom = '20px';
+      title.style.color = '#000';
+      tempContainer.appendChild(title);
+      
+      // Process each section
+      sections.forEach(section => {
+        // Create section header
+        const sectionHeader = document.createElement('h2');
+        sectionHeader.textContent = section.name;
+        sectionHeader.style.fontSize = '18px';
+        sectionHeader.style.fontWeight = 'bold';
+        sectionHeader.style.marginTop = '30px';
+        sectionHeader.style.marginBottom = '10px';
+        sectionHeader.style.color = '#000';
+        sectionHeader.style.pageBreakBefore = 'always';
+        tempContainer.appendChild(sectionHeader);
         
-        // Add page-break-after style to force a new page after each section
-        sectionClone.style.pageBreakAfter = 'always';
-        sectionClone.style.breakAfter = 'page';
-        sectionClone.style.marginBottom = '50px'; // Add some space
-        
-        // Add a visible separator at the bottom to help force the page break
-        const separator = document.createElement('div');
-        separator.style.height = '1px';
-        separator.style.width = '100%';
-        separator.style.marginTop = '40px';
-        separator.style.marginBottom = '40px';
-        
-        // Add the section to the container
-        tempContainer.appendChild(sectionClone);
-        
-        // Don't add a separator after the last section
-        if (index < sectionElements.length - 1) {
-          tempContainer.appendChild(separator);
+        // Skip complex components, create placeholders
+        if (section.id === 'map') {
+          const mapPlaceholder = document.createElement('div');
+          mapPlaceholder.textContent = '[Infrastructure Map Visualization]';
+          mapPlaceholder.style.padding = '20px';
+          mapPlaceholder.style.border = '1px solid #000';
+          mapPlaceholder.style.textAlign = 'center';
+          tempContainer.appendChild(mapPlaceholder);
+        } else if (section.id === 'chart') {
+          const chartPlaceholder = document.createElement('div');
+          chartPlaceholder.textContent = '[Budget Prioritization Chart]';
+          chartPlaceholder.style.padding = '20px';
+          chartPlaceholder.style.border = '1px solid #000';
+          chartPlaceholder.style.textAlign = 'center';
+          tempContainer.appendChild(chartPlaceholder);
+        } else {
+          // For text content, create a simple div with the content
+          const contentDiv = document.createElement('div');
+          // Get the HTML content but strip out style attributes
+          const originalElement = document.getElementById(section.id) || document.getElementById(`fullscreen-${section.id}`);
+          if (originalElement) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = sectionContent[section.id] || '';
+            
+            // Clean all elements to use basic styling
+            const allElements = tempDiv.querySelectorAll('*');
+            allElements.forEach(el => {
+              // Remove class and style attributes
+              el.removeAttribute('class');
+              el.removeAttribute('style');
+              
+              // Use simple HTML semantic styling
+              if (el.tagName === 'H2') {
+                el.style.fontSize = '18px';
+                el.style.fontWeight = 'bold';
+                el.style.marginTop = '20px';
+                el.style.marginBottom = '10px';
+                el.style.color = '#000';
+              } else if (el.tagName === 'P') {
+                el.style.marginBottom = '10px';
+                el.style.color = '#000';
+              } else if (el.tagName === 'UL') {
+                el.style.paddingLeft = '20px';
+                el.style.marginBottom = '10px';
+              } else if (el.tagName === 'LI') {
+                el.style.marginBottom = '5px';
+                el.style.color = '#000';
+              } else if (el.tagName === 'A') {
+                el.style.color = '#000';
+                el.style.textDecoration = 'underline';
+              }
+            });
+            
+            contentDiv.innerHTML = tempDiv.innerHTML;
+          }
+          tempContainer.appendChild(contentDiv);
         }
       });
       
-      // Set PDF generation options with explicit page break settings
+      document.body.appendChild(tempContainer);
+      
+      // Set PDF generation options
       const options = {
-        margin: [25, 25, 25, 25], // Increased margins
-        filename: `${reportName.replace(/\s+/g, '_')}.pdf`,
+        margin: [25, 25, 25, 25],
+        filename: `${reportTitle.replace(/\s+/g, '_')}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-          scale: 2, 
-          useCORS: true,
-          letterRendering: true,
-          logging: true
-        },
-        jsPDF: { 
-          unit: 'mm', 
-          format: 'a4', 
-          orientation: 'portrait',
-          compress: true
-        },
-        pagebreak: { 
-          mode: ['css', 'legacy'],
-          before: '.page-break-before',
-          after: ['.page-break-after', 'section'],
-          avoid: ['.avoid-break']
-        }
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
       };
       
       // Use html2pdf to convert temp container to PDF
       html2pdf()
         .from(tempContainer)
         .set(options)
-        .toPdf()
-        .get('pdf')
-        .then(pdf => {
-          // Clean up the temp container
+        .save()
+        .then(() => {
           document.body.removeChild(tempContainer);
-          
-          // Save the PDF
-          pdf.save(`${reportName.replace(/\s+/g, '_')}.pdf`);
         })
         .catch(error => {
           console.error('Error generating PDF:', error);
@@ -352,7 +388,6 @@ useEffect(() => {
       console.error('Error loading html2pdf:', error);
     });
   };
-
   // Regular panel content
   const regularPanelContent = (
 <div className="flex flex-col h-full overflow-hidden bg-white relative z-10">
@@ -547,7 +582,7 @@ useEffect(() => {
   <div 
     className="fixed top-6 right-6 z-30"
     style={{
-      top: '6rem',
+      top: '8rem',
       right: '2rem'
     }}
   >
@@ -556,7 +591,6 @@ useEffect(() => {
       style={{ 
         backgroundColor: 'transparent',
         boxShadow: 'none)',
-        border: `1px solid ${COLORS.coral}`,
       }}
     >
       {isMenuOpen && (

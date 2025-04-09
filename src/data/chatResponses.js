@@ -1,6 +1,6 @@
 export const chatResponses = {
   "Help me prioritize our budget across Vancouver based on flood risk and infrastructure needs. Also add relevant 311 call data and socio-economic demographics to this": {
-    text: "Here's your interactive map with flood zones, infrastructure conditions, stormwater projects, 311 calls, and demographic indicators.\n Key insights: \n1. Eastern neighborhoods show both high flood risk and aging sewer infrastructure \n2. Three high-density residential areas have significant flood risk but no current projects \n3. Northwestern areas have clustered 311 drainage complaints that align with flood risk models. \nThese patterns suggest where budget allocation would have maximum impact. Would you like me to create a composite risk-need index to help prioritize specific areas?",
+    text: "Here's your interactive map with flood zones, infrastructure conditions, stormwater projects, 311 calls, and demographic indicators.\n\n Key insights: \n\n1. Eastern neighborhoods show both high flood risk and aging sewer infrastructure \n2. Three high-density residential areas have significant flood risk but no current projects \n3. Northwestern areas have clustered 311 drainage complaints that align with flood risk models. \n\nThese patterns suggest where budget allocation would have maximum impact. Would you like me to create a composite risk-need index to help prioritize specific areas?",
     timing: [1000, 2000, 3000, 2500, 2000, 1500], // Timing for each line
     artifacts: [{
       type: "map",
@@ -27,12 +27,12 @@ export const chatResponses = {
     }]
   },
   "What is a composite risk-need index?": {
-    text: "A composite risk index combines multiple factors that affect infrastructure planning decisions into a single actionable score.\nFor urban flood management, this typically integrates physical vulnerability (flood zones, infrastructure age), social vulnerability (population density, income levels), and historical data (311 calls, past incidents).\nThis approach helps planners quickly identify which areas face the greatest combined threats and where limited budget can have the most impact across multiple planning objectives.\nWould you like me to create a composite risk-need index to help prioritize specific areas?",
+    text: "A composite risk index combines multiple factors that affect infrastructure planning decisions into a single actionable score.\n\nFor urban flood management, this typically integrates physical vulnerability (flood zones, infrastructure age), social vulnerability (population density, income levels), and historical data (311 calls, past incidents).\n\nThis approach helps planners quickly identify which areas face the greatest combined threats and where limited budget can have the most impact across multiple planning objectives.\n\nWould you like me to create a composite risk-need index to help prioritize specific areas?",
     timing: [1200, 2500, 2000, 1800], // Different timing for each line
     artifacts: [] 
   },
   "Yes, please create an index.": {
-    text: "Creating composite index with weighted factors: flood risk (35%), infrastructure condition (25%), 311 calls (15%), population density (15%), and social vulnerability (10%).\nRed areas represent highest priority zones. Click any area to see its score breakdown.\nShould we examine how current projects align with these priorities?",
+    text: "Creating composite index with weighted factors: flood risk (35%), infrastructure condition (25%), 311 calls (15%), population density (15%), and social vulnerability (10%).\n\nRed areas represent highest priority zones. Click any area to see its score breakdown.\n\nShould we examine how current projects align with these priorities?",
     timing: [3000, 2500, 1500], // Longer initial pause to simulate "thinking"
     artifacts: [{
       type: "map",
@@ -136,7 +136,7 @@ export const chatResponses = {
     }]
   },
   "What specific changes would you recommend to better align these developments with the Dallas Housing Policy 2033 Action Plan?": {
-    text: "1. Infrastructure Connectivity: 72% of HUD LIHTC properties need improved pedestrian and transit connectivity to meet the 2033 Policy's mobility goals. The highest priority should be the five developments along the Skillman corridor in Vickery Meadow.\n\n2. Mixed-Income Integration: The Reinvestment Areas dataset shows 64% of developments have less income diversity than the new policy recommends. I suggest focusing first on the Oak Cliff projects where minor adjustments to unit allocation could quickly improve compliance.\n3. Preservation vs. New Construction: Current projects are weighted 70% toward new construction, while the 2033 Policy recommends a 60/40 balance. Redirecting approximately $8.4M from planned new developments to preservation efforts in Southern Dallas would better align with policy goals.\n\nI've created an implementation timeline that prioritizes these changes based on impact, cost, and alignment with the Comprehensive Housing Policy. Would you like me to generate a detailed report comparing all projects against the 2033 Policy requirements?",
+    text: "1. Infrastructure Connectivity: 72% of HUD LIHTC properties need improved pedestrian and transit connectivity to meet the 2033 Policy's mobility goals. The highest priority should be the five developments along the Skillman corridor in Vickery Meadow.\n\n2. Mixed-Income Integration: The Reinvestment Areas dataset shows 64% of developments have less income diversity than the new policy recommends. I suggest focusing first on the Oak Cliff projects where minor adjustments to unit allocation could quickly improve compliance.\n\n3. Preservation vs. New Construction: Current projects are weighted 70% toward new construction, while the 2033 Policy recommends a 60/40 balance. Redirecting approximately $8.4M from planned new developments to preservation efforts in Southern Dallas would better align with policy goals.\n\nWould you like me to generate a detailed report comparing all projects against the 2033 Policy requirements?",
     timing: [2000, 2000, 2000, 2500], // Three points and a conclusion
     artifacts: [] 
   },

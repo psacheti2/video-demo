@@ -125,6 +125,18 @@ const BudgetDashboard = ({ onLayersReady }) => {
     { id: 'project-count', name: 'Project Count by Category' }
   ];
 
+  const categoryBudgetData = [
+    { category: "Streets", budget: 710.26, spending: 184.28 },
+    { category: "One Water", budget: 885.7, spending: 195.21 },
+    { category: "Waste", budget: 198.34, spending: 40.36 }
+  ];
+  
+  const streetSubcategoryData = [
+    { subcategory: "Building a resilient network", budget: 410.53 },
+    { subcategory: "Improving mobility", budget: 192.04 },
+    { subcategory: "Supporting public life", budget: 107.68 }
+  ];
+
   // Data processing functions
   const getCategoryBudgetData = () => {
     if (!budgetData.length) return [];
@@ -243,64 +255,138 @@ const BudgetDashboard = ({ onLayersReady }) => {
     switch (selectedChart) {
       case 'category-budget':
         return (
-          <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
-            <BarChart data={getCategoryBudgetData()} layout={isMobile ? "vertical" : "horizontal"}>
-              <CartesianGrid strokeDasharray="3 3" />
-              {isMobile ? (
-                <>
-                  <XAxis type="number" />
-                  <YAxis dataKey="category" type="category" width={120} />
-                </>
-              ) : (
-                <>
-                  <XAxis 
-  dataKey="category" 
-  type="category" 
-  label={{ value: "Service Categories", position: "insideBottom", offset: -5 }}
-/>
-<YAxis 
-  type="number" 
-  label={{ value: "Amount (Millions $)", angle: -90, position: "insideLeft" }}
-/>
-                </>
-              )}
-              <Tooltip formatter={(value) => `$${value.toFixed(2)}M`} />
-              <Legend />
-              <Bar dataKey="budget" name="Total Budget" fill={COLORS.blue} />
-              <Bar dataKey="spending" name="2025 Spending" fill={COLORS.green} />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="h-96 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={categoryBudgetData}
+                margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="category" 
+                  tick={{ fill: '#333', fontSize: 14 }}
+                  tickLine={{ stroke: '#333' }}
+                  axisLine={{ stroke: '#333', strokeWidth: 2 }}
+                  label={{ 
+                    value: 'Service Categories', 
+                    position: 'bottom', 
+                    offset: 2,
+                    fill: '#333',
+                    fontSize: 16,
+                    fontWeight: 'normal'
+                  }}
+                />
+                <YAxis 
+                  tick={{ fill: '#333', fontSize: 14 }}
+                  tickLine={{ stroke: '#333' }}
+                  axisLine={{ stroke: '#333', strokeWidth: 2 }}
+                  label={{ 
+                    value: 'Amount (Millions $)', 
+                    angle: -90, 
+                    position: 'left',
+                    offset: -10,
+                    dy: -70,  
+                    fill: '#333',
+                    fontSize: 16,
+                    fontWeight: 'normal'
+                  }}
+                  domain={[0, 1000]}
+                  tickCount={6}
+                />
+                <Tooltip formatter={(value) => `$${value.toFixed(2)}M`} />
+                <Legend wrapperStyle={{ paddingTop: 20 }} />
+                <Bar dataKey="budget" name="Total Budget" fill="#3498DB" />
+                <Bar dataKey="spending" name="2025 Spending" fill="#27AE60" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         );
         
-      case 'streets-subcategory':
-        return (
-          <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
-            <BarChart data={getStreetsSubcategoryData()} layout={isMobile ? "vertical" : "horizontal"}>
-              <CartesianGrid strokeDasharray="3 3" />
-              {isMobile ? (
-                <>
-                  <XAxis type="number" />
-                  <YAxis dataKey="subcategory" type="category" width={150} />
-                </>
-              ) : (
-                <>
+        case 'streets-subcategory':
+          return (
+            <div className="h-[400px] w-full"> {/* Increased from h-96 (384px) to h-[500px] */}
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={streetSubcategoryData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 30 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
-  dataKey="subcategory" 
-  type="category" 
-  label={{ value: "Subcategories", position: "insideBottom", offset: -5 }}
-/>
-<YAxis 
-  type="number" 
-  label={{ value: "Budget (Millions $)", angle: -90, position: "insideLeft" }}
-/>
-                </>
-              )}
-              <Tooltip formatter={(value) => `$${value.toFixed(2)}M`} />
-              <Bar dataKey="budget" name="Total Budget" fill={COLORS.purple} />
-            </BarChart>
-          </ResponsiveContainer>
-        );
-        
+                    dataKey="subcategory"
+                    interval={0}
+                    tick={(props) => {
+                      const { x, y, payload } = props;
+                      const words = payload.value.split(' ');
+                      const lineHeight = 16;
+                      let lines = [];
+                      let currentLine = words[0];
+                      
+                      for (let i = 1; i < words.length; i++) {
+                        if (currentLine.length + words[i].length < 14) {
+                          currentLine += " " + words[i];
+                        } else {
+                          lines.push(currentLine);
+                          currentLine = words[i];
+                        }
+                      }
+                      lines.push(currentLine);
+                      
+                      return (
+                        <g transform={`translate(${x},${y + 10})`}>
+                          {lines.map((line, index) => (
+                            <text 
+                              key={index}
+                              x={0} 
+                              y={0} 
+                              dy={index * lineHeight} 
+                              textAnchor="middle"
+                              fill="#333"
+                              fontSize={14}
+                            >
+                              {line}
+                            </text>
+                          ))}
+                        </g>
+                      );
+                    }}
+                    height={60}
+                    tickLine={{ stroke: '#333' }}
+                    axisLine={{ stroke: '#333', strokeWidth: 2 }}
+                    allowDataOverflow={false}
+                    label={{
+                      value: 'Street Subcategories',
+                      position: 'bottom',
+                      offset: -10,
+                      fill: '#333',
+                      fontSize: 16,
+                      fontWeight: 'normal'
+                    }}
+                  />
+                  <YAxis 
+                    tick={{ fill: '#333', fontSize: 14 }}
+                    tickLine={{ stroke: '#333' }}
+                    axisLine={{ stroke: '#333', strokeWidth: 2 }}
+                    label={{
+                      value: 'Budget (Millions $)',
+                      angle: -90,
+                      position: 'left',
+                      offset: -10,
+                      dy: -70,
+                      fill: '#333',
+                      fontSize: 16,
+                      fontWeight: 'normal'
+                    }}
+                    domain={[0, 500]}
+                    tickCount={6}
+                  />
+                  <Tooltip formatter={(value) => `$${value.toFixed(2)}M`} />
+                  <Legend wrapperStyle={{ paddingTop: 10 }} />
+                  <Bar dataKey="budget" name="Total Budget" fill="#9B59B6" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          );
+
       case 'yearly-spending':
         return (
           <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
