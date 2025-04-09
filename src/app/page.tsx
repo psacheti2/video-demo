@@ -1,5 +1,5 @@
 'use client';
-
+//changes
 import { useState, useEffect, useRef } from 'react';
 import { PanelRight, ArrowLeft, ChevronLeft } from 'lucide-react'; 
 import Navbar from '../components/layout/Navbar';
