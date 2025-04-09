@@ -5,6 +5,7 @@ import { PanelRight, ArrowLeft, ChevronLeft } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import ResponsiveChatLayout from '../components/chat/ChatWindow';
 import ArtifactsPanel from '../components/layout/ArtifactsPanel';
+import WelcomeCard from '../components/chat/WelcomeCard'
 
 // Define the artifact type
 export interface Artifact {
@@ -27,7 +28,7 @@ export default function Home() {
   // Lift the messages state up to the Home component
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  
+  const [isNewConversation, setIsNewConversation] = useState(true);
   const [artifacts, setArtifacts] = useState<Artifact[]>([]);
   const [artifactsPanelWidth, setArtifactsPanelWidth] = useState(40); // percentage
   const [isArtifactFullscreen, setIsArtifactFullscreen] = useState(false);
@@ -41,6 +42,9 @@ export default function Home() {
 
   // Function to handle sending messages
   const handleSendMessage = async ({ text, file }: { text: string, file: string | null }) => {
+    if (isNewConversation) {
+      setIsNewConversation(false);
+    }
     // Generate unique message ID
     const userMessageId = `user_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
     
@@ -226,22 +230,26 @@ export default function Home() {
         ) : (
           // Centered chat view with no artifacts
           <div className="flex justify-center w-full relative">
-            {/* Left sidebar button */}
-            <SidebarButton onClick={toggleSidebar} Icon={PanelRight} position="left" />
-            
-            <div className="w-full max-w-3xl">
-              <ResponsiveChatLayout 
-                messages={messages}
-                setMessages={setMessages}
-                isLoading={isLoading}
-                onSendMessage={handleSendMessage}
-                isCentered={true} 
-              />
-            </div>
-            
-            {/* Right arrow button */}
-            <SidebarButton onClick={() => {/* Define action for right arrow */}} Icon={ChevronLeft} position="right" />
-          </div>
+    {/* Left sidebar button */}
+    <SidebarButton onClick={toggleSidebar} Icon={PanelRight} position="left" />
+    
+    <div className="w-full max-w-3xl">
+      {isNewConversation && messages.length === 0 ? (
+        <WelcomeCard onSendMessage={handleSendMessage} />
+      ) : (
+        <ResponsiveChatLayout 
+          messages={messages}
+          setMessages={setMessages}
+          isLoading={isLoading}
+          onSendMessage={handleSendMessage}
+          isCentered={true} 
+        />
+      )}
+    </div>
+    
+    {/* Right arrow button */}
+    <SidebarButton onClick={() => {/* Define action for right arrow */}} Icon={ChevronLeft} position="right" />
+  </div>
         )}
       </div>
     </div>
