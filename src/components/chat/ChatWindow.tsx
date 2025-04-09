@@ -61,6 +61,33 @@ export default function ChatWindow({
     { id: 'a1', title: 'Infrastructure Flood Map', type: 'Map', date: 'Apr 9, 2025' },
     { id: 'a2', title: 'Risk Index Map', type: 'Map', date: 'Apr 9, 2025' },
   ];
+
+  // Set up a mutation observer to detect changes in the chat content
+useEffect(() => {
+  if (!messagesEndRef.current) return;
+  
+  // Create a MutationObserver to watch for changes in the DOM
+  const observer = new MutationObserver(() => {
+    scrollToBottom();
+  });
+  
+  // Get the parent container that contains all messages
+  const chatContainer = messagesEndRef.current.parentElement;
+  
+  if (chatContainer) {
+    // Start observing the chat container for changes
+    observer.observe(chatContainer, {
+      childList: true, // Watch for changes to the child nodes
+      subtree: true, // Watch for changes to the entire subtree
+      characterData: true // Watch for changes to the character data
+    });
+  }
+  
+  // Cleanup function
+  return () => {
+    observer.disconnect();
+  };
+}, []);
   
   return (
     <div className="flex h-full relative">

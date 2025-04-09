@@ -46,6 +46,7 @@ export default function ChatInput({ onSendMessage }) {
             placeholder="Ask NeuraCities..."
             className="flex-1 px-4 py-2 focus:outline-none w-full"
           />
+          
         </div>
         {uploadedFile && (
           <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-[#f0fdfa] border-2 border-[#008080] rounded-2xl shadow-sm max-w-xs">

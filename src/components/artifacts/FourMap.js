@@ -1532,7 +1532,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) => {
           title={showTable ? "Hide table" : "Show table"}
           style={{
             color: COLORS.coral,
-            border: 'none',
+            border: `1px solid ${COLORS.coral}`,
             transition: 'all 0.2s ease-in-out'
           }}
           onMouseEnter={(e) => {
@@ -1561,7 +1561,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) => {
           }}
           className="flex items-center justify-center p-2 rounded-full bg-white hover:bg-neutral transition-all shadow-sm"
           title="Save map"
-          style={{ color: COLORS.coral, border: 'none' }}
+          style={{ color: COLORS.coral, border: `1px solid ${COLORS.coral}` }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = COLORS.coral;
             e.currentTarget.style.color = 'white';
@@ -1580,7 +1580,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) => {
           onClick={() => setShowSymbologyEditor(true)}
           className="flex items-center justify-center p-2 rounded-full bg-white transition-all shadow-sm"
           title="Symbology"
-          style={{ color: COLORS.coral, border: 'none' }}
+          style={{ color: COLORS.coral, border: `1px solid ${COLORS.coral}` }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = COLORS.coral;
             e.currentTarget.style.color = 'white';
@@ -1599,7 +1599,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) => {
           onClick={() => setShowLegend(!showLegend)}
           title="Layers & Legend"
           className="flex items-center justify-center p-2 rounded-full bg-white transition-all shadow-sm"
-          style={{ color: COLORS.coral, border: 'none' }}
+          style={{ color: COLORS.coral, border: `1px solid ${COLORS.coral}` }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = COLORS.coral;
             e.currentTarget.style.color = 'white';
@@ -1617,7 +1617,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) => {
           onClick={() => setShowSources(prev => !prev)}
           title="View sources"
           className="flex items-center justify-center p-2 rounded-full bg-white transition-all shadow-sm"
-          style={{ color: COLORS.coral, border: 'none' }}
+          style={{ color: COLORS.coral, border: `1px solid ${COLORS.coral}` }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = COLORS.coral;
             e.currentTarget.style.color = 'white';
@@ -1636,7 +1636,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) => {
           onClick={() => setShowShareDialog(true)}
           className="flex items-center justify-center p-2 rounded-full bg-white transition-all shadow-sm"
           title="Share"
-          style={{ color: COLORS.coral, border: 'none' }}
+          style={{ color: COLORS.coral, border: `1px solid ${COLORS.coral}` }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = COLORS.coral;
             e.currentTarget.style.color = 'white';
@@ -1655,7 +1655,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) => {
           onClick={() => setShowDownloadDialog(true)}
           className="flex items-center justify-center p-2 rounded-full bg-white transition-all shadow-sm"
           title="Download map or tables"
-          style={{ color: COLORS.coral, border: 'none' }}
+          style={{ color: COLORS.coral, border: `1px solid ${COLORS.coral}` }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = COLORS.coral;
             e.currentTarget.style.color = 'white';
@@ -1673,7 +1673,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) => {
           onClick={toggleFullScreen}
           className="flex items-center justify-center p-2 rounded-full bg-white transition-all shadow-sm"
           title="Fullscreen"
-          style={{ color: COLORS.coral, border: 'none' }}
+          style={{ color: COLORS.coral, border: `1px solid ${COLORS.coral}` }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = COLORS.coral;
             e.currentTarget.style.color = 'white';
@@ -1790,71 +1790,66 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) => {
               >
                 <X size={20} />
               </button>
-
+        
               <h2 className="text-lg font-semibold text-gray-800 mb-4">Download Map</h2>
-
+        
               <div className="space-y-4">
-                <div className="space-y-1">
-                  <label className="flex items-center space-x-2">
+                <div className="space-y-2">
+                  <div className="text-sm font-medium text-gray-800 mb-2">📍 Vancouver Flood Assessment Map</div>
+                  
+                  <div className="flex space-x-2">
                     <input
-                      type="checkbox"
-                      checked={!!downloadSelections['map']}
-                      onChange={() =>
+                      type="text"
+                      className="border px-3 py-1 rounded w-[140px] text-sm focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                      value={downloadSelections['map']?.filename || 'vancouver_flood_map'}
+                      onChange={(e) =>
                         setDownloadSelections(prev => ({
-                          map: prev['map']
-                            ? undefined
-                            : { filename: 'vancouver_flood_map', format: '.jpg' }
+                          ...prev,
+                          map: { 
+                            filename: e.target.value, 
+                            format: prev['map']?.format || '.jpg' 
+                          }
                         }))
                       }
+                      placeholder="File name"
                     />
-                    <span className="text-sm font-medium text-gray-800">📍 Vancouver Flood Assessment Map</span>
-                  </label>
-
-                  {downloadSelections['map'] && (
-                    <div className="flex space-x-2 ml-6">
-                      <input
-                        type="text"
-                        className="border px-3 py-1 rounded w-[140px] text-sm focus:outline-none focus:ring-2 focus:ring-[#008080]"
-                        value={downloadSelections['map']?.filename || ''}
-                        onChange={(e) =>
-                          setDownloadSelections(prev => ({
-                            map: { ...prev.map, filename: e.target.value }
-                          }))
-                        }
-                        placeholder="File name"
-                      />
-                      <select
-                        value={downloadSelections['map']?.format}
-                        onChange={(e) =>
-                          setDownloadSelections(prev => ({
-                            map: { ...prev.map, format: e.target.value }
-                          }))
-                        }
-                        className="border px-2 py-1 rounded text-sm focus:outline-none"
-                      >
-                        <option value=".jpg">.jpg</option>
-                        <option value=".png">.png</option>
-                        <option value=".shp">.shp</option>
-                        <option value=".gdb">.gdb</option>
-                        <option value=".csv">.csv</option>
-                        <option value=".pdf">.pdf</option>
-                      </select>
-                    </div>
-                  )}
+                    <select
+                      value={downloadSelections['map']?.format || '.jpg'}
+                      onChange={(e) =>
+                        setDownloadSelections(prev => ({
+                          ...prev,
+                          map: { 
+                            filename: prev['map']?.filename || 'vancouver_flood_map', 
+                            format: e.target.value 
+                          }
+                        }))
+                      }
+                      className="border px-2 py-1 rounded text-sm focus:outline-none"
+                    >
+                      <option value=".jpg">.jpg</option>
+                      <option value=".png">.png</option>
+                      <option value=".shp">.shp</option>
+                      <option value=".gdb">.gdb</option>
+                      <option value=".csv">.csv</option>
+                      <option value=".pdf">.pdf</option> 
+                    </select>
+                  </div>
                 </div>
               </div>
-
+        
               <button
                 onClick={() => {
+                  // Initialize map selection if not already set
+                  if (!downloadSelections['map']) {
+                    setDownloadSelections(prev => ({
+                      ...prev,
+                      map: { filename: 'vancouver_flood_map', format: '.jpg' }
+                    }));
+                  }
                   handleDownloadAll();
                   setShowDownloadDialog(false);
                 }}
-                className={`mt-6 w-full py-2 rounded-md text-sm font-semibold 
-          ${downloadSelections['map']
-                    ? 'bg-[#008080] text-white hover:bg-teal-700'
-                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'}
-        `}
-                disabled={!downloadSelections['map']}
+                className="mt-6 w-full py-2 rounded-md text-sm font-semibold bg-[#008080] text-white hover:bg-teal-700"
               >
                 Download Map
               </button>
@@ -2073,8 +2068,15 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) => {
           <div className="absolute bottom-4 left-4 w-64 bg-white border rounded shadow-md p-3 text-sm"
             style={{ zIndex: 1000, overflow: 'auto', maxHeight: '70vh' }}
           >
-            <div className="mb-4">
-              <h3 className="font-semibold mb-2 text-primary">Map Layers</h3>
+            <div className="flex justify-between items-center mb-2">
+                            <h3 className="font-semibold mb-2 text-primary">Map Layers</h3>
+                            <button
+                                onClick={() => setShowLegend(false)}
+                                className="text-gray-400 hover:text-gray-600"
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
 
               {/* Layers section with collapsible groups */}
               <div className="space-y-1">
@@ -2333,7 +2335,6 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) => {
                 </div>
               </div>
             </div>
-          </div>
         )}
       </div>
 

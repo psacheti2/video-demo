@@ -1,22 +1,27 @@
-// 3. Also make sure to update the ChatInput component to work with this setup
-// If needed, modify the ChatInput component to use the onSendMessage callback directly
-
-// 4. Finally, create or update the API route for handling chat messages
-// pages/api/chat.ts or app/api/chat/route.ts
-
 import { NextResponse } from 'next/server';
 import { chatResponses } from '@/data/chatResponses';
+
+// Define the response type to match what's in chatResponses
+interface ResponseData {
+  text: string;
+  artifacts?: Array<{
+    type: string;
+    title: string;
+    component: string;
+    data: any;
+  }>;
+}
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { message } = body;
-    
+
     // Find a matching mock response
     const response = findMatchingResponse(message);
-    
+
     // Only include artifacts in the response if they exist
-    const responseBody: { text: string; artifacts?: any[] } = {
+    const responseBody: ResponseData = {
       text: response.text
     };
     
@@ -24,7 +29,7 @@ export async function POST(request: Request) {
     if (response.artifacts && response.artifacts.length > 0) {
       responseBody.artifacts = response.artifacts;
     }
-    
+
     // Return the response
     return NextResponse.json(responseBody);
   } catch (error) {
@@ -36,16 +41,17 @@ export async function POST(request: Request) {
   }
 }
 
-function findMatchingResponse(message: string) {
+function findMatchingResponse(message: string): ResponseData {
   // Simple keyword matching logic for the mock responses
   for (const [key, response] of Object.entries(chatResponses)) {
     if (message.toLowerCase().includes(key.toLowerCase())) {
-      return response;
+      return response as ResponseData;
     }
   }
-  
+
   // Default response if no match found
   return {
     text: "I'm not sure I understand. Could you please rephrase your question?",
+    artifacts: [] // Add empty artifacts array to default response
   };
 }

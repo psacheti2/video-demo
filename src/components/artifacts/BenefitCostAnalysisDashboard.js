@@ -4,7 +4,8 @@ import {
   Legend, ResponsiveContainer, Label, ReferenceLine, Cell,
   BarChart, Bar, PieChart, Pie, ComposedChart
 } from 'recharts';
-import { Maximize2, X, Info } from 'lucide-react';
+import { Maximize2, X, Info, Share2 } from 'lucide-react';
+import { useNotificationStore } from '@/store/NotificationsStore';
 
 // Color scheme for charts
 const COLORS = {
@@ -42,6 +43,7 @@ const TYPE_COLORS = {
   'Sanitary': '#3498DB',
   'Storm': '#9B59B6'
 };
+
 
 const PIE_COLORS = ['#3498DB', '#E67E22', '#9B59B6', '#2ECC71', '#1ABC9C', '#F39C12'];
 
@@ -81,7 +83,16 @@ const BenefitCostAnalysisDashboard = () => {
   const [isMobile, setIsMobile] = useState(false);
   const chartContainerRef = useRef(null);
   const infoRef = useRef(null);
-
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTeammate, setSelectedTeammate] = useState(null);
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const [showEmailNotification, setShowEmailNotification] = useState(false);
+  const addNotification = useNotificationStore((state) => state.addNotification);
+    
+  const teammateList = [
+    "Alice Johnson", "Bob Smith", "Catherine Nguyen", "David Li", "Emma Patel"
+  ];
   // Check for mobile viewport
   useEffect(() => {
     const checkIfMobile = () => {
@@ -485,7 +496,7 @@ const BenefitCostAnalysisDashboard = () => {
     {['quadrant', 'distribution', 'category', 'top'].map((tab) => (
       <button
         key={tab}
-        className={`px-3 py-1 rounded-t-md text-sm font-medium transition-all duration-200 border
+        className={`px-2 py-1 rounded-t-md text-sm font-medium transition-all duration-200 border
           ${
             activeTab === tab
               ? 'bg-[#008080] text-white border-[#008080]'
@@ -545,6 +556,27 @@ const BenefitCostAnalysisDashboard = () => {
         </div>
       </div>
     )}
+    <button
+  onClick={() => setShowShareDialog(true)}
+  className="p-2 rounded-full border"
+  title="Share"
+  style={{ 
+    color: COLORS.teal,
+    backgroundColor: COLORS.white,
+    border: `1px solid ${COLORS.teal}`,
+    transition: 'all 0.2s ease-in-out'
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.backgroundColor = COLORS.teal;
+    e.currentTarget.style.color = COLORS.white;
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.backgroundColor = COLORS.white;
+    e.currentTarget.style.color = COLORS.teal;
+  }}
+>
+  <Share2 size={18} />
+</button> 
 
     {/* Fullscreen Button */}
     <button 
@@ -680,6 +712,99 @@ const BenefitCostAnalysisDashboard = () => {
           </div>
         )}
       </div>
+      {/* Share Dialog */}
+{showShareDialog && (
+  <div className="absolute bottom-[20px] right-6 z-[1000]">
+    <div className="bg-white w-[300px] rounded-xl shadow-xl p-6 border border-gray-200 relative">
+      <button
+        className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+        onClick={() => setShowShareDialog(false)}
+      >
+        <X size={20} />
+      </button>
+
+      <h2 className="text-xl font-semibold text-gray-800 mb-4">Share This Dashboard</h2>
+
+      <div className="mb-4">
+        <label className="text-sm font-medium text-gray-700 mb-1 block">Search Teammate</label>
+        <input
+          type="text"
+          placeholder="Type a name..."
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-[#008080] focus:outline-none"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
+      <div className="max-h-48 overflow-y-auto mb-4 space-y-1">
+        {teammateList.filter(name =>
+          name.toLowerCase().includes(searchTerm.toLowerCase())
+        ).map(teammate => (
+          <div
+            key={teammate}
+            onClick={() => setSelectedTeammate(teammate)}
+            className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 border 
+              ${selectedTeammate === teammate
+                ? 'bg-[#008080]/10 border-[#008080]'
+                : 'bg-white hover:bg-gray-50 border-gray-200'}
+            `}
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-full bg-[#008080]/90 text-white text-sm font-semibold flex items-center justify-center shadow-sm">
+                {teammate.split(' ').map(n => n[0]).join('').toUpperCase()}
+              </div>
+              <span className="text-sm text-gray-800 font-medium">{teammate}</span>
+            </div>
+            {selectedTeammate === teammate && (
+              <span className="text-xs font-medium text-[#008080]">✓ Selected</span>
+            )}
+          </div>
+        ))}
+        {teammateList.filter(name =>
+          name.toLowerCase().includes(searchTerm.toLowerCase())
+        ).length === 0 && (
+          <div className="text-sm text-gray-500 text-center py-3">No teammates found</div>
+        )}
+      </div>
+
+      <button
+        disabled={!selectedTeammate}
+        onClick={() => {
+          setShowShareDialog(false);
+          const msg = `Benefit-Cost Analysis Dashboard shared with ${selectedTeammate}`;
+          setNotificationMessage(msg);
+          setShowEmailNotification(true);
+          addNotification(msg);
+        }}
+        className={`w-full py-2 rounded-md text-sm font-semibold transition-all duration-200
+          ${selectedTeammate
+            ? 'bg-[#008080] text-white hover:bg-teal-700'
+            : 'bg-gray-200 text-gray-500 cursor-not-allowed'}
+        `}
+      >
+        Share Dashboard
+      </button>
+    </div>
+  </div>
+)}
+
+{/* Notification Toast */}
+{showEmailNotification && (
+  <div className="fixed top-6 right-6 z-[9999] animate-slide-in group">
+    <div className="relative bg-white border border-[#008080] text-[#008080] px-5 py-3 rounded-lg shadow-lg flex items-center">
+      <span className="text-sm font-medium">
+        {notificationMessage}
+      </span>
+      <button
+        onClick={() => setShowEmailNotification(false)}
+        className="absolute top-1 right-1 w-5 h-5 rounded-full text-[#008080] hover:bg-[#008080]/10 hidden group-hover:flex items-center justify-center"
+        title="Dismiss"
+      >
+        ×
+      </button>
+    </div>
+  </div>
+)}
     </div>
   );
 

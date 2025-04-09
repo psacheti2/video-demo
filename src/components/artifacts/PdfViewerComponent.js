@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Maximize2, Download, ChevronLeft, ChevronRight } from "lucide-react";
 
-const PdfViewerComponent = ({ pdfFile = "/data/Vickery-data.pdf", title = 'Document Viewer' }) => {
+const PdfViewerComponent = ({ pdfFile = "/data/Vickery-data.pdf", title = 'Vickery Meadow project report' }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pdfData, setPdfData] = useState(null);
@@ -87,7 +87,7 @@ const PdfViewerComponent = ({ pdfFile = "/data/Vickery-data.pdf", title = 'Docum
   };
 
   return (
-    <div className="w-full h-screen flex flex-col bg-white rounded-lg shadow-sm overflow-hidden">
+    <div className="w-full h-160 flex flex-col bg-white rounded-lg shadow-sm overflow-hidden">
       <div className="flex items-center justify-between p-3 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-800">{title}</h2>
         <div className="flex space-x-2">
@@ -131,6 +131,7 @@ const PdfViewerComponent = ({ pdfFile = "/data/Vickery-data.pdf", title = 'Docum
               title="PDF Viewer"
               className="absolute inset-0 w-full h-full border-none"
               loading="lazy"
+              style={{ overflow: 'hidden' }}
             />
           )}
         </div>

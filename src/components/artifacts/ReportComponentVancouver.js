@@ -376,7 +376,7 @@ useEffect(() => {
         style={{ 
             backgroundColor: COLORS.white,
             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-            border: `1px solid ${COLORS.neutral}`,
+            border: `1px solid ${COLORS.coral}`,
             borderRadius: '9999px'
         }}
       >
@@ -556,7 +556,7 @@ useEffect(() => {
       style={{ 
         backgroundColor: 'transparent',
         boxShadow: 'none)',
-        border: 'none'
+        border: `1px solid ${COLORS.coral}`,
       }}
     >
       {isMenuOpen && (
@@ -790,7 +790,7 @@ useEffect(() => {
                 style={{ 
                   backgroundColor: 'transparent',
                   boxShadow: 'none)',
-                  border: 'none'
+                  border: `1px solid ${COLORS.coral}`,
                 }}
               >
                 {/* Other buttons - only visible when menu is open */}
@@ -951,6 +951,7 @@ useEffect(() => {
               className="border-r overflow-auto" 
               style={{ 
                 width: '0px', 
+                border: `1px solid ${COLORS.coral}`,
                 borderColor: '#e5e7eb', 
                 backgroundColor: COLORS.white,
                 transition: 'width 300ms ease-in-out' 
@@ -963,7 +964,7 @@ useEffect(() => {
                   style={{ 
                     backgroundColor: COLORS.white,
   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-  border: `1px solid ${COLORS.neutral}`,
+  border: `1px solid ${COLORS.coral}`,
   borderRadius: '9999px'
                   }}
                 >

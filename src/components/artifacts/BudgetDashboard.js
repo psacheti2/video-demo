@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { Maximize2, X, Info } from 'lucide-react';
+import { Maximize2, X, Info, Share2  } from 'lucide-react';
 import Papa from 'papaparse';
+import { useNotificationStore } from '@/store/NotificationsStore';
+
 
 // Color scheme for charts
 const COLORS = {
@@ -30,7 +32,16 @@ const BudgetDashboard = ({ onLayersReady }) => {
   const [isMobile, setIsMobile] = useState(false);
   const chartContainerRef = useRef(null);
   const infoRef = useRef(null);
-
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTeammate, setSelectedTeammate] = useState(null);
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const [showEmailNotification, setShowEmailNotification] = useState(false);
+  const addNotification = useNotificationStore((state) => state.addNotification);
+  
+  const teammateList = [
+    "Alice Johnson", "Bob Smith", "Catherine Nguyen", "David Li", "Emma Patel"
+  ];
   // Check for mobile viewport
   useEffect(() => {
     const checkIfMobile = () => {
@@ -242,8 +253,15 @@ const BudgetDashboard = ({ onLayersReady }) => {
                 </>
               ) : (
                 <>
-                  <XAxis dataKey="category" type="category" />
-                  <YAxis type="number" />
+                  <XAxis 
+  dataKey="category" 
+  type="category" 
+  label={{ value: "Service Categories", position: "insideBottom", offset: -5 }}
+/>
+<YAxis 
+  type="number" 
+  label={{ value: "Amount (Millions $)", angle: -90, position: "insideLeft" }}
+/>
                 </>
               )}
               <Tooltip formatter={(value) => `$${value.toFixed(2)}M`} />
@@ -266,8 +284,15 @@ const BudgetDashboard = ({ onLayersReady }) => {
                 </>
               ) : (
                 <>
-                  <XAxis dataKey="subcategory" type="category" />
-                  <YAxis type="number" />
+                  <XAxis 
+  dataKey="subcategory" 
+  type="category" 
+  label={{ value: "Subcategories", position: "insideBottom", offset: -5 }}
+/>
+<YAxis 
+  type="number" 
+  label={{ value: "Budget (Millions $)", angle: -90, position: "insideLeft" }}
+/>
                 </>
               )}
               <Tooltip formatter={(value) => `$${value.toFixed(2)}M`} />
@@ -281,8 +306,13 @@ const BudgetDashboard = ({ onLayersReady }) => {
           <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
             <LineChart data={getYearlySpendingData()}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="year" />
-              <YAxis />
+              <XAxis 
+  dataKey="year" 
+  label={{ value: "Fiscal Year", position: "insideBottom", offset: -5 }}
+/>
+<YAxis 
+  label={{ value: "Spending (Millions $)", angle: -90, position: "insideLeft" }}
+/>
               <Tooltip formatter={(value) => `$${value.toFixed(2)}M`} />
               <Legend />
               <Line type="monotone" dataKey="Streets" stroke={COLORS.blue} strokeWidth={2} />
@@ -297,13 +327,17 @@ const BudgetDashboard = ({ onLayersReady }) => {
           <ResponsiveContainer width="100%" height={isMobile ? 400 : 500}>
             <BarChart data={getTopProjectsData()} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" />
-              <YAxis 
-                dataKey="name" 
-                type="category" 
-                width={isMobile ? 120 : 250}
-                tick={{ fontSize: isMobile ? 10 : 12 }}
-              />
+              <XAxis 
+  type="number" 
+  label={{ value: "Budget (Millions $)", position: "insideBottom", offset: -5 }}
+/>
+<YAxis 
+  dataKey="name" 
+  type="category" 
+  width={isMobile ? 120 : 250}
+  tick={{ fontSize: isMobile ? 10 : 12 }}
+  label={{ value: "Project Name", position: "insideLeft", angle: -90 }}
+/>
               <Tooltip formatter={(value) => `$${value.toFixed(2)}M`} />
               <Bar dataKey="budget" name="Total Budget" fill={COLORS.teal}>
                 {getTopProjectsData().map((entry, index) => (
@@ -346,9 +380,12 @@ const BudgetDashboard = ({ onLayersReady }) => {
 
   const renderPanelContent = (fullscreen = false) => (
     <div
-      className={`px-4 pt-4 ${fullscreen ? 'fixed inset-0 z-50 p-30 mt-12 bg-white overflow-auto' : 'max-h-[90vh] overflow-y-auto pb-4'}`}
-      ref={chartContainerRef}
-    >
+    className={`px-4 pt-4 ${fullscreen ? 'fixed inset-0 z-50 p-30 mt-12 overflow-auto' : 'max-h-[90vh] overflow-y-auto pb-4'}`}
+    ref={chartContainerRef}
+    style={{ 
+      backgroundColor: 'rgba(255, 255, 255, 0.7)' 
+    }}
+  >
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4">
   {/* Dropdown on the left */}
   <div className="mb-2 md:mb-0">
@@ -416,6 +453,27 @@ const BudgetDashboard = ({ onLayersReady }) => {
     </div>
 
     {/* Fullscreen button */}
+    <button
+  onClick={() => setShowShareDialog(true)}
+  className="p-2 rounded-full border"
+  title="Share"
+  style={{ 
+    color: COLORS.teal,
+    backgroundColor: COLORS.white,
+    border: `1px solid ${COLORS.teal}`,
+    transition: 'all 0.2s ease-in-out'
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.backgroundColor = COLORS.teal;
+    e.currentTarget.style.color = COLORS.white;
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.backgroundColor = COLORS.white;
+    e.currentTarget.style.color = COLORS.teal;
+  }}
+>
+  <Share2 size={18} />
+</button>
     <button 
       onClick={toggleFullscreen} 
       className="p-2 rounded-full border" 
@@ -462,6 +520,100 @@ const BudgetDashboard = ({ onLayersReady }) => {
           <p>The chart tracks projected spending across service categories from 2025 through 2029.</p>
         </div>
       )}
+
+      {/* Share Dialog */}
+{showShareDialog && (
+  <div className="absolute bottom-[20px] right-6 z-[1000]">
+    <div className="bg-white w-[300px] rounded-xl shadow-xl p-6 border border-gray-200 relative">
+      <button
+        className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+        onClick={() => setShowShareDialog(false)}
+      >
+        <X size={20} />
+      </button>
+
+      <h2 className="text-xl font-semibold text-gray-800 mb-4">Share This Dashboard</h2>
+
+      <div className="mb-4">
+        <label className="text-sm font-medium text-gray-700 mb-1 block">Search Teammate</label>
+        <input
+          type="text"
+          placeholder="Type a name..."
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-[#008080] focus:outline-none"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
+      <div className="max-h-48 overflow-y-auto mb-4 space-y-1">
+        {teammateList.filter(name =>
+          name.toLowerCase().includes(searchTerm.toLowerCase())
+        ).map(teammate => (
+          <div
+            key={teammate}
+            onClick={() => setSelectedTeammate(teammate)}
+            className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 border 
+              ${selectedTeammate === teammate
+                ? 'bg-[#008080]/10 border-[#008080]'
+                : 'bg-white hover:bg-gray-50 border-gray-200'}
+            `}
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-full bg-[#008080]/90 text-white text-sm font-semibold flex items-center justify-center shadow-sm">
+                {teammate.split(' ').map(n => n[0]).join('').toUpperCase()}
+              </div>
+              <span className="text-sm text-gray-800 font-medium">{teammate}</span>
+            </div>
+            {selectedTeammate === teammate && (
+              <span className="text-xs font-medium text-[#008080]">✓ Selected</span>
+            )}
+          </div>
+        ))}
+        {teammateList.filter(name =>
+          name.toLowerCase().includes(searchTerm.toLowerCase())
+        ).length === 0 && (
+          <div className="text-sm text-gray-500 text-center py-3">No teammates found</div>
+        )}
+      </div>
+
+      <button
+        disabled={!selectedTeammate}
+        onClick={() => {
+          setShowShareDialog(false);
+          const msg = `Budget Dashboard shared with ${selectedTeammate}`;
+          setNotificationMessage(msg);
+          setShowEmailNotification(true);
+          addNotification(msg);
+        }}
+        className={`w-full py-2 rounded-md text-sm font-semibold transition-all duration-200
+          ${selectedTeammate
+            ? 'bg-[#008080] text-white hover:bg-teal-700'
+            : 'bg-gray-200 text-gray-500 cursor-not-allowed'}
+        `}
+      >
+        Share Dashboard
+      </button>
+    </div>
+  </div>
+)}
+
+{/* Notification Toast */}
+{showEmailNotification && (
+  <div className="fixed top-6 right-6 z-[9999] animate-slide-in group">
+    <div className="relative bg-white border border-[#008080] text-[#008080] px-5 py-3 rounded-lg shadow-lg flex items-center">
+      <span className="text-sm font-medium">
+        {notificationMessage}
+      </span>
+      <button
+        onClick={() => setShowEmailNotification(false)}
+        className="absolute top-1 right-1 w-5 h-5 rounded-full text-[#008080] hover:bg-[#008080]/10 hidden group-hover:flex items-center justify-center"
+        title="Dismiss"
+      >
+        ×
+      </button>
+    </div>
+  </div>
+)}
     </div>
   );
 

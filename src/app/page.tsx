@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { PanelRight, ArrowLeft, ChevronLeft } from 'lucide-react'; 
 import Navbar from '../components/layout/Navbar';
 import ResponsiveChatLayout from '../components/chat/ChatWindow';
@@ -20,6 +20,7 @@ export interface ChatMessageType {
   file?: string | null;
   isUser: boolean;
   artifacts?: Artifact[];
+  id: string; // Add unique ID to each message
 }
 
 export default function Home() {
@@ -31,6 +32,8 @@ export default function Home() {
   const [artifactsPanelWidth, setArtifactsPanelWidth] = useState(40); // percentage
   const [isArtifactFullscreen, setIsArtifactFullscreen] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [lastMessageId, setLastMessageId] = useState<string>(''); // Track last message ID
+  const prevArtifactsLength = useRef(0); // Track previous artifacts length
 
   const addArtifact = (artifact: Artifact) => {
     setArtifacts(prev => [...prev, artifact]);
@@ -38,10 +41,22 @@ export default function Home() {
 
   // Function to handle sending messages
   const handleSendMessage = async ({ text, file }: { text: string, file: string | null }) => {
+    // Generate unique message ID
+    const userMessageId = `user_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    
     // Add user message
-    const userMessage: ChatMessageType = { text, file, isUser: true };
+    const userMessage: ChatMessageType = { 
+      text, 
+      file, 
+      isUser: true, 
+      id: userMessageId 
+    };
+    
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
+    
+    // Remember current artifacts count before response
+    prevArtifactsLength.current = artifacts.length;
     
     try {
       // Call API route
@@ -59,10 +74,14 @@ export default function Home() {
       
       const data = await response.json();
       
+      // Generate unique ID for assistant message
+      const assistantMessageId = `assistant_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+      
       // Create bot message with any artifacts attached
       const botMessage: ChatMessageType = { 
         text: data.text, 
-        isUser: false
+        isUser: false,
+        id: assistantMessageId
       };
       
       // Add artifacts to the message if any were generated
@@ -78,12 +97,24 @@ export default function Home() {
       // Add the bot message to the messages state
       setMessages(prev => [...prev, botMessage]);
       
+      // Set the last message ID to trigger the artifacts panel update
+      setLastMessageId(assistantMessageId);
+      
     } catch (error) {
       console.error('Error sending message:', error);
+      
+      // Generate unique ID for error message
+      const errorMessageId = `error_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+      
       setMessages(prev => [...prev, {
         text: "Sorry, I encountered an error. Please try again.",
-        isUser: false
+        isUser: false,
+        id: errorMessageId
       }]);
+      
+      // Update last message ID
+      setLastMessageId(errorMessageId);
+      
     } finally {
       setIsLoading(false);
     }
@@ -126,7 +157,7 @@ export default function Home() {
       />
       
       <Navbar />
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden pt-1">
         {/* Conditional layout based on artifact presence */}
         {isArtifactFullscreen ? (
           // Fullscreen artifact view
@@ -135,6 +166,8 @@ export default function Home() {
               artifacts={artifacts}
               isFullscreen={true}
               toggleFullscreen={() => setIsArtifactFullscreen(!isArtifactFullscreen)}
+              messageId={lastMessageId}
+              prevArtifactsCount={prevArtifactsLength.current}
             />
           </div>
         ) : hasArtifacts || showSidebar ? (
@@ -185,6 +218,8 @@ export default function Home() {
               <ArtifactsPanel
                 artifacts={artifacts}
                 toggleFullscreen={() => setIsArtifactFullscreen(!isArtifactFullscreen)}
+                messageId={lastMessageId}
+                prevArtifactsCount={prevArtifactsLength.current}
               />
             </div>
           </div>
