@@ -1,103 +1,143 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { PanelRight, ArrowLeft, ChevronLeft } from 'lucide-react'; // Import the Lucide icons
+import Navbar from '../components/layout/Navbar';
+import ResponsiveChatLayout from '../components/chat/ChatWindow';
+import ArtifactsPanel from '../components/layout/ArtifactsPanel';
+
+// Define the artifact type
+export interface Artifact {
+  type: string;
+  title: string;
+  component: string;
+  data: any;
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [artifacts, setArtifacts] = useState<Artifact[]>([]);
+  const [artifactsPanelWidth, setArtifactsPanelWidth] = useState(40); // percentage
+  const [isArtifactFullscreen, setIsArtifactFullscreen] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  const addArtifact = (artifact: Artifact) => {
+    setArtifacts(prev => [...prev, artifact]);
+  };
+
+  // Function to toggle sidebar
+  const toggleSidebar = () => {
+    setShowSidebar(prev => !prev);
+  };
+
+  // Check if artifacts exist
+  const hasArtifacts = artifacts.length > 0;
+
+  // Create sidebar button component with navbar-like styling
+  interface SidebarButtonProps {
+    onClick: () => void;
+    Icon: React.ElementType;
+    position: 'left' | 'right';
+  }
+  
+  const SidebarButton = ({ onClick, Icon, position }: SidebarButtonProps) => (
+    <button 
+      onClick={onClick}
+      className={`p-2 rounded-full bg-white border border-gray-300 hover:bg-[#008080]/90 group shadow-sm transition absolute top-4 ${position === 'left' ? 'left-4' : 'right-4'} z-10`}
+    >
+      <Icon className="h-5 w-5 text-[#008080] group-hover:text-white" />
+    </button>
+  );
+
+  return (
+    <div className="flex flex-col h-screen max-h-screen overflow-hidden">
+      {/* Topography overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none z-0"
+        style={{
+          backgroundImage: "url('/assets/topography.svg')",
+          backgroundPosition: "center",
+          filter: "opacity(0.1)",
+        }}
+      />
+      
+      <Navbar />
+      <div className="flex flex-1 overflow-hidden">
+        {/* Conditional layout based on artifact presence */}
+        {isArtifactFullscreen ? (
+          // Fullscreen artifact view
+          <div className="flex-1 overflow-hidden">
+            <ArtifactsPanel
+              artifacts={artifacts}
+              isFullscreen={true}
+              toggleFullscreen={() => setIsArtifactFullscreen(!isArtifactFullscreen)}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          </div>
+        ) : hasArtifacts || showSidebar ? (
+          // Split view with artifacts panel
+          <div className="flex flex-1 overflow-hidden">
+            <div
+              className="flex-1 overflow-hidden relative"
+              style={{ width: `${100 - artifactsPanelWidth}%` }}
+            >
+              <ResponsiveChatLayout 
+                onArtifactGenerated={addArtifact}
+                isCentered={false} 
+              />
+            </div>
+            <div
+              className="relative"
+              onMouseDown={(e) => {
+                const startX = e.clientX;
+                const startWidth = artifactsPanelWidth;
+                const onMouseMove = (moveEvent: MouseEvent) => {
+                  const deltaX = moveEvent.clientX - startX;
+                  const containerWidth = document.body.clientWidth;
+                  const newWidth = startWidth - (deltaX / containerWidth * 100);
+                  setArtifactsPanelWidth(Math.max(20, Math.min(80, newWidth)));
+                };
+                const onMouseUp = () => {
+                  document.removeEventListener('mousemove', onMouseMove);
+                  document.removeEventListener('mouseup', onMouseUp);
+                };
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+              }}
+            >
+              <div className="group relative w-1 h-full cursor-ew-resize bg-transparent">
+                <div
+                  className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[6px] rounded-md h-full bg-white/60 backdrop-blur-md shadow-sm border border-gray-300 group-hover:bg-[#008080] group-hover:shadow-md transition-all duration-200"
+                >
+                </div>
+              </div>
+            </div>
+            <div
+              style={{ width: `${artifactsPanelWidth}%` }}
+              className="bg-white overflow-hidden shadow-md"
+            >
+              <ArtifactsPanel
+                artifacts={artifacts}
+                toggleFullscreen={() => setIsArtifactFullscreen(!isArtifactFullscreen)}
+              />
+            </div>
+          </div>
+        ) : (
+          // Centered chat view with no artifacts
+          <div className="flex justify-center w-full relative">
+            {/* Left sidebar button */}
+            <SidebarButton onClick={toggleSidebar} Icon={PanelRight} position="left" />
+            
+            <div className="w-full max-w-3xl">
+              <ResponsiveChatLayout 
+                onArtifactGenerated={addArtifact}
+                isCentered={true} 
+              />
+            </div>
+            
+            {/* Right arrow button */}
+            <SidebarButton onClick={() => {/* Define action for right arrow */}} Icon={ChevronLeft} position="right" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
