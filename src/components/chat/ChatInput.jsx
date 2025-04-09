@@ -1,10 +1,21 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Upload, X } from 'lucide-react';
 
 export default function ChatInput({ onSendMessage }) {
   const [message, setMessage] = useState('');
   const [uploadedFile, setUploadedFile] = useState(null);
-  
+  const textareaRef = useRef(null);
+
+  // Auto-resize textarea based on content
+  useEffect(() => {
+    if (textareaRef.current) {
+      // Reset height to auto to get the correct scrollHeight
+      textareaRef.current.style.height = 'auto';
+      // Set the height to the scrollHeight to fit all content
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    }
+  }, [message]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (message.trim() || uploadedFile) {
@@ -17,7 +28,7 @@ export default function ChatInput({ onSendMessage }) {
       setUploadedFile(null);
     }
   };
-  
+
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -34,19 +45,28 @@ export default function ChatInput({ onSendMessage }) {
       alert('Only PDFs, DOC/DOCX, and images are allowed.');
     }
   };
-  
+
+  // Handle Enter key to send message (Shift+Enter for new line)
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+
   return (
     <div className="bg-white/20 p-4">
       <form onSubmit={handleSubmit}>
         <div className="flex rounded-lg border border-gray-300 overflow-hidden w-full bg-white">
-          <input
-            type="text"
+          <textarea
+            ref={textareaRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder="Ask NeuraCities..."
-            className="flex-1 px-4 py-2 focus:outline-none w-full"
+            className="flex-1 px-4 py-2 focus:outline-none w-full resize-none min-h-10 max-h-40 overflow-y-auto"
+            rows={1}
           />
-          
         </div>
         {uploadedFile && (
           <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-[#f0fdfa] border-2 border-[#008080] rounded-2xl shadow-sm max-w-xs">
