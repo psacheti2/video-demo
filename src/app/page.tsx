@@ -1,7 +1,10 @@
+// 1. MODIFY HOME COMPONENT (page.tsx)
+// First, let's update the Home component to maintain the chat message state
+
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PanelRight, ArrowLeft, ChevronLeft } from 'lucide-react'; // Import the Lucide icons
+import { PanelRight, ArrowLeft, ChevronLeft } from 'lucide-react'; 
 import Navbar from '../components/layout/Navbar';
 import ResponsiveChatLayout from '../components/chat/ChatWindow';
 import ArtifactsPanel from '../components/layout/ArtifactsPanel';
@@ -14,7 +17,19 @@ export interface Artifact {
   data: any;
 }
 
+// Define the chat message type
+export interface ChatMessageType {
+  text: string;
+  file?: string | null;
+  isUser: boolean;
+  artifacts?: Artifact[];
+}
+
 export default function Home() {
+  // Lift the messages state up to the Home component
+  const [messages, setMessages] = useState<ChatMessageType[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  
   const [artifacts, setArtifacts] = useState<Artifact[]>([]);
   const [artifactsPanelWidth, setArtifactsPanelWidth] = useState(40); // percentage
   const [isArtifactFullscreen, setIsArtifactFullscreen] = useState(false);
@@ -22,6 +37,59 @@ export default function Home() {
 
   const addArtifact = (artifact: Artifact) => {
     setArtifacts(prev => [...prev, artifact]);
+  };
+
+  // Function to handle sending messages
+  const handleSendMessage = async ({ text, file }: { text: string, file: string | null }) => {
+    // Add user message
+    const userMessage: ChatMessageType = { text, file, isUser: true };
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+    
+    try {
+      // Call API route
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: text }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to get response');
+      }
+      
+      const data = await response.json();
+      
+      // Create bot message with any artifacts attached
+      const botMessage: ChatMessageType = { 
+        text: data.text, 
+        isUser: false
+      };
+      
+      // Add artifacts to the message if any were generated
+      if (data.artifacts && data.artifacts.length > 0) {
+        botMessage.artifacts = data.artifacts;
+        
+        // Add each artifact to the artifacts state
+        data.artifacts.forEach((artifact: Artifact) => {
+          addArtifact(artifact);
+        });
+      }
+      
+      // Add the bot message to the messages state
+      setMessages(prev => [...prev, botMessage]);
+      
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setMessages(prev => [...prev, {
+        text: "Sorry, I encountered an error. Please try again.",
+        isUser: false
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Function to toggle sidebar
@@ -80,7 +148,10 @@ export default function Home() {
               style={{ width: `${100 - artifactsPanelWidth}%` }}
             >
               <ResponsiveChatLayout 
-                onArtifactGenerated={addArtifact}
+                messages={messages}
+                setMessages={setMessages}
+                isLoading={isLoading}
+                onSendMessage={handleSendMessage}
                 isCentered={false} 
               />
             </div>
@@ -128,7 +199,10 @@ export default function Home() {
             
             <div className="w-full max-w-3xl">
               <ResponsiveChatLayout 
-                onArtifactGenerated={addArtifact}
+                messages={messages}
+                setMessages={setMessages}
+                isLoading={isLoading}
+                onSendMessage={handleSendMessage}
                 isCentered={true} 
               />
             </div>
@@ -141,3 +215,4 @@ export default function Home() {
     </div>
   );
 }
+

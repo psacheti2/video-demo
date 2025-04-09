@@ -1,16 +1,12 @@
+// 2. MODIFY CHATWINDOW COMPONENT
+// Next, update the ChatWindow component to receive messages and setMessages as props
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
-import { Artifact } from '../../app/page';
-
-interface ChatMessageType {
-  text: string;
-  file?: string | null;
-  isUser: boolean;
-  artifacts?: Artifact[];  // Add artifacts to the message interface
-}
+import { Artifact, ChatMessageType } from '../../app/page';
 
 interface RecentChat {
   id: number;
@@ -26,16 +22,20 @@ interface SavedArtifact {
 }
 
 interface ChatWindowProps {
-  onArtifactGenerated: (artifact: Artifact) => void;
+  messages: ChatMessageType[];
+  setMessages: React.Dispatch<React.SetStateAction<ChatMessageType[]>>;
+  isLoading: boolean;
+  onSendMessage: ({ text, file }: { text: string, file: string | null }) => Promise<void>;
   isCentered?: boolean;
 }
 
 export default function ChatWindow({ 
-  onArtifactGenerated, 
+  messages,
+  setMessages,
+  isLoading,
+  onSendMessage,
   isCentered = false 
 }: ChatWindowProps) {
-  const [messages, setMessages] = useState<ChatMessageType[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [sidebarTab, setSidebarTab] = useState<'recent' | 'saved'>('recent');
@@ -49,58 +49,6 @@ export default function ChatWindow({
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-  
-  const handleSendMessage = async ({ text, file }: { text: string, file: string | null }) => {
-    // Add user message
-    const userMessage: ChatMessageType = { text, file, isUser: true };
-    setMessages(prev => [...prev, userMessage]);
-    setIsLoading(true);
-    
-    try {
-      // Call API route
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: text }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to get response');
-      }
-      
-      const data = await response.json();
-      
-      // Create bot message with any artifacts attached
-      const botMessage: ChatMessageType = { 
-        text: data.text, 
-        isUser: false
-      };
-      
-      // Add artifacts to the message if any were generated
-      if (data.artifacts && data.artifacts.length > 0) {
-        botMessage.artifacts = data.artifacts;
-        
-        // Also notify parent component about new artifacts
-        data.artifacts.forEach((artifact: Artifact) => {
-          onArtifactGenerated(artifact);
-        });
-      }
-      
-      // Add the bot message to the messages state
-      setMessages(prev => [...prev, botMessage]);
-      
-    } catch (error) {
-      console.error('Error sending message:', error);
-      setMessages(prev => [...prev, {
-        text: "Sorry, I encountered an error. Please try again.",
-        isUser: false
-      }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
   
   // Directly include the recentChats data here
   const recentChats: RecentChat[] = [
@@ -218,8 +166,60 @@ export default function ChatWindow({
           <div ref={messagesEndRef} />
         </div>
         
-        <ChatInput onSendMessage={handleSendMessage} />
+        <ChatInput onSendMessage={onSendMessage} />
       </div>
     </div>
   );
+}
+
+// 3. Also make sure to update the ChatInput component to work with this setup
+// If needed, modify the ChatInput component to use the onSendMessage callback directly
+
+// 4. Finally, create or update the API route for handling chat messages
+// pages/api/chat.ts or app/api/chat/route.ts
+
+import { NextResponse } from 'next/server';
+import { chatResponses } from '@/data/chatResponses';
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { message } = body;
+    
+    // Find a matching mock response
+    const response = findMatchingResponse(message);
+    
+    // Only include artifacts in the response if they exist
+    const responseBody: { text: string; artifacts?: any[] } = {
+      text: response.text
+    };
+    
+    // Add artifacts to the response only if they exist
+    if (response.artifacts && response.artifacts.length > 0) {
+      responseBody.artifacts = response.artifacts;
+    }
+    
+    // Return the response
+    return NextResponse.json(responseBody);
+  } catch (error) {
+    console.error('Error in chat API:', error);
+    return NextResponse.json(
+      { error: 'Failed to process request' },
+      { status: 500 }
+    );
+  }
+}
+
+function findMatchingResponse(message: string) {
+  // Simple keyword matching logic for the mock responses
+  for (const [key, response] of Object.entries(chatResponses)) {
+    if (message.toLowerCase().includes(key.toLowerCase())) {
+      return response;
+    }
+  }
+  
+  // Default response if no match found
+  return {
+    text: "I'm not sure I understand. Could you please rephrase your question?",
+  };
 }
