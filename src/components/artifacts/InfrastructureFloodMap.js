@@ -601,11 +601,11 @@ const demographicPolygonsRef = useRef([]);
               if (feature.geometry && feature.geometry.coordinates) {
                 // Convert GeoJSON linestring coordinates to Leaflet format
                 const coords = feature.geometry.coordinates.map(coord => [coord[1], coord[0]]);
-
+          
                 // Determine color based on condition
                 let color = layerColors.sewerMedium;
                 const condition = feature.properties?.condition || 'C';
-
+          
                 if (condition === 'A' || condition === 'B') {
                   color = layerColors.sewerGood;
                 } else if (condition === 'C' || condition === 'D') {
@@ -613,7 +613,7 @@ const demographicPolygonsRef = useRef([]);
                 } else {
                   color = layerColors.sewerPoor;
                 }
-
+          
                 // Create polyline for sewer line
                 const sewerLine = L.polyline(coords, {
                   color: color,
@@ -621,7 +621,7 @@ const demographicPolygonsRef = useRef([]);
                   opacity: 0.8,
                   dashArray: '5, 5'
                 });
-
+          
                 // Create popup with sewer information
                 let popupContent = `<strong>${feature.properties?.effluent_type || 'Sewer'} Line</strong>`;
                 if (feature.properties) {
@@ -638,7 +638,7 @@ const demographicPolygonsRef = useRef([]);
                     popupContent += `<br>Installed: ${feature.properties.install_yr}`;
                   }
                 }
-
+          
                 sewerLine.bindPopup(popupContent);
                 sewerLinesRef.current.push({ line: sewerLine, condition: feature.properties?.condition });
                 infraLayer.addLayer(sewerLine);
@@ -1187,10 +1187,27 @@ const fetch311Data = async () => {
   useEffect(() => {
     if (!map) return;
   
+    // Helper function for debugging
+    const debugLayers = () => {
+      console.log('Updating layers with new colors:');
+      console.log('Flood polygons:', floodPolygonsRef.current.length);
+      console.log('Street lines:', streetLinesRef.current.length);
+      console.log('Sewer lines:', sewerLinesRef.current.length);
+      console.log('Project features:', projectFeaturesRef.current.length);
+      console.log('Demographic polygons:', demographicPolygonsRef.current.length);
+    };
+  
+    // Log current state for debugging
+    debugLayers();
+  
+    // Force map to redraw by invalidating size
+    map.invalidateSize();
+  
     // Flood Zones
     floodPolygonsRef.current.forEach(({ polygon, properties }) => {
       let color = layerColors.floodMedium;
       let fillColor = layerColors.floodLight;
+  
       if (properties?.risk_level === 'high') {
         color = layerColors.floodDark;
         fillColor = layerColors.floodMedium;
@@ -1198,7 +1215,11 @@ const fetch311Data = async () => {
         color = layerColors.floodLight;
         fillColor = layerColors.floodLight;
       }
+  
+      // Use both setStyle and options approach for maximum compatibility
       polygon.setStyle({ color, fillColor });
+      polygon.options.color = color;
+      polygon.options.fillColor = fillColor;
     });
   
     // Streets
@@ -1207,23 +1228,30 @@ const fetch311Data = async () => {
       if (condition === 'A' || condition === 'B') color = layerColors.streetGood;
       else if (condition === 'C' || condition === 'D') color = layerColors.streetMedium;
       else color = layerColors.streetPoor;
+      
       line.setStyle({ color });
+      line.options.color = color;
     });
   
-    // Sewer Lines
+    // Sewer Lines 
     sewerLinesRef.current.forEach(({ line, condition }) => {
       let color = layerColors.sewerMedium;
       if (condition === 'A' || condition === 'B') color = layerColors.sewerGood;
       else if (condition === 'C' || condition === 'D') color = layerColors.sewerMedium;
       else color = layerColors.sewerPoor;
-      line.setStyle({ color });
+      
+      if (line && typeof line.setStyle === 'function') {
+        line.setStyle({ color });
+        line.options.color = color;
+      }
     });
   
-    // Projects (just reapply color)
+    // Projects
     projectFeaturesRef.current.forEach(({ element }) => {
-      if (element.setStyle) {
+      if (element && element.setStyle) {
         element.setStyle({ color: layerColors.projectActive });
-      } else if (element.setIcon) {
+        element.options.color = layerColors.projectActive;
+      } else if (element && element.setIcon) {
         element.setIcon(L.divIcon({
           html: `<div style="background-color: ${layerColors.projectActive}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
           className: '',
@@ -1240,10 +1268,30 @@ const fetch311Data = async () => {
         : normalized > 0.5
           ? layerColors.demoMedium
           : layerColors.demoLow;
+      
       polygon.setStyle({ fillColor });
+      polygon.options.fillColor = fillColor;
     });
   
+    // 311 Data - We don't try to update heatmap colors dynamically
+    // Instead, let's just make sure the existing layer is visible
+    if (map.data311Layer && activeLayers.data311) {
+      // Simply make sure the layer is added (it may already be)
+      if (!map.hasLayer(map.data311Layer)) {
+        map.addLayer(map.data311Layer);
+      }
+    }
+  
+    // Force redraw after updates
+    setTimeout(() => {
+      if (map) {
+        map.invalidateSize();
+      }
+    }, 100);
+  
   }, [layerColors, map]);
+  
+  
   
 
   // Get loading status message
@@ -1511,15 +1559,20 @@ const filteredTeammates = teammateList.filter(name =>
       </div>
 
       <div className="mt-4 flex justify-end">
-        <button
-          onClick={() => {
-            setShowSymbologyEditor(false);
-            setLayerColors(prev => ({ ...prev })); 
-          }}
-          className="px-4 py-1 bg-[#008080] text-white rounded hover:bg-teal-700 text-sm"
-        >
-          Done
-        </button>
+      <button
+  onClick={() => {
+    const updatedColors = { ...layerColors };
+    setLayerColors(updatedColors);
+    setShowSymbologyEditor(false);
+    
+    if (map) {
+      setTimeout(() => map.invalidateSize(), 100);
+    }
+  }}
+  className="px-4 py-1 bg-[#008080] text-white rounded hover:bg-teal-700 text-sm"
+>
+  Done
+</button>
       </div>
     </div>
   </div>
