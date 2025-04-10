@@ -50,7 +50,7 @@ export default function ArtifactsPanel({
   const ReportComponentVancouverWithProps = ({ data }: { data: any }) => <ReportComponentVancouver {...data} />;
   const IndexMapComponentWithProps = ({ data }: { data: any }) => <InfrastructureIndexMap {...data} />;
   const HousingMapComponentWithProps = ({ data }: { data: any }) => <HousingMapComponent {...data} />;
-  const SevenExtractComponentWithProps = ({ data }: { data: any }) => <ExtractComponent {...data} />;
+  const SevenExtractComponentWithProps = ({ data }: { data: any }) => <PdfViewer {...data} />;
   const FourMapComponentWithProps = ({ data }: { data: any }) => <FourMap {...data} />;
   const PdfViewerComponentWithProps = ({ data }: { data: any }) => <PdfViewer {...data} />;
 
