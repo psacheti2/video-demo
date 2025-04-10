@@ -95,7 +95,7 @@ export const chatResponses = {
       }
     }]
   },
-  "I've just uploaded Dallas's new affordable housing policy document. Can you identify similar policies in comparable cities and map current affordable housing projects?": {
+  "I've just uploaded Dallas's new affordable housing policy document. Can you map current affordable housing projects?": {
     text: "I've analyzed the Dallas Housing Policy 2033 Action Plan you uploaded. The map shows 83 total affordable housing developments across Dallas - 56 from the HUD LIHTC database and 27 from the Reinvestment Areas Combined dataset. I've color-coded them to distinguish the data sources. Looking at the distribution, I notice that 64% of existing developments fall within the policy's high-priority reinvestment zones, but there's a significant gap in coverage for transit-oriented development areas identified in the 2033 Action Plan, particularly along the planned Silver Line corridor.",
     timing: [4000], // Single long paragraph, single timing value
     artifacts: [{
@@ -111,7 +111,7 @@ export const chatResponses = {
       }
     }]
   },
-  "Open the report for the Vickery Meadow project. Summarize the key metrics for this project and the people involved in this study.": {
+  "Open the report for the Vickery Meadow project and summarize the key metrics.": {
     text: "The Vickery Meadow plan focuses on 5 key metrics that align with the 2033 Housing Policy:\n\n1. Housing Diversity: Currently 78% multifamily units, with a goal to increase owner-occupied housing by 15% by 2030.\n2. Economic Mobility: Plan targets reduction in poverty rate from current 37% to 25% through mixed-income development.\n3. Safety Initiatives: Includes lighting improvements and design standards that meet the 2033 Policy's community safety requirements.\n4. Educational Partnerships: Five educational facilities identified for co-location with housing developments, exceeding the 2033 Policy recommendation of integrated community services.\n5. Infrastructure Investment: $12.4M allocated for connectivity improvements, which falls short of the 2033 Policy's recommendation of $18M for areas of this size.\n\nKey stakeholders include the Vickery Meadow Public Improvement District, Dallas Housing Authority, and five neighborhood associations serving the area's diverse population of over 38,000 residents.",
     timing: [2000, 1000, 1000, 1000, 1000, 1000, 2000], // Intro, 5 points, and conclusion
     artifacts: [{
