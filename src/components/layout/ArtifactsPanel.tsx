@@ -130,17 +130,7 @@ export default function ArtifactsPanel({
           <h2 className="text-sm font-semibold text-[#2C3E50]">Artifacts ({artifacts.length})</h2>
         )}
         
-        <button
-          onClick={toggleFullscreen}
-          className="p-1 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors"
-          aria-label={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-        >
-          {isFullscreen ? (
-            <Minimize2 className="h-4 w-4 text-[#008080] group-hover:text-white" />
-          ) : (
-            <Maximize2 className="h-4 w-4 text-[#008080] group-hover:text-white" />
-          )}
-        </button>
+        
       </div>
 
       <div className="flex-1 overflow-y-auto">

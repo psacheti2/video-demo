@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
+import { Search } from 'lucide-react'; // At the top of the file
+import { Dialog } from '@headlessui/react';
 
 // Custom sidebar component that directly integrates with the chat layout
 export default function ResponsiveChatLayout({ onArtifactGenerated }) {
@@ -11,7 +13,8 @@ export default function ResponsiveChatLayout({ onArtifactGenerated }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const messagesEndRef = useRef(null);
   const [sidebarTab, setSidebarTab] = useState('recent'); 
-  
+  const [searchOpen, setSearchOpen] = useState(false);
+
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -91,6 +94,49 @@ className={`w-64 text-white flex flex-col absolute h-full left-0 top-0 transitio
             New Conversation
           </button>
         </div>
+
+        <div className="px-4 pb-2">
+  <button
+    onClick={() => setSearchOpen(true)}
+    className="w-full flex items-center justify-center py-2 bg-white rounded-lg hover:bg-opacity-90 text-[#34495E] font-medium"
+  >
+    <Search className="h-4 w-4 mr-2" />
+    Search Conversations
+  </button>
+</div>
+
+{/* Dialog */}
+<Dialog open={searchOpen} onClose={() => setSearchOpen(false)} className="relative z-50">
+  <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" aria-hidden="true" />
+  <div className="fixed inset-0 flex items-center justify-center p-4">
+    <Dialog.Panel className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl space-y-4">
+      <Dialog.Title className="text-lg font-semibold text-[#008080]">Search Conversations</Dialog.Title>
+      <input
+        type="text"
+        placeholder="Search..."
+        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+      />
+      <div className="flex justify-end space-x-2">
+        <button
+          onClick={() => setSearchOpen(false)}
+          className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-sm"
+        >
+          Close
+        </button>
+        <button
+          onClick={() => {
+            // Add search logic here
+            setSearchOpen(false);
+          }}
+          className="px-4 py-2 rounded bg-[#008080] text-white hover:bg-[#006666] text-sm"
+        >
+          Search
+        </button>
+      </div>
+    </Dialog.Panel>
+  </div>
+</Dialog>
+
         <div className="p-4 flex space-x-2">
   <button
     onClick={() => setSidebarTab('recent')}

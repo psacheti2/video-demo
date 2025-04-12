@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { Search, Bell } from 'lucide-react';
+import { Search, Bell, Plus, PanelRight } from 'lucide-react';
 import { useNotificationStore } from '@/store/NotificationsStore';
 
-export default function Navbar() {
+export default function Navbar({ onToggleSidebar, sidebarOpen }) {
   const { notifications, markAllAsRead, clearAllNotifications } = useNotificationStore();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const unreadCount = notifications.filter((n) => !n.read).length;
+  const [profileOpen, setProfileOpen] = useState(false);
+const toggleProfileDropdown = () => setProfileOpen(!profileOpen);
 
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
@@ -22,8 +24,32 @@ export default function Navbar() {
   >
     {/* Logo */}
     <div className="flex items-center space-x-2">
-      <img src="/assets/Logo.svg" alt="Logo" className="h-8" />
-    </div>
+ 
+<button
+  onClick={onToggleSidebar}
+  className="p-2 rounded-full bg-white border border-gray-300 hover:bg-[#008080]/90 group shadow-sm transition"
+  title="Toggle Sidebar"
+>
+  <PanelRight className="h-5 w-5 text-[#008080] group-hover:text-white" />
+</button>
+
+{/* New Chat */}
+<button
+  className="p-2 rounded-full bg-white border border-gray-300 hover:bg-[#008080]/90 group shadow-sm transition"
+  title="New Chat"
+>
+  <Plus className="h-5 w-5 text-[#008080] group-hover:text-white" />
+</button>
+
+
+  {/* Logo (shift only this) */}
+  <div className={`transition-all duration-300 ${sidebarOpen ? 'ml-40' : 'ml-0'}`}>
+    <img src="/assets/Logo.svg" alt="Logo" className="h-8" />
+  </div>
+</div>
+
+
+
 
     {/* Controls */}
     <div className="flex items-center space-x-2 relative">
@@ -76,9 +102,26 @@ export default function Navbar() {
       </div>
 
       {/* Profile */}
-      <div className="w-10 h-10 flex items-center justify-center rounded-full bg-[#008080] text-white font-semibold shadow-sm hover:scale-105 transition">
-        JD
+      <div className="relative">
+  <button
+    onClick={toggleProfileDropdown}
+    className="w-10 h-10 flex items-center justify-center rounded-full bg-[#008080] text-white font-semibold shadow-sm hover:scale-105 transition"
+  >
+    JD
+  </button>
+
+  {profileOpen && (
+    <div className="absolute right-0 mt-3 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 text-sm overflow-hidden animate-fade-in">
+      <div className="divide-y divide-gray-100">
+        <button className="w-full px-4 py-3 text-left text-[#008080] hover:bg-[#f0fdfa] transition">Settings</button>
+        <button className="w-full px-4 py-3 text-left text-[#008080] hover:bg-[#f0fdfa] transition">Privacy</button>
+        <button className="w-full px-4 py-3 text-left text-[#008080] hover:bg-[#f0fdfa] transition">Learn More</button>
+        <button className="w-full px-4 py-3 text-left text-[#008080] hover:bg-[#f0fdfa] transition">Help & FAQ</button>
       </div>
+    </div>
+  )}
+</div>
+
     </div>
   </div>
 </header>

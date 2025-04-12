@@ -6,6 +6,7 @@ import Navbar from '../components/layout/Navbar';
 import ResponsiveChatLayout from '../components/chat/ChatWindow';
 import ArtifactsPanel from '../components/layout/ArtifactsPanel';
 import WelcomeCard from '../components/chat/WelcomeCard'
+import Sidebar from '../components/layout/Sidebar.jsx';
 
 // Define the artifact type
 export interface Artifact {
@@ -35,7 +36,8 @@ export default function Home() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [lastMessageId, setLastMessageId] = useState<string>(''); // Track last message ID
   const prevArtifactsLength = useRef(0); // Track previous artifacts length
-
+  const [sidebarTab, setSidebarTab] = useState('recent');
+  
   const addArtifact = (artifact: Artifact) => {
     setArtifacts(prev => [...prev, artifact]);
   };
@@ -159,8 +161,13 @@ export default function Home() {
           filter: "opacity(0.1)",
         }}
       />
-      
-      <Navbar />
+      <Sidebar
+  isOpen={showSidebar}
+  onClose={() => setShowSidebar(false)}
+  activeTab={sidebarTab}
+  setActiveTab={setSidebarTab}
+/>
+      <Navbar onToggleSidebar={toggleSidebar} sidebarOpen={showSidebar} />
       <div className="flex flex-1 overflow-hidden pt-1">
         {/* Conditional layout based on artifact presence */}
         {isArtifactFullscreen ? (
@@ -174,20 +181,22 @@ export default function Home() {
               prevArtifactsCount={prevArtifactsLength.current}
             />
           </div>
-        ) : hasArtifacts || showSidebar ? (
-          // Split view with artifacts panel
+) : hasArtifacts || (!isNewConversation && showSidebar) ? (
           <div className="flex flex-1 overflow-hidden">
             <div
               className="flex-1 overflow-hidden relative"
               style={{ width: `${100 - artifactsPanelWidth}%` }}
             >
               <ResponsiveChatLayout 
-                messages={messages}
-                setMessages={setMessages}
-                isLoading={isLoading}
-                onSendMessage={handleSendMessage}
-                isCentered={false} 
-              />
+  messages={messages}
+  setMessages={setMessages}
+  isLoading={isLoading}
+  onSendMessage={handleSendMessage}
+  isCentered={false}
+  sidebarOpen={showSidebar}
+  setSidebarOpen={setShowSidebar}
+/>
+
             </div>
             <div
               className="relative"
@@ -231,24 +240,24 @@ export default function Home() {
           // Centered chat view with no artifacts
           <div className="flex justify-center w-full relative">
     {/* Left sidebar button */}
-    <SidebarButton onClick={toggleSidebar} Icon={PanelRight} position="left" />
     
     <div className="w-full max-w-3xl">
-      {isNewConversation && messages.length === 0 ? (
-        <WelcomeCard onSendMessage={handleSendMessage} />
-      ) : (
+    {isNewConversation ? (
+  <WelcomeCard onSendMessage={handleSendMessage} />
+) : (
         <ResponsiveChatLayout 
-          messages={messages}
-          setMessages={setMessages}
-          isLoading={isLoading}
-          onSendMessage={handleSendMessage}
-          isCentered={true} 
-        />
+  messages={messages}
+  setMessages={setMessages}
+  isLoading={isLoading}
+  onSendMessage={handleSendMessage}
+  isCentered={false}
+  sidebarOpen={showSidebar}
+  setSidebarOpen={setShowSidebar}
+/>
+
       )}
     </div>
     
-    {/* Right arrow button */}
-    <SidebarButton onClick={() => {/* Define action for right arrow */}} Icon={ChevronLeft} position="right" />
   </div>
         )}
       </div>

@@ -6,7 +6,7 @@ import VancouverPriorityDashboard from './BudgetDashboard';
 import VancouverBCAChart from './BenefitCostAnalysisDashboard';
 
 
-const ReportComponentVancouver = ({ onLayersReady, reportName = "Downtown Austin Resilience Assessment: Infrastructure, Risk & Opportunity", artifacts = [],
+const ReportComponentVancouver = ({ onLayersReady, reportName = "Vancouver Flood Assessment: Infrastructure, Risk & Opportunity", artifacts = [],
   }) => {
   const [activeSection, setActiveSection] = useState('intro');
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -1298,7 +1298,7 @@ return (
             rel="noopener noreferrer"
             className="text-blue-600 underline hover:text-blue-800"
           >
-            Austin Office of Resilience 2023, A path to create a Resilience Hub Network in Austin
+            Vancouver Office of Resilience 2023, A path to create a Resilience Hub Network in Vancouver
           </a>
         </div>
         <div>
@@ -1308,7 +1308,7 @@ return (
             rel="noopener noreferrer"
             className="text-blue-600 underline hover:text-blue-800"
           >
-            Austin Climate Equity Plan
+            Vancouver Climate Equity Plan
           </a>
         </div>
         <div>
@@ -1318,7 +1318,7 @@ return (
             rel="noopener noreferrer"
             className="text-blue-600 underline hover:text-blue-800"
           >
-            Inception Report – Action plan – Austin, United States, 2024 – 2028
+            Inception Report – Action plan – Vancouver2024 – 2028
           </a>
         </div>
         <div>
@@ -1328,7 +1328,7 @@ return (
             rel="noopener noreferrer"
             className="text-blue-600 underline hover:text-blue-800"
           >
-            Flood Mitigation Task Force-Final Report to Austin City Council Codes
+            Flood Mitigation Task Force-Final Report to Vancouver City Council Codes
           </a>
         </div>
         <div>
