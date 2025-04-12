@@ -27,7 +27,7 @@ const toggleProfileDropdown = () => setProfileOpen(!profileOpen);
  
 <button
   onClick={onToggleSidebar}
-  className="p-2 rounded-full bg-white border border-gray-300 hover:bg-[#008080]/90 group shadow-sm transition"
+  className="p-2 rounded-full bg-white border border-[#008080] hover:bg-[#008080]/90 group shadow-sm transition"
   title="Toggle Sidebar"
 >
   <PanelRight className="h-5 w-5 text-[#008080] group-hover:text-white" />
@@ -35,7 +35,7 @@ const toggleProfileDropdown = () => setProfileOpen(!profileOpen);
 
 {/* New Chat */}
 <button
-  className="p-2 rounded-full bg-white border border-gray-300 hover:bg-[#008080]/90 group shadow-sm transition"
+  className="p-2 rounded-full bg-white border border-[#008080] hover:bg-[#008080]/90 group shadow-sm transition"
   title="New Chat"
 >
   <Plus className="h-5 w-5 text-[#008080] group-hover:text-white" />
@@ -53,16 +53,13 @@ const toggleProfileDropdown = () => setProfileOpen(!profileOpen);
 
     {/* Controls */}
     <div className="flex items-center space-x-2 relative">
-      {/* Search */}
-      <button className="p-2 rounded-full bg-white border border-gray-300 hover:bg-[#008080]/90 group shadow-sm transition">
-        <Search className="h-5 w-5 text-[#008080] group-hover:text-white" />
-      </button>
+      
 
       {/* Notifications */}
       <div className="relative">
         <button
           onClick={toggleDropdown}
-          className="p-2 rounded-full bg-white border border-gray-300 hover:bg-[#008080]/90 group shadow-sm transition relative"
+          className="p-2 rounded-full bg-white border border-[#008080] hover:bg-[#008080]/90 group shadow-sm transition relative"
         >
           <Bell className="h-5 w-5 text-[#008080] group-hover:text-white" />
           {unreadCount > 0 && (
@@ -105,7 +102,7 @@ const toggleProfileDropdown = () => setProfileOpen(!profileOpen);
       <div className="relative">
   <button
     onClick={toggleProfileDropdown}
-    className="w-10 h-10 flex items-center justify-center rounded-full bg-[#008080] text-white font-semibold shadow-sm hover:scale-105 transition"
+    className="w-10 h-10 flex items-center justify-center rounded-full bg-white text-[#008080] border border-[#008080] hover:bg-[#008080]/90 hover:text-white font-semibold shadow-sm hover:scale-105 transition"
   >
     JD
   </button>
