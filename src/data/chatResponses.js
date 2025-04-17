@@ -97,7 +97,7 @@ export const chatResponses = {
   },
   "I've just uploaded Dallas's new affordable housing policy document. Can you map current affordable housing projects?": {
     text: "I've analyzed the Dallas Housing Policy 2033 Action Plan you uploaded. The map shows 83 total affordable housing developments across Dallas - 56 from the HUD LIHTC database and 27 from the Reinvestment Areas Combined dataset. I've color-coded them to distinguish the data sources. Looking at the distribution, I notice that 64% of existing developments fall within the policy's high-priority reinvestment zones, but there's a significant gap in coverage for transit-oriented development areas identified in the 2033 Action Plan, particularly along the planned Silver Line corridor.",
-    timing: [4000], // Single long paragraph, single timing value
+    timing: [4000], 
     artifacts: [{
       type: "map",
       title: "Dallas Affordable Housing Developments Map",

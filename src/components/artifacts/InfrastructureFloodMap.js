@@ -1,14 +1,20 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import {
   Layers, Maximize2, X, Info, ChevronDown, ChevronUp,
-  Download, Wrench, Palette, Share2, BookmarkPlus, Table, Minimize2
+  Download, Wrench, Palette, Share2, BookmarkPlus, Table, Minimize2, ChevronLeft, ChevronRight, Pencil
 } from 'lucide-react';
+import { TbMapSearch } from "react-icons/tb";
 import html2canvas from 'html2canvas';
 import { useNotificationStore } from '@/store/NotificationsStore';
-
+import 'leaflet-control-geocoder/dist/Control.Geocoder.css';
+import L from 'leaflet';
+import 'leaflet-control-geocoder';
+import 'leaflet-draw';
+import 'leaflet-draw/dist/leaflet.draw.js';
 import _ from 'lodash';
 
-const InfrastructureFloodMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) => {
+const InfrastructureFloodMap = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts }) => {
+
   const mapContainerRef = useRef(null);
   const [map, setMap] = useState(null);
   const infoRef = useRef(null);
@@ -19,29 +25,51 @@ const InfrastructureFloodMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) =>
   const [tableData, setTableData] = useState([]);
   const [tableTitles, setTableTitles] = useState(['Infrastructure', 'Stormwater Projects', '311 Data', 'Demographics']);
   const [showShareDialog, setShowShareDialog] = useState(false);
-const [emailSubject, setEmailSubject] = useState('');
-const [emailBody, setEmailBody] = useState('');
-const [showEmailNotification, setShowEmailNotification] = useState(false);
-const [emailTo, setEmailTo] = useState('');
-const addNotification = useNotificationStore((state) => state.addNotification);
-const [showDownloadDialog, setShowDownloadDialog] = useState(false);
-const [downloadSelections, setDownloadSelections] = useState({});
-const [notificationMessage, setNotificationMessage] = useState('');
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailBody, setEmailBody] = useState('');
+  const [showEmailNotification, setShowEmailNotification] = useState(false);
+  const [emailTo, setEmailTo] = useState('');
+  const addNotification = useNotificationStore((state) => state.addNotification);
+  const [showDownloadDialog, setShowDownloadDialog] = useState(false);
+  const [downloadSelections, setDownloadSelections] = useState({});
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [customSaveName, setCustomSaveName] = useState('');
+  const [toolbarVisible, setToolbarVisible] = useState(true);
+  const [toolbarPosition, setToolbarPosition] = useState({ top: 100, left: 100 });
+  const wrenchRef = useRef(null);
+  const [showGeocoder, setShowGeocoder] = useState(false);
+  const geocoderRef = useRef(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [slideOut, setSlideOut] = useState(false);
+  const [showDrawTools, setShowDrawTools] = useState(false);
+  const editControlRef = useRef(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [activeDrawTool, setActiveDrawTool] = useState(null);
+  const snapLayersRef = useRef([]);
+  const pencilRef = useRef(null);
+  const [drawDialogPos, setDrawDialogPos] = useState({ top: 0, left: 0 });
+  const [selectedRowIndex, setSelectedRowIndex] = useState(null);
+  const [selectedColIndex, setSelectedColIndex] = useState(null);
+  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, type: null });
+  const [activeEditingCell, setActiveEditingCell] = useState(null); // { row: 2, col: 1 }
+const [editingFormula, setEditingFormula] = useState('');
+const formulaInputRef = useRef(null);
 
-
-const [attachments, setAttachments] = useState([
-  { id: 'map', label: '📍 Vancouver Infrastructure & Flood Assessment Map.jpg' },
-  ...tableTitles.map((title, i) => ({
-    id: `table-${i}`,
-    label: `📊 ${title}.csv`
-  }))
-]);
+  const [attachments, setAttachments] = useState([
+    { id: 'map', label: '📍 Vancouver Infrastructure & Flood Assessment Map.jpg' },
+    ...tableTitles.map((title, i) => ({
+      id: `table-${i}`,
+      label: `📊 ${title}.csv`
+    }))
+  ]);
 
   const floodPolygonsRef = useRef([]);
-const streetLinesRef = useRef([]);
-const sewerLinesRef = useRef([]);
-const projectFeaturesRef = useRef([]);
-const demographicPolygonsRef = useRef([]);
+  const streetLinesRef = useRef([]);
+  const sewerLinesRef = useRef([]);
+  const projectFeaturesRef = useRef([]);
+  const demographicPolygonsRef = useRef([]);
 
   // Drag handle reference
   const dragHandleRef = useRef(null);
@@ -55,7 +83,7 @@ const demographicPolygonsRef = useRef([]);
 
   const [showSymbologyEditor, setShowSymbologyEditor] = useState(false);
 
- 
+
   const [activeLayers, setActiveLayers] = useState({
     floodZones: true,
     infrastructure: true,
@@ -125,6 +153,100 @@ const demographicPolygonsRef = useRef([]);
     data311Medium: COLORS.data311Medium,
     data311Low: COLORS.data311Low
   });
+
+  const evaluateCell = (value, table) => {
+    if (typeof value !== 'string' || !value.startsWith('=')) return value;
+  
+    const match = value.match(/^=(SUM|AVERAGE)\(([^)]+)\)$/i);
+    if (!match) return value;
+  
+    const [, fn, colName] = match;
+    const nums = table.rows.map(row => parseFloat(row[colName])).filter(n => !isNaN(n));
+    if (nums.length === 0) return 0;
+  
+    if (fn.toUpperCase() === 'SUM') return nums.reduce((a, b) => a + b, 0).toFixed(2);
+    if (fn.toUpperCase() === 'AVERAGE') return (nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(2);
+    return value;
+  };
+  
+  const handleCellEdit = (rowIndex, header, value) => {
+    setTableData(prev => {
+      const updated = [...prev];
+      updated[currentTableIndex].rows[rowIndex][header] = value;
+      return updated;
+    });
+  };
+  
+  const addRow = () => {
+    setTableData(prev => {
+      const updated = [...prev];
+      const table = updated[currentTableIndex];
+      const newRow = Object.fromEntries(table.headers.map(h => [h, '']));
+      table.rows.push(newRow);
+      return updated;
+    });
+  };  
+  
+  const addColumn = () => {
+    const name = prompt('Enter column name:');
+    if (!name) return;
+  
+    setTableData(prev => {
+      const updated = [...prev];
+      const currentTable = updated[currentTableIndex];
+      if (!currentTable.headers.includes(name)) {
+        currentTable.headers.push(name);
+        currentTable.rows = currentTable.rows.map(row => ({ ...row, [name]: '' }));
+      }
+      return updated;
+    });
+  };
+  
+  const insertRow = (index) => {
+    setTableData(prev => {
+      const updated = [...prev];
+      const table = updated[currentTableIndex];
+      const newRow = Object.fromEntries(table.headers.map(h => [h, '']));
+      table.rows.splice(index, 0, newRow);
+      return updated;
+    });
+  };
+  
+  const insertColumn = (index) => {
+    const name = prompt("Enter column name:");
+    if (!name) return;
+    setTableData(prev => {
+      const updated = [...prev];
+      const table = updated[currentTableIndex];
+      if (!table.headers.includes(name)) {
+        table.headers.splice(index, 0, name);
+        table.rows = table.rows.map(row => {
+          const newRow = {};
+          table.headers.forEach(h => {
+            newRow[h] = h === name ? '' : row[h] ?? '';
+          });
+          return newRow;
+        });
+      }
+      return updated;
+    });
+  };
+  
+  const handleRightClick = (e, type, index) => {
+    e.preventDefault();
+    setContextMenu({ visible: true, x: e.clientX, y: e.clientY, type, index });
+  };
+  
+  const closeContextMenu = () => {
+    setContextMenu({ visible: false, x: 0, y: 0, type: null, index: null });
+  };
+
+  useEffect(() => {
+    const handleClick = () => closeContextMenu();
+    window.addEventListener("click", handleClick);
+    return () => window.removeEventListener("click", handleClick);
+  }, []);
+  
   const handleMouseDown = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -156,6 +278,62 @@ const demographicPolygonsRef = useRef([]);
     if (dragHandleRef.current) {
       dragHandleRef.current.classList.add('dragging');
     }
+  };
+  const runGeocodeSearch = async (query) => {
+    if (!query) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&limit=5`
+      );
+      const data = await res.json();
+      const formattedResults = data.map(result => ({
+        name: result.display_name,
+        center: [parseFloat(result.lat), parseFloat(result.lon)],
+        bbox: L.latLngBounds(
+          [parseFloat(result.boundingbox[0]), parseFloat(result.boundingbox[2])],
+          [parseFloat(result.boundingbox[1]), parseFloat(result.boundingbox[3])]
+        )
+      }));
+      setSearchResults(formattedResults);
+    } catch (err) {
+      console.error("Geocoding error:", err);
+      setSearchResults([]);
+    }
+  };
+
+
+  const handleResultClick = (result) => {
+    setSearchResults([]);
+    setSearchQuery(result.name);
+    const bbox = result.bbox;
+    const poly = L.polygon([
+      bbox.getSouthEast(),
+      bbox.getNorthEast(),
+      bbox.getNorthWest(),
+      bbox.getSouthWest()
+    ]);
+    map.fitBounds(result.bbox);
+    L.marker(result.center, {
+      icon: L.divIcon({
+        html: `<div style="
+          width: 20px;
+          height: 20px;
+          background-color: #008080;
+          border-radius: 50% 50% 50% 0;
+          transform: rotate(-45deg);
+          border: 2px solid white;
+          box-shadow: 0 0 2px rgba(0,0,0,0.3);
+        "></div>`,
+        className: '',
+        iconSize: [20, 20],
+        iconAnchor: [10, 20]
+      })
+    }).addTo(map);
+    setSearchResults([]);
   };
 
   const handleMouseMove = (e) => {
@@ -280,6 +458,95 @@ const demographicPolygonsRef = useRef([]);
   };
 
   useEffect(() => {
+    const handleClickOutside = (e) => {
+      // Prevent deselect if clicking on context menu or header
+      if (e.target.closest('th') || e.target.closest('.context-menu')) return;
+      setSelectedRowIndex(null);
+      setSelectedColIndex(null);
+    };
+  
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+  
+  useEffect(() => {
+    if (showDrawTools && pencilRef.current) {
+      const rect = pencilRef.current.getBoundingClientRect();
+
+      const top = isFullScreen
+        ? rect.bottom + window.scrollY + 12
+        : rect.top + window.scrollY + 12;
+
+      const left = rect.left + window.scrollX - 120 + rect.width / 2;
+
+      setDrawDialogPos({ top, left });
+    }
+  }, [showDrawTools, isFullScreen]);
+
+
+  useEffect(() => {
+    if (showEmailNotification) {
+      const timer = setTimeout(() => {
+        setSlideOut(true); // trigger slide-out animation
+        setTimeout(() => {
+          setShowEmailNotification(false);
+          setSlideOut(false); // reset for next time
+        }, 300); // match slide-out duration
+      }, 4000); // show for 4s before sliding out
+
+      return () => clearTimeout(timer);
+    }
+  }, [showEmailNotification]);
+
+  useEffect(() => {
+    if (!map) return;
+  
+    map.on(L.Draw.Event.CREATED, function (e) {
+      const layer = e.layer;
+      map.drawnItems.addLayer(layer); // ✅ this ensures drawings are saved
+    });
+  }, [map]);
+  
+
+  useEffect(() => {
+    if (isFullScreen) {
+      // Centered horizontally, near the top
+      const toolbarWidth = 400; // approximate width in px of the full toolbar
+      const windowWidth = window.innerWidth;
+
+      setToolbarPosition({
+        top: 20, // top of screen
+        left: windowWidth / 2 - toolbarWidth / 2
+      });
+    }
+  }, [isFullScreen]);
+
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!wrenchRef.current || !wrenchRef.current.dataset.dragging) return;
+      setToolbarPosition({
+        top: e.clientY - 20,
+        left: e.clientX - 20,
+      });
+    };
+
+    const handleMouseUp = () => {
+      if (wrenchRef.current) {
+        delete wrenchRef.current.dataset.dragging;
+      }
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
+
+  useEffect(() => {
     if (map) {
       // Give it a moment to paint/render first
       const timeout = setTimeout(() => {
@@ -354,11 +621,11 @@ const demographicPolygonsRef = useRef([]);
   };
   const handleDownloadAll = () => {
     const downloadedFiles = [];
-  
+
     Object.entries(downloadSelections).forEach(([key, { filename, format }]) => {
       const fullName = `${filename}${format}`;
       downloadedFiles.push(fullName);
-  
+
       if (key === 'map') {
         html2canvas(mapContainerRef.current, {
           backgroundColor: 'white',
@@ -377,15 +644,15 @@ const demographicPolygonsRef = useRef([]);
       } else if (key.startsWith('table-')) {
         const tableIndex = parseInt(key.split('-')[1], 10);
         const data = tableData[tableIndex];
-  
+
         if (!data || !data.headers || !data.rows) return;
-  
+
         const csvRows = [
           data.headers.join(','),
           ...data.rows.map(row => data.headers.map(h => `"${(row[h] ?? '').toString().replace(/"/g, '""')}"`).join(','))
         ];
         const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-  
+
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         link.setAttribute('download', fullName);
@@ -394,7 +661,7 @@ const demographicPolygonsRef = useRef([]);
         document.body.removeChild(link);
       }
     });
-  
+
     // ✅ Push notification
     if (downloadedFiles.length > 0) {
       const fileList = downloadedFiles.join(', ');
@@ -404,8 +671,85 @@ const demographicPolygonsRef = useRef([]);
       addNotification(`Downloaded ${downloadedFiles.length} file${downloadedFiles.length > 1 ? 's' : ''}: ${fileList}`);
     }
   };
+  useEffect(() => {
+    if (!map) return;
+
+    const drawnItems = new L.FeatureGroup();
+    drawnItems.setZIndex(1000);
+    map.addLayer(drawnItems);
+    map.drawnItems = drawnItems;
+
+
+    const drawControl = new L.Control.Draw({
+      draw: {
+        polygon: false, // we'll enable it manually per tool
+        polyline: false,
+        rectangle: false,
+        circle: false,
+        marker: false,
+        circlemarker: false
+      },
+      edit: {
+        featureGroup: drawnItems
+      }
+    });
+
+    map.drawControl = drawControl;
+    map.drawnItems = drawnItems;
+  }, [map]);
+
+  const insertCellReferenceIntoFormula = (cellRef) => {
+    if (!formulaInputRef.current) return;
+  
+    // Force focus into the formula cell
+    formulaInputRef.current.focus();
+  
+    setTimeout(() => {
+      const selection = window.getSelection();
+      const formulaDiv = formulaInputRef.current;
+  
+      // If no child, insert a text node
+      if (!formulaDiv.firstChild) {
+        formulaDiv.innerText = editingFormula;
+      }
+  
+      const textNode = formulaDiv.firstChild;
+      if (!textNode || !selection) return;
+  
+      let range;
+      try {
+        range = selection.getRangeAt(0);
+      } catch (err) {
+        // If there's no range (e.g., no caret yet), set one at the end
+        range = document.createRange();
+        range.setStart(textNode, textNode.textContent?.length || 0);
+        range.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+  
+      const startOffset = range.startOffset;
+      const before = editingFormula.slice(0, startOffset);
+      const after = editingFormula.slice(startOffset);
+  
+      const newFormula = `${before}${cellRef}${after}`;
+      setEditingFormula(newFormula);
+  
+      // Update innerText manually
+      formulaDiv.innerText = newFormula;
+  
+      // Restore caret position after inserted ref
+      const newPos = startOffset + cellRef.length;
+      const newRange = document.createRange();
+      newRange.setStart(formulaDiv.firstChild, newPos);
+      newRange.setEnd(formulaDiv.firstChild, newPos);
+      selection.removeAllRanges();
+      selection.addRange(newRange);
+    }, 0);
+  };
   
   
+
 
   useEffect(() => {
     const initializeMap = async () => {
@@ -430,9 +774,13 @@ const demographicPolygonsRef = useRef([]);
       const leafletMap = L.map(mapContainerRef.current, {
         zoomControl: false,
         attributionControl: false,
-        minZoom: 11,
-        maxZoom: 18
-      }).setView([49.24, -123.119], 12); 
+        minZoom: 3,
+        maxZoom: 18,
+        doubleClickZoom: false
+      }).setView([49.24, -123.119], 12);
+      leafletMap.createPane('drawPane');
+      leafletMap.getPane('drawPane').style.zIndex = 100000000000;
+
 
       L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
@@ -444,9 +792,28 @@ const demographicPolygonsRef = useRef([]);
       L.control.attribution({ position: 'bottomright' }).addTo(leafletMap);
 
 
-      // Store map reference early so user can see the base map
       setMap(leafletMap);
       setLoadingProgress(15);
+
+
+
+      const geocoderControl = L.Control.geocoder({
+        defaultMarkGeocode: false
+      });
+      geocoderRef.current = geocoderControl;
+
+      geocoderControl.on('markgeocode', function (e) {
+        const bbox = e.geocode.bbox;
+        const poly = L.polygon([
+          bbox.getSouthEast(),
+          bbox.getNorthEast(),
+          bbox.getNorthWest(),
+          bbox.getSouthWest()
+        ]);
+        map.fitBounds(poly.getBounds());
+        L.marker(e.geocode.center).addTo(map);
+      });
+
 
       await new Promise(r => setTimeout(r, 500));
 
@@ -496,7 +863,7 @@ const demographicPolygonsRef = useRef([]);
                 opacity: 0.8,
                 fillOpacity: 0.5
               });
-
+              snapLayersRef.current.push(polygon);
               // Create popup with relevant information
               let popupContent = '<strong>Flood Zone</strong>';
               if (feature.properties) {
@@ -569,6 +936,7 @@ const demographicPolygonsRef = useRef([]);
                   weight: 4,
                   opacity: 0.8
                 });
+                snapLayersRef.current.push(streetLine);
 
                 // Create popup with street information
                 let popupContent = '<strong>Street</strong>';
@@ -601,11 +969,11 @@ const demographicPolygonsRef = useRef([]);
               if (feature.geometry && feature.geometry.coordinates) {
                 // Convert GeoJSON linestring coordinates to Leaflet format
                 const coords = feature.geometry.coordinates.map(coord => [coord[1], coord[0]]);
-          
+
                 // Determine color based on condition
                 let color = layerColors.sewerMedium;
                 const condition = feature.properties?.condition || 'C';
-          
+
                 if (condition === 'A' || condition === 'B') {
                   color = layerColors.sewerGood;
                 } else if (condition === 'C' || condition === 'D') {
@@ -613,7 +981,7 @@ const demographicPolygonsRef = useRef([]);
                 } else {
                   color = layerColors.sewerPoor;
                 }
-          
+
                 // Create polyline for sewer line
                 const sewerLine = L.polyline(coords, {
                   color: color,
@@ -621,7 +989,9 @@ const demographicPolygonsRef = useRef([]);
                   opacity: 0.8,
                   dashArray: '5, 5'
                 });
-          
+                snapLayersRef.current.push(sewerLine);
+
+
                 // Create popup with sewer information
                 let popupContent = `<strong>${feature.properties?.effluent_type || 'Sewer'} Line</strong>`;
                 if (feature.properties) {
@@ -638,7 +1008,7 @@ const demographicPolygonsRef = useRef([]);
                     popupContent += `<br>Installed: ${feature.properties.install_yr}`;
                   }
                 }
-          
+
                 sewerLine.bindPopup(popupContent);
                 sewerLinesRef.current.push({ line: sewerLine, condition: feature.properties?.condition });
                 infraLayer.addLayer(sewerLine);
@@ -729,7 +1099,7 @@ const demographicPolygonsRef = useRef([]);
                   }
 
                   marker.bindPopup(popupContent);
-                  projectFeaturesRef.current.push({ element: marker});
+                  projectFeaturesRef.current.push({ element: marker });
                   projectsLayer.addLayer(marker);
 
                 } else if (feature.geometry.type === 'LineString') {
@@ -741,6 +1111,7 @@ const demographicPolygonsRef = useRef([]);
                     weight: 4,
                     opacity: 0.8
                   });
+                  snapLayersRef.current.push(line);
 
                   // Create popup content
                   let popupContent = '<strong>Project</strong>';
@@ -822,10 +1193,10 @@ const demographicPolygonsRef = useRef([]);
             console.error("Required layers not available for spatial analysis");
             return L.layerGroup();
           }
-      
+
           // This is a simplified approach since we can't easily do true GIS operations in the browser
           // For a production app, you would use a server-side GIS library or service
-      
+
           // 1. First we need to get all the infrastructure items
           const infraItems = [];
           map.infrastructureLayer.eachLayer(layer => {
@@ -841,7 +1212,7 @@ const demographicPolygonsRef = useRef([]);
               });
             }
           });
-      
+
           // 2. Now we need to get all project areas
           const projectAreas = [];
           map.stormwaterProjectsLayer.eachLayer(layer => {
@@ -853,14 +1224,14 @@ const demographicPolygonsRef = useRef([]);
               });
             }
           });
-      
+
           // 3. Find infrastructure that doesn't intersect with any project area
           // and prioritize poor condition infrastructure
           const outsideLayer = L.layerGroup();
           const criticalInfra = infraItems.filter(item => {
             // Check if the infrastructure is in poor condition
             const isPoorCondition = item.condition === 'E' || item.condition === 'F' || item.condition === 'D';
-      
+
             // Check if it's outside of all project areas
             const isOutside = projectAreas.every(project => {
               // Create buffered bounds
@@ -868,19 +1239,19 @@ const demographicPolygonsRef = useRef([]);
                 [project.bounds.getSouth() - project.buffer, project.bounds.getWest() - project.buffer],
                 [project.bounds.getNorth() + project.buffer, project.bounds.getEast() + project.buffer]
               );
-      
+
               // Check if infrastructure is outside the buffered project area
               return !bufferedBounds.contains(item.center);
             });
-      
+
             return isPoorCondition && isOutside;
           });
-      
+
           // 4. Add the critical infrastructure as markers only (no lines)
           criticalInfra.forEach(item => {
             // Create popup with infrastructure information
             let popupContent = `<strong>Warning: ${item.type}</strong><br>Condition: ${item.condition}<br>Priority: High<br>Status: Outside Current Project Areas`;
-      
+
             // Create a marker at the center point of the infrastructure
             const marker = L.marker(item.center, {
               icon: L.divIcon({
@@ -889,10 +1260,10 @@ const demographicPolygonsRef = useRef([]);
                 iconSize: [14, 14]
               })
             }).bindPopup(popupContent);
-      
+
             outsideLayer.addLayer(marker);
           });
-      
+
           return outsideLayer;
         } catch (error) {
           console.error("Error creating infrastructure outside projects layer:", error);
@@ -912,129 +1283,129 @@ const demographicPolygonsRef = useRef([]);
       projectFeaturesRef.current = [];
 
 
-const fetch311Data = async () => {
-  try {
-    const res = await fetch('/data/311-data.geojson');
-    const data311 = await res.json();
-    const data311Layer = L.layerGroup();
+      const fetch311Data = async () => {
+        try {
+          const res = await fetch('/data/311-data.geojson');
+          const data311 = await res.json();
+          const data311Layer = L.layerGroup();
 
-    // Process the actual 311 data
-    const heatData = [];
-    const neighborhoodCountMap = new Map(); // We'll still count requests by neighborhood for heatmap data
+          // Process the actual 311 data
+          const heatData = [];
+          const neighborhoodCountMap = new Map(); // We'll still count requests by neighborhood for heatmap data
 
-    // Filter for features with valid geometry
-    const validFeatures = data311.features.filter(feature =>
-      feature.geometry && feature.geometry.type === 'Point' &&
-      feature.geometry.coordinates &&
-      feature.geometry.coordinates.length === 2
-    );
+          // Filter for features with valid geometry
+          const validFeatures = data311.features.filter(feature =>
+            feature.geometry && feature.geometry.type === 'Point' &&
+            feature.geometry.coordinates &&
+            feature.geometry.coordinates.length === 2
+          );
 
-    // Count features by neighborhood for those without geometry (still needed for heatmap)
-    data311.features.forEach(feature => {
-      if (feature.properties && feature.properties.local_area) {
-        const area = feature.properties.local_area;
-        neighborhoodCountMap.set(area, (neighborhoodCountMap.get(area) || 0) + 1);
-      }
-    });
+          // Count features by neighborhood for those without geometry (still needed for heatmap)
+          data311.features.forEach(feature => {
+            if (feature.properties && feature.properties.local_area) {
+              const area = feature.properties.local_area;
+              neighborhoodCountMap.set(area, (neighborhoodCountMap.get(area) || 0) + 1);
+            }
+          });
 
-    // Add markers for valid points
-    validFeatures.forEach(feature => {
-      const coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
+          // Add markers for valid points
+          validFeatures.forEach(feature => {
+            const coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
 
-      // Determine priority based on request type
-      let priority = "Medium";
-      if (feature.properties.service_request_type.includes("Damage")) {
-        priority = "High";
-      } else if (feature.properties.service_request_type.includes("Locate")) {
-        priority = "Low";
-      }
+            // Determine priority based on request type
+            let priority = "Medium";
+            if (feature.properties.service_request_type.includes("Damage")) {
+              priority = "High";
+            } else if (feature.properties.service_request_type.includes("Locate")) {
+              priority = "Low";
+            }
 
-      // Calculate intensity for heatmap
-      const intensity = priority === "High" ? 1.0 :
-        priority === "Medium" ? 0.7 : 0.4;
+            // Calculate intensity for heatmap
+            const intensity = priority === "High" ? 1.0 :
+              priority === "Medium" ? 0.7 : 0.4;
 
-      heatData.push([coords[0], coords[1], intensity]);
+            heatData.push([coords[0], coords[1], intensity]);
 
-      // Determine colors
-      const color = priority === "High" ? layerColors.data311High :
-        priority === "Medium" ? layerColors.data311Medium : layerColors.data311Low;
+            // Determine colors
+            const color = priority === "High" ? layerColors.data311High :
+              priority === "Medium" ? layerColors.data311Medium : layerColors.data311Low;
 
-      const statusColor = feature.properties.status === "Open" ? "red" : "green";
+            const statusColor = feature.properties.status === "Open" ? "red" : "green";
 
-      // Create marker
-      const marker = L.marker(coords, {
-        icon: L.divIcon({
-          html: `<div style="background-color: ${color}; color: white; width: 10px; height: 10px; border-radius: 50%; border: 2px solid ${statusColor};"></div>`,
-          className: '',
-          iconSize: [14, 14]
-        })
-      });
+            // Create marker
+            const marker = L.marker(coords, {
+              icon: L.divIcon({
+                html: `<div style="background-color: ${color}; color: white; width: 10px; height: 10px; border-radius: 50%; border: 2px solid ${statusColor};"></div>`,
+                className: '',
+                iconSize: [14, 14]
+              })
+            });
 
-      // Create popup content
-      let popupContent = `<strong>311 Request: ${feature.properties.service_request_type}</strong>`;
-      if (feature.properties.address) popupContent += `<br>Address: ${feature.properties.address}`;
-      popupContent += `<br>Status: ${feature.properties.status}`;
-      popupContent += `<br>Department: ${feature.properties.department}`;
-      if (feature.properties.local_area) popupContent += `<br>Area: ${feature.properties.local_area}`;
-      if (feature.properties.service_request_open_timestamp) {
-        const openDate = new Date(feature.properties.service_request_open_timestamp);
-        popupContent += `<br>Opened: ${openDate.toLocaleDateString()}`;
-      }
+            // Create popup content
+            let popupContent = `<strong>311 Request: ${feature.properties.service_request_type}</strong>`;
+            if (feature.properties.address) popupContent += `<br>Address: ${feature.properties.address}`;
+            popupContent += `<br>Status: ${feature.properties.status}`;
+            popupContent += `<br>Department: ${feature.properties.department}`;
+            if (feature.properties.local_area) popupContent += `<br>Area: ${feature.properties.local_area}`;
+            if (feature.properties.service_request_open_timestamp) {
+              const openDate = new Date(feature.properties.service_request_open_timestamp);
+              popupContent += `<br>Opened: ${openDate.toLocaleDateString()}`;
+            }
 
-      marker.bindPopup(popupContent);
-      
-      data311Layer.addLayer(marker);
-    });
+            marker.bindPopup(popupContent);
 
-    // For neighborhoods without specific coordinates but with counts
-    // We still need these coordinates for the heatmap data
-    const neighborhoodCenters = {
-      "Downtown": [49.281, -123.120],
-      "Fairview": [49.265, -123.135],
-      "Marpole": [49.210, -123.130],
-      "Dunbar-Southlands": [49.240, -123.185],
-      "Grandview-Woodland": [49.275, -123.070],
-      "Hastings-Sunrise": [49.281, -123.039],
-      "Renfrew-Collingwood": [49.240, -123.040],
-      "Sunset": [49.223, -123.090],
-      "Oakridge": [49.230, -123.120]
-    };
+            data311Layer.addLayer(marker);
+          });
 
-    // Only add heatmap data from neighborhoods (not the marker circles)
-    neighborhoodCountMap.forEach((count, neighborhood) => {
-      if (neighborhoodCenters[neighborhood] && count > 0) {
-        const coords = neighborhoodCenters[neighborhood];
-        // Add to heatmap with intensity based on count
-        const intensity = Math.min(count / 5, 1.0); // Normalize, max at 5+ requests
-        heatData.push([coords[0], coords[1], intensity]);
-        
-        // We remove the cluster marker creation here
-        // No more gray circles with numbers
-      }
-    });
+          // For neighborhoods without specific coordinates but with counts
+          // We still need these coordinates for the heatmap data
+          const neighborhoodCenters = {
+            "Downtown": [49.281, -123.120],
+            "Fairview": [49.265, -123.135],
+            "Marpole": [49.210, -123.130],
+            "Dunbar-Southlands": [49.240, -123.185],
+            "Grandview-Woodland": [49.275, -123.070],
+            "Hastings-Sunrise": [49.281, -123.039],
+            "Renfrew-Collingwood": [49.240, -123.040],
+            "Sunset": [49.223, -123.090],
+            "Oakridge": [49.230, -123.120]
+          };
 
-    // Add heatmap for 311 calls
-    if (window.L.heatLayer && heatData.length > 0) {
-      const heatmap = window.L.heatLayer(heatData, {
-        radius: 30,
-        blur: 15,
-        maxZoom: 17,
-        gradient: {
-          0.2: layerColors.data311Low,
-          0.5: layerColors.data311Medium,
-          0.8: layerColors.data311High
+          // Only add heatmap data from neighborhoods (not the marker circles)
+          neighborhoodCountMap.forEach((count, neighborhood) => {
+            if (neighborhoodCenters[neighborhood] && count > 0) {
+              const coords = neighborhoodCenters[neighborhood];
+              // Add to heatmap with intensity based on count
+              const intensity = Math.min(count / 5, 1.0); // Normalize, max at 5+ requests
+              heatData.push([coords[0], coords[1], intensity]);
+
+              // We remove the cluster marker creation here
+              // No more gray circles with numbers
+            }
+          });
+
+          // Add heatmap for 311 calls
+          if (window.L.heatLayer && heatData.length > 0) {
+            const heatmap = window.L.heatLayer(heatData, {
+              radius: 30,
+              blur: 15,
+              maxZoom: 17,
+              gradient: {
+                0.2: layerColors.data311Low,
+                0.5: layerColors.data311Medium,
+                0.8: layerColors.data311High
+              }
+            });
+
+            data311Layer.addLayer(heatmap);
+          }
+
+          return { data311Layer, data311 };
+        } catch (error) {
+          console.error("Error fetching 311 data:", error);
+          return { data311Layer: L.layerGroup(), data311: { features: [] } };
         }
-      });
-
-      data311Layer.addLayer(heatmap);
-    }
-
-    return { data311Layer, data311 };
-  } catch (error) {
-    console.error("Error fetching 311 data:", error);
-    return { data311Layer: L.layerGroup(), data311: { features: [] } };
-  }
-};
+      };
 
       const { data311Layer, data311 } = await fetch311Data();
       data311Layer.addTo(leafletMap);
@@ -1083,10 +1454,12 @@ const fetch311Data = async () => {
                   fillOpacity: 0.3
                 }).bindPopup(`<strong>${name}</strong><br>Socio-Economic Index: ${socioEconomicValue}`);
 
+                snapLayersRef.current.push(polygon);
+
                 demographicsLayer.addLayer(polygon);
                 demographicPolygonsRef.current.push({ polygon, socioEconomicValue });
 
-                
+
               }
             });
           }
@@ -1121,10 +1494,13 @@ const fetch311Data = async () => {
       }
     };
 
+
     initializeMap();
 
     return () => map?.remove();
   }, []);
+
+
 
   useEffect(() => {
     if (!map) return;
@@ -1186,7 +1562,7 @@ const fetch311Data = async () => {
 
   useEffect(() => {
     if (!map) return;
-  
+
     // Helper function for debugging
     const debugLayers = () => {
       console.log('Updating layers with new colors:');
@@ -1196,18 +1572,18 @@ const fetch311Data = async () => {
       console.log('Project features:', projectFeaturesRef.current.length);
       console.log('Demographic polygons:', demographicPolygonsRef.current.length);
     };
-  
+
     // Log current state for debugging
     debugLayers();
-  
+
     // Force map to redraw by invalidating size
     map.invalidateSize();
-  
+
     // Flood Zones
     floodPolygonsRef.current.forEach(({ polygon, properties }) => {
       let color = layerColors.floodMedium;
       let fillColor = layerColors.floodLight;
-  
+
       if (properties?.risk_level === 'high') {
         color = layerColors.floodDark;
         fillColor = layerColors.floodMedium;
@@ -1215,37 +1591,37 @@ const fetch311Data = async () => {
         color = layerColors.floodLight;
         fillColor = layerColors.floodLight;
       }
-  
+
       // Use both setStyle and options approach for maximum compatibility
       polygon.setStyle({ color, fillColor });
       polygon.options.color = color;
       polygon.options.fillColor = fillColor;
     });
-  
+
     // Streets
     streetLinesRef.current.forEach(({ line, condition }) => {
       let color = layerColors.streetMedium;
       if (condition === 'A' || condition === 'B') color = layerColors.streetGood;
       else if (condition === 'C' || condition === 'D') color = layerColors.streetMedium;
       else color = layerColors.streetPoor;
-      
+
       line.setStyle({ color });
       line.options.color = color;
     });
-  
+
     // Sewer Lines 
     sewerLinesRef.current.forEach(({ line, condition }) => {
       let color = layerColors.sewerMedium;
       if (condition === 'A' || condition === 'B') color = layerColors.sewerGood;
       else if (condition === 'C' || condition === 'D') color = layerColors.sewerMedium;
       else color = layerColors.sewerPoor;
-      
+
       if (line && typeof line.setStyle === 'function') {
         line.setStyle({ color });
         line.options.color = color;
       }
     });
-  
+
     // Projects
     projectFeaturesRef.current.forEach(({ element }) => {
       if (element && element.setStyle) {
@@ -1259,7 +1635,7 @@ const fetch311Data = async () => {
         }));
       }
     });
-  
+
     // Demographics
     demographicPolygonsRef.current.forEach(({ polygon, socioEconomicValue }) => {
       const normalized = socioEconomicValue / 100;
@@ -1268,11 +1644,11 @@ const fetch311Data = async () => {
         : normalized > 0.5
           ? layerColors.demoMedium
           : layerColors.demoLow;
-      
+
       polygon.setStyle({ fillColor });
       polygon.options.fillColor = fillColor;
     });
-  
+
     // 311 Data - We don't try to update heatmap colors dynamically
     // Instead, let's just make sure the existing layer is visible
     if (map.data311Layer && activeLayers.data311) {
@@ -1281,18 +1657,18 @@ const fetch311Data = async () => {
         map.addLayer(map.data311Layer);
       }
     }
-  
+
     // Force redraw after updates
     setTimeout(() => {
       if (map) {
         map.invalidateSize();
       }
     }, 100);
-  
+
   }, [layerColors, map]);
-  
-  
-  
+
+
+
 
   // Get loading status message
   const getLoadingMessage = () => {
@@ -1310,21 +1686,244 @@ const fetch311Data = async () => {
     }
   };
 
-  const Toolbar = ({ isFullScreen, showTable, setShowTable, onSaveMap, savedMaps, captureAndDownload, setShowLegend, setShowSources, toggleFullScreen }) => {
+  const Toolbar = ({
+    isFullScreen,
+    showTable,
+    setShowTable,
+    onSaveMap,
+    savedMaps,
+    captureAndDownload,
+    setShowLegend,
+    setShowSources,
+    toggleFullScreen,
+    toolbarVisible,
+    setToolbarVisible,
+    toolbarPosition,
+    setToolbarPosition
+  }) => {
+    const toolbarRef = useRef(null);
+    const dragStart = useRef({ x: 0, y: 0 });
+
+    const handleMouseDown = (e) => {
+      e.preventDefault();
+      dragStart.current = {
+        x: e.clientX - toolbarPosition.left,
+        y: e.clientY - toolbarPosition.top
+      };
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    };
+
+    const handleMouseMove = (e) => {
+      setToolbarPosition({
+        top: e.clientY - dragStart.current.y,
+        left: e.clientX - dragStart.current.x
+      });
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    // 🌐 REGULAR VIEW TOOLBAR
+    if (!isFullScreen) {
+      return (
+        <div
+          className="flex justify-center items-center space-x-2 bg-white bg-opacity-70 backdrop-blur-sm p-2 shadow-sm z-30 rounded-full transition-all duration-300"
+          style={{
+            position: 'absolute',
+            bottom: showTable ? `${tableHeight + 4}px` : '0px',
+            left: '50%',
+            transform: 'translateX(-50%)'
+          }}
+        >
+          {/* your normal buttons here... */}
+          <button onClick={() => setShowTable(!showTable)} title="Toggle Table" className="p-2 rounded-full border" style={{
+            color: COLORS.coral,
+            border: `1px solid ${COLORS.coral}`,
+            transition: 'all 0.2s ease-in-out'
+          }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+            {showTable ? <Table size={20} /> : <Table size={20} />}
+          </button>
+          <button onClick={() => setShowSaveDialog(true)} title="Save Map" className="p-2 rounded-full border" style={{
+            color: COLORS.coral,
+            border: `1px solid ${COLORS.coral}`,
+            transition: 'all 0.2s ease-in-out'
+          }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+            <BookmarkPlus size={20} />
+          </button>
+          <button
+            ref={pencilRef}
+            onClick={() => setShowDrawTools(!showDrawTools)}
+            title="Draw & Measure Tools"
+            className="p-2 rounded-full border relative"
+            style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}
+          >
+            <Pencil size={20} />
+          </button>
+
+          <button
+            onClick={() => setShowGeocoder(!showGeocoder)}
+            title="Search Location"
+            className="p-2 rounded-full border"
+            style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}
+          >
+            <TbMapSearch size={20} />
+          </button>
+
+          <button onClick={() => setShowSymbologyEditor(true)} title="Symbology" className="p-2 rounded-full border" style={{
+            color: COLORS.coral,
+            border: `1px solid ${COLORS.coral}`,
+            transition: 'all 0.2s ease-in-out'
+          }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+            <Palette size={20} />
+          </button>
+          <button onClick={() => setShowLegend(prev => !prev)} title="Legend" className="p-2 rounded-full border" style={{
+            color: COLORS.coral,
+            border: `1px solid ${COLORS.coral}`,
+            transition: 'all 0.2s ease-in-out'
+          }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+            <Layers size={20} />
+          </button>
+          <button onClick={() => setShowSources(prev => !prev)} title="Sources" className="p-2 rounded-full border" style={{
+            color: COLORS.coral,
+            border: `1px solid ${COLORS.coral}`,
+            transition: 'all 0.2s ease-in-out'
+          }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+            <Info size={20} />
+          </button>
+          <button onClick={() => setShowShareDialog(true)} title="Share" className="p-2 rounded-full border" style={{
+            color: COLORS.coral,
+            border: `1px solid ${COLORS.coral}`,
+            transition: 'all 0.2s ease-in-out'
+          }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+            <Share2 size={20} />
+          </button>
+          <button onClick={() => setShowDownloadDialog(true)} title="Download" className="p-2 rounded-full border" style={{
+            color: COLORS.coral,
+            border: `1px solid ${COLORS.coral}`,
+            transition: 'all 0.2s ease-in-out'
+          }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+            <Download size={20} />
+          </button>
+          <button onClick={toggleFullScreen} title="Fullscreen" className="p-2 rounded-full border" style={{
+            color: COLORS.coral,
+            border: `1px solid ${COLORS.coral}`,
+            transition: 'all 0.2s ease-in-out'
+          }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+            <Maximize2 size={20} />
+          </button>
+        </div>
+      );
+    }
+
+    // 🧰 FULLSCREEN TOOLBAR WITH WRENCH
     return (
       <div
-        className={`flex justify-center items-center space-x-2 bg-white bg-opacity-70 backdrop-blur-sm p-2 shadow-sm z-30 transition-all duration-300
-    ${showTable ? 'absolute bottom-[calc(var(--table-height)_+_4px)] left-0 right-0' : 'absolute bottom-0 left-0 right-0'}
-  `}
+        ref={toolbarRef}
+        className="flex items-center space-x-2 bg-white bg-opacity-80 backdrop-blur-sm p-2 shadow-lg rounded-full z-50 transition-all duration-300"
         style={{
-          bottom: showTable ? `${tableHeight + 4}px` : '0px'
+          position: 'absolute',
+          top: `${toolbarPosition.top}px`,
+          left: `${toolbarPosition.left}px`,
+          cursor: 'grab'
         }}
       >
-        {/* Toggle Table button */}
+        {/* 🛠️ Wrench (toggle + drag) */}
         <button
-          onClick={() => setShowTable(!showTable)}
-          className="p-2 rounded-full bg-white border border-[#008080] hover:bg-[#008080]/90 group shadow-sm transition"
-          title={showTable ? "Hide table" : "Show table"}
+          onClick={() => setToolbarVisible(!toolbarVisible)}
+          onMouseDown={handleMouseDown}
+          title={toolbarVisible ? "Collapse tools" : "Expand tools"}
+          className="p-2 rounded-full border cursor-move"
           style={{
             color: COLORS.coral,
             border: `1px solid ${COLORS.coral}`,
@@ -1339,162 +1938,200 @@ const fetch311Data = async () => {
             e.currentTarget.style.color = COLORS.coral;
           }}
         >
-          {showTable ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+          {toolbarVisible ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
         </button>
 
-        <button
-  onClick={() => {
-    const newArtifactNumber = savedMaps?.length + 1 || 1;
-    const artifactName = `Infrastructure Flood Map`;
-    
-    // Show toast and notification without actually saving
-    const message = `${artifactName} has been saved`;
-    setNotificationMessage(message);
-    setShowEmailNotification(true);
-    addNotification(message);
-  }}          
-  className="p-2 rounded-full bg-white border border-[#008080] hover:bg-[#008080]/90 group shadow-sm transition"
-  title="Save map"
-  style={{ color: COLORS.coral, border: `1px solid ${COLORS.coral}` }}
-  onMouseEnter={(e) => {
-    e.currentTarget.style.backgroundColor = COLORS.coral;
-    e.currentTarget.style.color = 'white';
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.backgroundColor = 'white';
-    e.currentTarget.style.color = COLORS.coral;
-  }}
->
-  <BookmarkPlus size={20} />
-</button>
+        {/* 👇 Render the rest only if visible */}
+        {toolbarVisible && (
+          <>
+            <button onClick={() => setShowTable(!showTable)} title="Toggle Table" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.coral;
+                e.currentTarget.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'white';
+                e.currentTarget.style.color = COLORS.coral;
+              }}>
+              {showTable ? <Table size={20} /> : <Table size={20} />}
+            </button>
+            <button onClick={() => setShowSaveDialog(true)} title="Save Map" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.coral;
+                e.currentTarget.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'white';
+                e.currentTarget.style.color = COLORS.coral;
+              }}>
+              <BookmarkPlus size={20} />
+            </button>
+            <button
+              ref={pencilRef}
+              onClick={() => setShowDrawTools(!showDrawTools)}
+              title="Draw & Measure Tools"
+              className="p-2 rounded-full border relative"
+              style={{
+                color: COLORS.coral,
+                border: `1px solid ${COLORS.coral}`,
+                transition: 'all 0.2s ease-in-out'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.coral;
+                e.currentTarget.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'white';
+                e.currentTarget.style.color = COLORS.coral;
+              }}
+            >
+              <Pencil size={20} />
+            </button>
 
-        {/* Symbology button */}
-        <button
-  onClick={() => setShowSymbologyEditor(true)}
-  className="p-2 rounded-full bg-white border border-[#008080] hover:bg-[#008080]/90 group shadow-sm transition"
-  title="Symbology"
-  style={{ color: COLORS.coral, border: `1px solid ${COLORS.coral}` }}
-  onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = COLORS.coral;
-            e.currentTarget.style.color = 'white';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'white';
-            e.currentTarget.style.color = COLORS.coral;
-          }}
-        >
-          <Palette size={20} />
-        </button>
+            <button
+              onClick={() => setShowGeocoder(!showGeocoder)}
+              title="Search Location"
+              className="p-2 rounded-full border"
+              style={{
+                color: COLORS.coral,
+                border: `1px solid ${COLORS.coral}`,
+                transition: 'all 0.2s ease-in-out'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.coral;
+                e.currentTarget.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'white';
+                e.currentTarget.style.color = COLORS.coral;
+              }}
+            >
+              <TbMapSearch size={20} />
+            </button>
 
-        
-        {/* Legend button (same as your layers button) */}
-        <button
-          onClick={() => setShowLegend(!showLegend)}
-          title="Legend"
-          className="flex items-center justify-center p-2 rounded-full bg-white transition-all shadow-sm"
-          style={{ color: COLORS.coral, border: `1px solid ${COLORS.coral}` }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = COLORS.coral;
-            e.currentTarget.style.color = 'white';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'white';
-            e.currentTarget.style.color = COLORS.coral;
-          }}
-        >
-          <Layers size={20} />
-        </button>
-
-        {/* Info / Sources button */}
-        <button
-          onClick={() => setShowSources(prev => !prev)}
-          title="View sources"
-          className="flex items-center justify-center p-2 rounded-full bg-white transition-all shadow-sm"
-          style={{ color: COLORS.coral, border: `1px solid ${COLORS.coral}` }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = COLORS.coral;
-            e.currentTarget.style.color = 'white';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'white';
-            e.currentTarget.style.color = COLORS.coral;
-          }}
-        >
-          <Info size={20} />
-        </button>
-
-
-        {/* Share button */}
-        <button
-  onClick={() => setShowShareDialog(true)}
-  className="flex items-center justify-center p-2 rounded-full bg-white transition-all shadow-sm"
-  title="Share"
-  style={{ color: COLORS.coral, border: `1px solid ${COLORS.coral}` }}
-  onMouseEnter={(e) => {
-    e.currentTarget.style.backgroundColor = COLORS.coral;
-    e.currentTarget.style.color = 'white';
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.backgroundColor = 'white';
-    e.currentTarget.style.color = COLORS.coral;
-  }}
->
-  <Share2 size={20} />
-</button>
-
-
-        {/* Download button */}
-        <button
-  onClick={() => setShowDownloadDialog(true)}
-  className="flex items-center justify-center p-2 rounded-full bg-white transition-all shadow-sm"
-  title="Download map or tables"
-  style={{ color: COLORS.coral, border: `1px solid ${COLORS.coral}` }}
-  onMouseEnter={(e) => {
-    e.currentTarget.style.backgroundColor = COLORS.coral;
-    e.currentTarget.style.color = 'white';
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.backgroundColor = 'white';
-    e.currentTarget.style.color = COLORS.coral;
-  }}
->
-  <Download size={20} />
-</button>
-
-        {/* Fullscreen button */}
-        <button
-          onClick={toggleFullScreen}
-          className="flex items-center justify-center p-2 rounded-full bg-white transition-all shadow-sm"
-          title="Fullscreen"
-          style={{ color: COLORS.coral, border: `1px solid ${COLORS.coral}` }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = COLORS.coral;
-            e.currentTarget.style.color = 'white';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'white';
-            e.currentTarget.style.color = COLORS.coral;
-          }}
-        >
-          {isFullScreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
-        </button>
+            <button onClick={() => setShowSymbologyEditor(true)} title="Symbology" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.coral;
+                e.currentTarget.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'white';
+                e.currentTarget.style.color = COLORS.coral;
+              }}>
+              <Palette size={20} />
+            </button>
+            <button onClick={() => setShowLegend(prev => !prev)} title="Legend" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.coral;
+                e.currentTarget.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'white';
+                e.currentTarget.style.color = COLORS.coral;
+              }}>
+              <Layers size={20} />
+            </button>
+            <button onClick={() => setShowSources(prev => !prev)} title="Sources" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.coral;
+                e.currentTarget.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'white';
+                e.currentTarget.style.color = COLORS.coral;
+              }}>
+              <Info size={20} />
+            </button>
+            <button onClick={() => setShowShareDialog(true)} title="Share" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.coral;
+                e.currentTarget.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'white';
+                e.currentTarget.style.color = COLORS.coral;
+              }}>
+              <Share2 size={20} />
+            </button>
+            <button onClick={() => setShowDownloadDialog(true)} title="Download" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.coral;
+                e.currentTarget.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'white';
+                e.currentTarget.style.color = COLORS.coral;
+              }}>
+              <Download size={20} />
+            </button>
+            <button onClick={toggleFullScreen} title="Exit Fullscreen" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.coral;
+                e.currentTarget.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'white';
+                e.currentTarget.style.color = COLORS.coral;
+              }}>
+              <Minimize2 size={20} />
+            </button>
+          </>
+        )}
       </div>
     );
   };
+
+
+
   const [searchTerm, setSearchTerm] = useState('');
-const [selectedTeammate, setSelectedTeammate] = useState(null);
+  const [selectedTeammate, setSelectedTeammate] = useState(null);
 
-const teammateList = [
-  "Alice Johnson", "Bob Smith", "Catherine Nguyen", "David Li", "Emma Patel"
-];
+  const teammateList = [
+    "Alice Johnson", "Bob Smith", "Catherine Nguyen", "David Li", "Emma Patel"
+  ];
 
-const filteredTeammates = teammateList.filter(name =>
-  name.toLowerCase().includes(searchTerm.toLowerCase())
-);
+  const filteredTeammates = teammateList.filter(name =>
+    name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className={`flex flex-col h-full max-h-screen overflow-hidden ${isFullScreen ? 'fixed inset-0 z-50 bg-white' : ''}`}>
-      
+    <div className={`flex flex-col overflow-hidden transition-all duration-300 ${isFullScreen
+        ? 'fixed top-12 bottom-4 left-4 right-4 z-50 bg-white rounded-2xl shadow-2xl border border-gray-300'
+        : 'h-full max-h-screen'
+      }`}>
+
       <div className="flex-1 relative">
         {showSources && (
           <div ref={infoRef} className="absolute top-4 right-4 w-[280px] bg-white border border-gray-200 rounded-xl shadow-lg p-5 z-50 animate-fade-in">
@@ -1529,130 +2166,698 @@ const filteredTeammates = teammateList.filter(name =>
           </div>
         )}
 
-{showSymbologyEditor && (
-  <div className="absolute top-16 right-4 z-[1000]">
-    <div className="bg-white p-5 rounded-xl w-[380px] max-h-[75vh] overflow-y-auto shadow-xl border border-gray-200">
-      <div className="flex justify-between items-center mb-3">
-        <h3 className="text-base font-semibold text-gray-800">Customize Layer Colors</h3>
-        <button onClick={() => setShowSymbologyEditor(false)}>
-          <X size={20} className="text-gray-500 hover:text-gray-700" />
-        </button>
-      </div>
+        {showSaveDialog && (
+          <div className="absolute bottom-[60px] right-6 z-[1000]">
+            <div className="bg-white w-[300px] rounded-xl shadow-xl p-6 border border-gray-200 relative">
+              <button
+                onClick={() => setShowSaveDialog(false)}
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+              >
+                <X size={20} />
+              </button>
 
-      <div className="space-y-3">
-        {Object.entries(layerColors).map(([key, value]) => (
-          <div key={key} className="flex justify-between items-center">
-            <label className="capitalize text-sm text-gray-700">{key.replace(/([A-Z])/g, ' $1')}</label>
-            <input
-              type="color"
-              value={value}
-              onChange={(e) =>
-                setLayerColors((prev) => ({
-                  ...prev,
-                  [key]: e.target.value
-                }))
-              }
-              className="w-10 h-6 border rounded"
-            />
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">Save Map</h2>
+              <input
+                type="text"
+                placeholder="Enter a name"
+                value={customSaveName}
+                onChange={(e) => setCustomSaveName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-[#008080] focus:outline-none"
+              />
+              <button
+                className="mt-4 w-full py-2 rounded-md text-sm font-semibold bg-[#008080] text-white hover:bg-teal-700"
+                onClick={() => {
+                  const name = customSaveName.trim() || 'Untitled Map';
+                  const artifact = {
+                    id: Date.now().toString(),
+                    title: name,
+                    type: 'map',
+                    component: 'MapComponent',
+                    data: {
+                      conversationId: localStorage.getItem('activeConversationId') || '',
+                    },
+                    date: new Date().toLocaleDateString(),
+                  };
+
+                  if (typeof setSavedArtifacts === 'function') {
+                    setSavedArtifacts((prev) => {
+                      const updated = [...prev, artifact];
+                      localStorage.setItem('savedArtifacts', JSON.stringify(updated));
+                      return updated;
+                    });
+                  }
+
+                  const msg = `${name} has been saved`;
+                  setShowSaveDialog(false);
+                  setCustomSaveName('');
+                  setNotificationMessage(msg);
+                  setShowEmailNotification(true);
+                  addNotification(msg);
+                }}
+              >
+                Save
+              </button>
+            </div>
           </div>
-        ))}
-      </div>
+        )}
 
-      <div className="mt-4 flex justify-end">
-      <button
-  onClick={() => {
-    const updatedColors = { ...layerColors };
-    setLayerColors(updatedColors);
-    setShowSymbologyEditor(false);
-    
-    if (map) {
-      setTimeout(() => map.invalidateSize(), 100);
-    }
-  }}
-  className="px-4 py-1 bg-[#008080] text-white rounded hover:bg-teal-700 text-sm"
->
-  Done
-</button>
-      </div>
-    </div>
-  </div>
-)}
+        {showSymbologyEditor && (
+          <div className="absolute top-16 right-4 z-[1000]">
+            <div className="bg-white p-5 rounded-xl w-[380px] max-h-[75vh] overflow-y-auto shadow-xl border border-gray-200">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-base font-semibold text-gray-800">Customize Layer Colors</h3>
+                <button onClick={() => setShowSymbologyEditor(false)}>
+                  <X size={20} className="text-gray-500 hover:text-gray-700" />
+                </button>
+              </div>
 
-{showDownloadDialog && (
-  <div className="absolute bottom-[60px] right-6 z-[1000]">
-    <div className="bg-white w-[320px] rounded-xl shadow-2xl p-6 border border-gray-200 relative">
-      <button
-        onClick={() => setShowDownloadDialog(false)}
-        className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
-      >
-        <X size={20} />
-      </button>
+              <div className="space-y-3">
+                {Object.entries(layerColors).map(([key, value]) => (
+                  <div key={key} className="flex justify-between items-center">
+                    <label className="capitalize text-sm text-gray-700">{key.replace(/([A-Z])/g, ' $1')}</label>
+                    <input
+                      type="color"
+                      value={value}
+                      onChange={(e) =>
+                        setLayerColors((prev) => ({
+                          ...prev,
+                          [key]: e.target.value
+                        }))
+                      }
+                      className="w-10 h-6 border rounded"
+                    />
+                  </div>
+                ))}
+              </div>
 
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">Download Map</h2>
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={() => {
+                    const updatedColors = { ...layerColors };
+                    setLayerColors(updatedColors);
+                    setShowSymbologyEditor(false);
 
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-gray-800 mb-2">📍 Vancouver Flood Assessment Map</div>
-          
-          <div className="flex space-x-2">
+                    if (map) {
+                      setTimeout(() => map.invalidateSize(), 100);
+                    }
+                  }}
+                  className="px-4 py-1 bg-[#008080] text-white rounded hover:bg-teal-700 text-sm"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {showGeocoder && (
+          <div className="absolute top-6 left-6 z-[1000] w-[300px]">
             <input
               type="text"
-              className="border px-3 py-1 rounded w-[140px] text-sm focus:outline-none focus:ring-2 focus:ring-[#008080]"
-              value={downloadSelections['map']?.filename || 'vancouver_flood_map'}
-              onChange={(e) =>
-                setDownloadSelections(prev => ({
-                  ...prev,
-                  map: { 
-                    filename: e.target.value, 
-                    format: prev['map']?.format || '.jpg' 
-                  }
-                }))
-              }
-              placeholder="File name"
+              placeholder="Search a location..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                runGeocodeSearch(e.target.value);
+              }}
+              className="w-full px-4 py-2 text-sm rounded-full shadow-md border"
+              style={{
+                backgroundColor: 'white',
+                borderColor: '#008080',
+                outline: 'none',
+                boxShadow: '0 0 0 2px rgba(0,128,128,0.1)',
+                transition: 'border 0.2s ease-in-out'
+              }}
+              onFocus={(e) => (e.target.style.boxShadow = '0 0 0 3px rgba(0,128,128,0.3)')}
+              onBlur={(e) => (e.target.style.boxShadow = '0 0 0 2px rgba(0,128,128,0.1)')}
             />
-            <select
-              value={downloadSelections['map']?.format || '.jpg'}
-              onChange={(e) =>
-                setDownloadSelections(prev => ({
-                  ...prev,
-                  map: { 
-                    filename: prev['map']?.filename || 'vancouver_flood_map', 
-                    format: e.target.value 
-                  }
-                }))
-              }
-              className="border px-2 py-1 rounded text-sm focus:outline-none"
-            >
-              <option value=".jpg">.jpg</option>
-              <option value=".png">.png</option>
-              <option value=".shp">.shp</option>
-              <option value=".gdb">.gdb</option>
-              <option value=".csv">.csv</option>
-              <option value=".pdf">.pdf</option> 
-            </select>
+            {searchResults.length > 0 && (
+              <div className="bg-white border border-gray-200 rounded-lg shadow-md mt-1 max-h-48 overflow-y-auto divide-y divide-gray-100">
+                {searchResults.map((result, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => handleResultClick(result)}
+                    className="px-4 py-2 hover:bg-[#008080]/10 cursor-pointer text-sm text-gray-700 transition-colors duration-150"
+                  >
+                    {result.name}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
-      </div>
+        )}
+        {showDrawTools && (
+          <div
+            className="absolute z-[9999] w-[260px] bg-white border border-gray-200 rounded-xl shadow-xl p-4 transition-all animate-fade-in"
+            style={{
+              top: isFullScreen ? '80px' : '280px',
+              left: isFullScreen ? '500px' : '60px',
+            }}
+          >
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-base font-semibold text-gray-800">Drawing Tools</h3>
+              <button onClick={() => setShowDrawTools(false)}>
+                <X size={16} className="text-gray-500 hover:text-gray-700" />
+              </button>
+            </div>
+            <div className="grid gap-2">
+              <button
+                className="w-full px-3 py-2 rounded-md border text-sm font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                onClick={() => {
+                  if (!map) return;
+                  setShowDrawTools(false);
+                  // Prevent duplicate draw tools
+                  if (map._drawControl) {
+                    map._drawControl.disable();
+                  }
 
-      <button
-        onClick={() => {
-          // Initialize map selection if not already set
-          if (!downloadSelections['map']) {
-            setDownloadSelections(prev => ({
-              ...prev,
-              map: { filename: 'vancouver_flood_map', format: '.jpg' }
-            }));
-          }
-          handleDownloadAll();
-          setShowDownloadDialog(false);
-        }}
-        className="mt-6 w-full py-2 rounded-md text-sm font-semibold bg-[#008080] text-white hover:bg-teal-700"
-      >
-        Download Map
-      </button>
-    </div>
-  </div>
-)}
+                  // Ensure draw handler is removed before adding a new one
+                  map.off(L.Draw.Event.CREATED);
+
+                  const drawPolygon = new L.Draw.Polygon(map, {
+                    allowIntersection: false,
+                    showArea: true,
+                    repeatMode: false,
+                    finishOnDoubleClick: true,
+                    shapeOptions: {
+                      color: '#008080',
+                      weight: 2,
+                      opacity: 0.8,
+                      fillOpacity: 0.3
+                    }
+                  });
+
+                  // Enable the tool after configuration
+                  drawPolygon.enable();
+                  const handleSnap = (e) => {
+                    if (!map._drawControl || !map._drawControl._shape) return;
+                  
+                    const drawnShape = map._drawControl._shape;
+                    const latlngs = drawnShape.getLatLngs()[0]; // For polygon
+                    if (!latlngs || latlngs.length === 0) return;
+                  
+                    const currentPoint = e.latlng;
+                  
+                    let closestPoint = null;
+                    let minDistance = Infinity;
+                  
+                    snapLayersRef.current.forEach(layer => {
+                      if (typeof layer.getLatLngs !== 'function') return;
+                      const points = layer.getLatLngs().flat(Infinity);
+                  
+                      points.forEach(pt => {
+                        const dist = currentPoint.distanceTo(pt);
+                        if (dist < 20 && dist < minDistance) {
+                          minDistance = dist;
+                          closestPoint = pt;
+                        }
+                      });
+                    });
+                  
+                    if (closestPoint) {
+                      latlngs[latlngs.length - 1] = closestPoint;
+                      drawnShape.setLatLngs([latlngs]);
+                    }
+                  };
+                  
+                  map.on('mousemove', handleSnap);
+                  
+                  // Clean up after drawing
+                  map.once(L.Draw.Event.CREATED, function (e) {
+                    map.drawnItems.addLayer(e.layer);
+                    map.off('mousemove', handleSnap); // remove snap listener
+                    map._drawControl = null;
+                    setActiveDrawTool(null);
+                  });
+                  
+                  map._drawControl = drawPolygon;
+                  setActiveDrawTool('polygon');
+                  map.on('draw:drawvertex', function (e) {
+                    const layer = e.layers?.getLayers?.()?.[0];
+                    if (!layer) return;
+                  
+                    const latlngs = layer.getLatLngs?.()?.[0];
+                    if (!latlngs || latlngs.length === 0) return;
+                  
+                    const lastIndex = latlngs.length - 1;
+                    const currentPoint = latlngs[lastIndex];
+                  
+                    let closestPoint = null;
+                    let minDistance = Infinity;
+                  
+                    snapLayersRef.current.forEach((snapLayer) => {
+                      if (typeof snapLayer.getLatLngs !== 'function') return;
+                      const snapPoints = snapLayer.getLatLngs().flat(Infinity);
+                  
+                      snapPoints.forEach((pt) => {
+                        const dist = currentPoint.distanceTo(pt);
+                        if (dist < 20 && dist < minDistance) {
+                          minDistance = dist;
+                          closestPoint = pt;
+                        }
+                      });
+                    });
+                  
+                    if (closestPoint) {
+                      latlngs[lastIndex] = closestPoint;
+                      layer.setLatLngs([latlngs]);
+                    }
+                  });
+                  
+                  // Add explicit double click handler to the map
+                  const mapContainer = map.getContainer();
+                  mapContainer.addEventListener('dblclick', function (e) {
+                    if (map._drawControl && map._drawControl instanceof L.Draw.Polygon) {
+                      // This will trigger the finishShape method internally
+                      map._drawControl._finishShape();
+                      e.stopPropagation();
+                    }
+                  }, { once: true });
+
+                  // Handle when polygon drawing is completed
+                  map.on(L.Draw.Event.CREATED, function (e) {
+                    const layer = e.layer;
+                    map.drawnItems.addLayer(layer);
+                    map._drawControl = null; // reset for future draws
+                    setActiveDrawTool(null);
+                  });
+                }}
+
+              >
+                Draw Polygon
+              </button>
+              <button
+                className="w-full px-3 py-2 rounded-md border text-sm font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                onClick={() => {
+                  if (!map) return;
+                  setShowDrawTools(false);
+                  if (map._drawControl) {
+                    map._drawControl.disable();
+                  }
+
+                  const drawCircle = new L.Draw.Circle(map, {
+                    shapeOptions: {
+                      color: '#008080',
+                      weight: 2,
+                      opacity: 0.8,
+                      fillColor: '#008080',
+                      fillOpacity: 0.2,
+                      pane: 'drawPane',
+                    }
+                  });
+
+                  drawCircle.enable();
+                  map._drawControl = drawCircle;
+
+                  map.on(L.Draw.Event.CREATED, function (e) {
+                    const layer = e.layer;
+                    map.drawnItems.addLayer(layer);
+                    map._drawControl = null;
+                  });
+                }}
+              >
+                Draw Circle
+              </button>
+              <button
+                className="w-full px-3 py-2 rounded-md border text-sm font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                onClick={() => {
+                  if (!map) return;
+                  setShowDrawTools(false);
+                  // Disable existing draw control if any
+                  if (map._drawControl) {
+                    map._drawControl.disable();
+                  }
+
+                  // Create dashed polyline draw tool
+                  const drawPolyline = new L.Draw.Polyline(map, {
+                    shapeOptions: {
+                      color: '#008080',
+                      weight: 3,
+                      opacity: 0.8,
+                      dashArray: '6, 6', // <-- dashed line
+                    },
+                    repeatMode: false,
+                  });
+
+                  drawPolyline.enable();
+                  map._drawControl = drawPolyline;
+
+                  // Handle completed line
+                  map.once(L.Draw.Event.CREATED, function (e) {
+                    const layer = e.layer;
+                    const latlngs = layer.getLatLngs();
+
+                    let totalDistance = 0;
+                    for (let i = 0; i < latlngs.length - 1; i++) {
+                      totalDistance += latlngs[i].distanceTo(latlngs[i + 1]);
+                    }
+
+                    const popup = L.popup()
+                      .setLatLng(latlngs[Math.floor(latlngs.length / 2)])
+                      .setContent(`<strong>Total Distance:</strong> ${totalDistance.toFixed(2)} meters`)
+                      .openOn(map);
+
+                    // Add the line to map temporarily
+                    layer.addTo(map);
+
+                    // Remove line after popup shows (1.5s delay for smoother UX)
+                    setTimeout(() => {
+                      map.removeLayer(layer);
+                    }, 1500);
+
+                    map._drawControl = null;
+                  });
+                }}
+              >
+                Measure Distance
+              </button>
+
+              <button
+                className="w-full px-3 py-2 rounded-md border text-sm font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                onClick={() => {
+                  if (!map) return;
+                  setShowDrawTools(false);
+                  // Disable any active drawing tool
+                  if (map._drawControl) {
+                    map._drawControl.disable();
+                  }
+
+                  const drawPolygon = new L.Draw.Polygon(map, {
+                    allowIntersection: false,
+                    showArea: true,
+                    repeatMode: false,
+                    finishOnDoubleClick: true, // ✅ ADD THIS LINE
+                    shapeOptions: {
+                      pane: 'drawPane',
+                      color: '#008080'
+                    },
+                    guideLayers: [],
+                    metric: true
+                  });
+                  const mapContainer = map.getContainer();
+                  mapContainer.addEventListener('dblclick', function (e) {
+                    if (map._drawControl && map._drawControl instanceof L.Draw.Polygon) {
+                      // This will trigger the finishShape method internally
+                      map._drawControl._finishShape();
+                      e.stopPropagation();
+                    }
+                  }, { once: true });
+
+                  drawPolygon.enable();
+                  const handleSnap = (e) => {
+                    if (!map._drawControl || !map._drawControl._shape) return;
+                  
+                    const drawnShape = map._drawControl._shape;
+                    const latlngs = drawnShape.getLatLngs()[0]; // For polygon
+                    if (!latlngs || latlngs.length === 0) return;
+                  
+                    const currentPoint = e.latlng;
+                  
+                    let closestPoint = null;
+                    let minDistance = Infinity;
+                  
+                    snapLayersRef.current.forEach(layer => {
+                      if (typeof layer.getLatLngs !== 'function') return;
+                      const points = layer.getLatLngs().flat(Infinity);
+                  
+                      points.forEach(pt => {
+                        const dist = currentPoint.distanceTo(pt);
+                        if (dist < 20 && dist < minDistance) {
+                          minDistance = dist;
+                          closestPoint = pt;
+                        }
+                      });
+                    });
+                  
+                    if (closestPoint) {
+                      latlngs[latlngs.length - 1] = closestPoint;
+                      drawnShape.setLatLngs([latlngs]);
+                    }
+                  };
+                  
+                  map.on('mousemove', handleSnap);
+                  
+                  // Clean up after drawing
+                  map.once(L.Draw.Event.CREATED, function (e) {
+                    map.drawnItems.addLayer(e.layer);
+                    map.off('mousemove', handleSnap); // remove snap listener
+                    map._drawControl = null;
+                    setActiveDrawTool(null);
+                  });
+                  
+                  map._drawControl = drawPolygon;
+                  map.on('mousemove', function (e) {
+                    if (!map._drawControl || !map._drawControl._shape) return;
+
+                    const drawnShape = map._drawControl._shape;
+                    const currentPoint = e.latlng;
+
+                    let closestPoint = null;
+                    let minDistance = Infinity;
+
+                    snapLayersRef.current.forEach(layer => {
+                      if (typeof layer.getLatLngs !== 'function') return;
+
+                      const latlngs = layer.getLatLngs().flat(Infinity); // flatten nested arrays
+                      latlngs.forEach(pt => {
+                        const dist = currentPoint.distanceTo(pt);
+                        if (dist < 20 && dist < minDistance) { // Snap threshold: 20 meters
+                          minDistance = dist;
+                          closestPoint = pt;
+                        }
+                      });
+                    });
+
+                    if (closestPoint) {
+                      const shape = drawnShape.getLatLngs();
+                      if (shape.length > 0) {
+                        shape[shape.length - 1] = closestPoint;
+                        drawnShape.setLatLngs(shape);
+                      }
+                    }
+                  });
+
+                  map.once(L.Draw.Event.CREATED, function (e) {
+                    const layer = e.layer;
+                    const latlngs = layer.getLatLngs()[0];
+
+                    let area = 0;
+
+                    // Option 1: Leaflet.GeometryUtil
+                    if (L.GeometryUtil && L.GeometryUtil.geodesicArea) {
+                      area = L.GeometryUtil.geodesicArea(latlngs);
+                    }
+
+                    // Option 2: Turf.js
+                    else if (window.turf && window.turf.polygon && window.turf.area) {
+                      const coords = latlngs.map(p => [p.lng, p.lat]);
+                      const polygon = window.turf.polygon([[...coords, coords[0]]]);
+                      area = window.turf.area(polygon);
+                    }
+
+                    // Option 3: Approximate planar method (not geodesic, fallback)
+                    else {
+                      for (let i = 0, len = latlngs.length, j = len - 1; i < len; j = i++) {
+                        const p1 = latlngs[i];
+                        const p2 = latlngs[j];
+                        area += (p2.lng + p1.lng) * (p2.lat - p1.lat);
+                      }
+                      area = Math.abs(area / 2) * 12365; // Rough multiplier to convert to m²
+                    }
+
+                    const readable =
+                      area > 1_000_000
+                        ? `${(area / 1_000_000).toFixed(2)} km²`
+                        : `${area.toFixed(0)} m²`;
+
+                    const popup = L.popup()
+                      .setLatLng(layer.getBounds().getCenter())
+                      .setContent(`<strong>Area:</strong> ${readable}`)
+                      .openOn(map);
+
+                    layer.addTo(map);
+                    map._drawControl = null;
+                  });
+                }}
+              >
+                Measure Area
+              </button>
+              <button
+                className="w-full px-3 py-2 rounded-md border text-sm font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                onClick={() => {
+                  if (!map || !map.drawnItems) return;
+                  setShowDrawTools(false);
+                  // Disable previous draw tools if any
+                  if (map._drawControl) {
+                    map._drawControl.disable();
+                  }
+
+                  // Create a higher z-index pane specifically for editing vertices if needed
+                  if (!map.getPane('editPane')) {
+                    map.createPane('editPane');
+                    map.getPane('editPane').style.zIndex = 700; // Even higher than drawPane
+                  }
+
+                  // Configure the edit options with high z-index for vertices
+                  const editControl = new L.EditToolbar.Edit(map, {
+                    featureGroup: map.drawnItems,
+                    edit: {
+                      selectedPathOptions: {
+                        pane: 'editPane',
+                        maintainColor: true,
+                        opacity: 0.8,
+                        fillOpacity: 0.3,
+                        dashArray: null
+                      }
+                    }
+                  });
+
+                  // Force the edit markers to appear on top
+                  editControl.options.editLayer = new L.LayerGroup(null, { pane: 'editPane' });
+
+                  editControl.enable();
+                  map._drawControl = editControl;
+                  editControlRef.current = editControl;
+                  setIsEditing(true);
+
+                  // When editing is complete
+                  map.once('draw:edited', () => {
+                    map._drawControl = null;
+                    setIsEditing(false);
+                  });
+                }}
+              >
+                Edit Vertices
+              </button>
+
+              <button
+  className="w-full px-3 py-2 rounded-md border text-sm font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+  onClick={() => {
+    if (!map) return;
+    setShowDrawTools(false);
+
+    if (map._drawControl) {
+      map._drawControl.disable();
+    }
+
+    // Set up Freehand Polyline
+    const freehandPolyline = new L.Draw.Polyline(map, {
+      shapeOptions: {
+        color: '#ff6600',
+        weight: 3,
+        opacity: 0.8,
+      },
+      freehand: true // ✅ key setting
+    });
+
+    freehandPolyline.enable();
+    map._drawControl = freehandPolyline;
+    setActiveDrawTool('freehand');
+
+    map.once(L.Draw.Event.CREATED, function (e) {
+      const layer = e.layer;
+      map.drawnItems.addLayer(layer);
+      map._drawControl = null;
+      setActiveDrawTool(null);
+    });
+  }}
+>
+  Freehand Drawing
+</button>
+            </div>
+          </div>
+        )}
+        {isEditing && (
+          <button
+            className="block w-full text-left font-semibold text-[#008080] border-t border-gray-200 pt-2 mt-2"
+            onClick={() => {
+              if (editControlRef.current) {
+                editControlRef.current.disable();
+                editControlRef.current = null;
+              }
+              setIsEditing(false);
+            }}
+          >
+            Done Editing
+          </button>
+        )}
+
+
+
+        {showDownloadDialog && (
+          <div className="absolute bottom-[60px] right-6 z-[1000]">
+            <div className="bg-white w-[320px] rounded-xl shadow-2xl p-6 border border-gray-200 relative">
+              <button
+                onClick={() => setShowDownloadDialog(false)}
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+              >
+                <X size={20} />
+              </button>
+
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">Download Map</h2>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="text-sm font-medium text-gray-800 mb-2">📍 Vancouver Flood Assessment Map</div>
+
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      className="border px-3 py-1 rounded w-[140px] text-sm focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                      value={downloadSelections['map']?.filename || 'vancouver_flood_map'}
+                      onChange={(e) =>
+                        setDownloadSelections(prev => ({
+                          ...prev,
+                          map: {
+                            filename: e.target.value,
+                            format: prev['map']?.format || '.jpg'
+                          }
+                        }))
+                      }
+                      placeholder="File name"
+                    />
+                    <select
+                      value={downloadSelections['map']?.format || '.jpg'}
+                      onChange={(e) =>
+                        setDownloadSelections(prev => ({
+                          ...prev,
+                          map: {
+                            filename: prev['map']?.filename || 'vancouver_flood_map',
+                            format: e.target.value
+                          }
+                        }))
+                      }
+                      className="border px-2 py-1 rounded text-sm focus:outline-none"
+                    >
+                      <option value=".jpg">.jpg</option>
+                      <option value=".png">.png</option>
+                      <option value=".shp">.shp</option>
+                      <option value=".gdb">.gdb</option>
+                      <option value=".csv">.csv</option>
+                      <option value=".pdf">.pdf</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  // Initialize map selection if not already set
+                  if (!downloadSelections['map']) {
+                    setDownloadSelections(prev => ({
+                      ...prev,
+                      map: { filename: 'vancouver_flood_map', format: '.jpg' }
+                    }));
+                  }
+                  handleDownloadAll();
+                  setShowDownloadDialog(false);
+                }}
+                className="mt-6 w-full py-2 rounded-md text-sm font-semibold bg-[#008080] text-white hover:bg-teal-700"
+              >
+                Download Map
+              </button>
+            </div>
+          </div>
+        )}
 
 
 
@@ -1685,57 +2890,158 @@ const filteredTeammates = teammateList.filter(name =>
             style={{ height: `${tableHeight}px` }}
           >
             {/* Table header with tabs */}
-            <Toolbar showTable={true} />
+            {!isFullScreen && <Toolbar showTable={true} />}
             <div className="flex justify-between items-center p-1 bg-white text-gray-800 border-b border-gray-200 h-10 px-4">
-              <div className="flex space-x-1">
-                {tableTitles.map((title, index) => (
-                  <button
-                  key={index}
-                  className={`px-2 py-1 border rounded-t-md text-xs font-medium transition-all duration-200
-                  ${currentTableIndex === index
-                    ? 'bg-[#008080] text-white border-[#008080]'
-                    : 'bg-white text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white'}
-                  `}
-                  onClick={() => setCurrentTableIndex(index)}
-                >
-                  {title}
-                </button>
-                
-                ))}
-              </div>
-            </div>
+  {/* Tabs on the left */}
+  <div className="flex space-x-1">
+    {tableTitles.map((title, index) => (
+      <button
+        key={index}
+        className={`px-2 py-1 border rounded-t-md text-xs font-medium transition-all duration-200
+          ${currentTableIndex === index
+            ? 'bg-[#008080] text-white border-[#008080]'
+            : 'bg-white text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white'}
+        `}
+        onClick={() => setCurrentTableIndex(index)}
+      >
+        {title}
+      </button>
+    ))}
+  </div>
+
+</div>
 
             {/* Table content */}
             <div className="h-[calc(100%-40px)] overflow-auto p-2">
               {tableData[currentTableIndex] ? (
                 <table className="min-w-full border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      {tableData[currentTableIndex].headers?.map((header, idx) => (
-                        <th
-                          key={idx}
-                          className="px-3 py-1 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200"
-                          >
-                          {header}
-                        </th>
+                <thead>
+  {/* Excel-style A/B/C header row */}
+  <tr>
+    <th className="w-8 text-[10px] bg-gray-100"></th>
+    {tableData[currentTableIndex].headers.map((_, colIdx) => (
+      <th
+        key={`abc-${colIdx}`}
+        onClick={() =>
+          setSelectedColIndex((prev) => (prev === colIdx ? null : colIdx))
+        }
+                onContextMenu={(e) => handleRightClick(e, 'column', colIdx)}
+        className={`px-3 py-1 text-center text-[10px] font-semibold text-gray-700 uppercase border border-gray-300
+          ${selectedColIndex === colIdx ? 'bg-[#ccecec]' : 'bg-gray-100'}`}
+      >
+        {String.fromCharCode(65 + colIdx)}
+      </th>
+    ))}
+  </tr>
+  {/* Actual column names */}
+  <tr>
+    <th className="w-8 bg-white"></th>
+    {tableData[currentTableIndex].headers.map((header, idx) => (
+      <th
+        key={`label-${idx}`}
+        className="px-3 py-1 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200"
+      >
+        {header}
+      </th>
+    ))}
+  </tr>
+</thead>
+
+                <tbody>
+                  {tableData[currentTableIndex].rows.map((row, rowIdx) => (
+                    <tr key={rowIdx}>
+                      <th
+onClick={() =>
+  setSelectedRowIndex((prev) => (prev === rowIdx ? null : rowIdx))
+}
+                        onContextMenu={(e) => handleRightClick(e, 'row', rowIdx)}
+                        className={`text-center text-[11px] font-semibold border border-gray-300 bg-gray-100
+                          ${selectedRowIndex === rowIdx ? 'bg-[#ccecec]' : ''}`}
+                      >
+                        {rowIdx + 1}
+                      </th>
+                      {tableData[currentTableIndex].headers.map((header, colIdx) => (
+                       <td
+                       key={colIdx}
+                       onClick={(e) => {
+                        if (
+                          activeEditingCell &&
+                          (activeEditingCell.row !== rowIdx || activeEditingCell.col !== colIdx)
+                        ) {
+                          e.preventDefault(); // stop focus from shifting
+                          e.stopPropagation(); // stop bubbling
+                          const cellRef = `${String.fromCharCode(65 + colIdx)}${rowIdx + 1}`;
+                          insertCellReferenceIntoFormula(cellRef);
+                          return;
+                        }
+                        
+                     
+                         setActiveEditingCell({ row: rowIdx, col: colIdx });
+                         setEditingFormula(
+                           tableData[currentTableIndex].rows[rowIdx][tableData[currentTableIndex].headers[colIdx]] ?? ''
+                         );
+                     
+                         setTimeout(() => {
+                           const node = formulaInputRef.current;
+                           if (node) {
+                             node.focus();
+                             document.getSelection()?.collapse(node, node.innerText.length);
+                           }
+                         }, 0);
+                       }}
+                       onBlur={() => {
+                         handleCellEdit(rowIdx, tableData[currentTableIndex].headers[colIdx], editingFormula);
+                         setActiveEditingCell(null);
+                         setEditingFormula('');
+                       }}
+                       className={`px-2 py-1 text-xs border border-gray-200 whitespace-nowrap min-w-[80px] align-top ${
+                         selectedColIndex === colIdx || selectedRowIndex === rowIdx ? 'bg-[#f0fdfa]' : ''
+                       }`}
+                     >
+                       {activeEditingCell?.row === rowIdx && activeEditingCell?.col === colIdx ? (
+                         <div
+                         ref={formulaInputRef}
+                         contentEditable
+                         suppressContentEditableWarning
+                         dir="ltr"
+                         className="outline-none w-full h-full text-left"
+                         onInput={(e) => setEditingFormula(e.currentTarget.innerText)}
+                         onFocus={(e) => {
+                           // Only inject the formula manually to avoid React interference
+                           if (formulaInputRef.current?.innerText !== editingFormula) {
+                             formulaInputRef.current.innerText = editingFormula;
+                           }
+                       
+                           // Move caret to end
+                           const range = document.createRange();
+                           const sel = window.getSelection();
+                           const node = formulaInputRef.current?.firstChild;
+                           if (node && sel) {
+                             range.setStart(node, node.textContent?.length || 0);
+                             range.collapse(true);
+                             sel.removeAllRanges();
+                             sel.addRange(range);
+                           }
+                         }}
+                       ></div>
+                       
+                       
+                       ) : (
+                         evaluateCell(
+                           tableData[currentTableIndex].rows[rowIdx][tableData[currentTableIndex].headers[colIdx]],
+                           tableData[currentTableIndex]
+                         )
+                       )}
+                     </td>
+                     
+                      
                       ))}
                     </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {tableData[currentTableIndex].rows?.map((row, rowIdx) => (
-                      <tr key={rowIdx} className={rowIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                        {tableData[currentTableIndex].headers?.map((header, cellIdx) => (
-                          <td
-                            key={cellIdx}
-                            className="px-3 py-1 text-xs text-gray-700 border-r border-gray-200 last:border-r-0"
-                            >
-                            {row[header]}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                  ))}
+                </tbody>
+              </table>
+              
+                
               ) : (
                 <div className="h-full flex flex-col items-center justify-center">
                   <Table className="h-8 w-8 text-coral/50 mb-2" />
@@ -1743,76 +3049,94 @@ const filteredTeammates = teammateList.filter(name =>
                 </div>
               )}
             </div>
+          
+
           </div>
         )}
-
-{showShareDialog && (
-  <div className="absolute bottom-[20px] right-6 z-[1000]">
-    <div className="bg-white w-[300px] rounded-xl shadow-xl p-6 border border-gray-200 relative">
-      <button
-        className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
-        onClick={() => setShowShareDialog(false)}
-      >
-        <X size={20} />
-      </button>
-
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Share This Map</h2>
-
-      <div className="mb-4">
-        <label className="text-sm font-medium text-gray-700 mb-1 block">Search Teammate</label>
-        <input
-          type="text"
-          placeholder="Type a name..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-[#008080] focus:outline-none"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
-
-      <div className="max-h-48 overflow-y-auto mb-4 space-y-1">
-        {filteredTeammates.map(teammate => (
-          <div
-            key={teammate}
-            onClick={() => setSelectedTeammate(teammate)}
-            className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 border 
-              ${selectedTeammate === teammate
-                ? 'bg-[#008080]/10 border-[#008080]'
-                : 'bg-white hover:bg-gray-50 border-gray-200'}
-            `}
+       {contextMenu.visible && (
+  <div
+  className="fixed z-[9999] context-menu bg-white rounded-xl border border-gray-200 shadow-xl animate-fade-in"
+    style={{ top: contextMenu.y, left: contextMenu.x, width: 190 }}
+  >
+    <div className="p-1.5 space-y-1 text-sm text-gray-800">
+      {contextMenu.type === 'row' && (
+        <>
+          <button
+            onClick={() => {
+              insertRow(contextMenu.index);
+              closeContextMenu();
+            }}
+            className="w-full text-left px-3 py-2 rounded-md text-sm hover:bg-[#e0f7f7] hover:text-[#008080] transition"
           >
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-full bg-[#008080]/90 text-white text-sm font-semibold flex items-center justify-center shadow-sm">
-                {teammate.split(' ').map(n => n[0]).join('').toUpperCase()}
-              </div>
-              <span className="text-sm text-gray-800 font-medium">{teammate}</span>
-            </div>
-            {selectedTeammate === teammate && (
-              <span className="text-xs font-medium text-[#008080]">✓ Selected</span>
-            )}
-          </div>
-        ))}
-        {filteredTeammates.length === 0 && (
-          <div className="text-sm text-gray-500 text-center py-3">No teammates found</div>
-        )}
-      </div>
+            Insert Row Above
+          </button>
+          <button
+            onClick={() => {
+              insertRow(contextMenu.index + 1);
+              closeContextMenu();
+            }}
+            className="w-full text-left px-3 py-2 rounded-md text-sm hover:bg-[#e0f7f7] hover:text-[#008080] transition"
+          >
+            Insert Row Below
+          </button>
+          <button
+            onClick={() => {
+              setTableData(prev => {
+                const updated = [...prev];
+                updated[currentTableIndex].rows.splice(contextMenu.index, 1);
+                return updated;
+              });
+              setSelectedRowIndex(null);
+              closeContextMenu();
+            }}
+            className="w-full text-left px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50 transition"
+          >
+            Delete Row
+          </button>
+        </>
+      )}
 
-      <button
-        disabled={!selectedTeammate}
-        onClick={() => {
-          setShowShareDialog(false);
-          const msg = `Map shared with ${selectedTeammate}`;
-          setNotificationMessage(msg);
-          setShowEmailNotification(true);
-          addNotification(msg);
-        }}
-        className={`w-full py-2 rounded-md text-sm font-semibold transition-all duration-200
-          ${selectedTeammate
-            ? 'bg-[#008080] text-white hover:bg-teal-700'
-            : 'bg-gray-200 text-gray-500 cursor-not-allowed'}
-        `}
-      >
-        Share Map
-      </button>
+      {contextMenu.type === 'column' && (
+        <>
+          <button
+            onClick={() => {
+              insertColumn(contextMenu.index);
+              closeContextMenu();
+            }}
+            className="w-full text-left px-3 py-2 rounded-md text-sm hover:bg-[#e0f7f7] hover:text-[#008080] transition"
+          >
+            Insert Column Left
+          </button>
+          <button
+            onClick={() => {
+              insertColumn(contextMenu.index + 1);
+              closeContextMenu();
+            }}
+            className="w-full text-left px-3 py-2 rounded-md text-sm hover:bg-[#e0f7f7] hover:text-[#008080] transition"
+          >
+            Insert Column Right
+          </button>
+          <button
+            onClick={() => {
+              setTableData(prev => {
+                const updated = [...prev];
+                const colName = updated[currentTableIndex].headers[contextMenu.index];
+                updated[currentTableIndex].headers.splice(contextMenu.index, 1);
+                updated[currentTableIndex].rows = updated[currentTableIndex].rows.map(row => {
+                  const { [colName]: _, ...rest } = row;
+                  return rest;
+                });
+                return updated;
+              });
+              setSelectedColIndex(null);
+              closeContextMenu();
+            }}
+            className="w-full text-left px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50 transition"
+          >
+            Delete Column
+          </button>
+        </>
+      )}
     </div>
   </div>
 )}
@@ -1820,17 +3144,138 @@ const filteredTeammates = teammateList.filter(name =>
 
 
 
-        <Toolbar
-          isFullScreen={isFullScreen}
-          showTable={showTable}
-          setShowTable={setShowTable}
-          onSaveMap={onSaveMap}
-          savedMaps={savedMaps}
-          captureAndDownload={captureAndDownload}
-          setShowLegend={setShowLegend}
-          setShowSources={setShowSources}
-          toggleFullScreen={toggleFullScreen}
-        />
+        {activeDrawTool && (
+          <button
+            className="block w-full text-left font-semibold text-[#008080] border-t border-gray-200 pt-2 mt-2"
+            onClick={() => {
+              if (map._drawControl && map._drawControl._enabled) {
+                // Simulate double click by manually triggering the finish action
+                const container = map.getContainer();
+                const finishBtn = container.querySelector('.leaflet-draw-actions a[title="Finish Drawing"]');
+                if (finishBtn) {
+                  finishBtn.click(); // 🟢 finalize the shape
+                } else {
+                  // fallback: just disable if no button found
+                  map._drawControl.disable();
+                }
+              }
+              map._drawControl = null;
+              setActiveDrawTool(null);
+            }}
+          >
+            ✅ Done Drawing
+          </button>
+        )}
+
+        {showShareDialog && (
+          <div className="absolute bottom-[20px] right-6 z-[1000]">
+            <div className="bg-white w-[300px] rounded-xl shadow-xl p-6 border border-gray-200 relative">
+              <button
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+                onClick={() => setShowShareDialog(false)}
+              >
+                <X size={20} />
+              </button>
+
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Share This Map</h2>
+
+              <div className="mb-4">
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Search Teammate</label>
+                <input
+                  type="text"
+                  placeholder="Type a name..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-[#008080] focus:outline-none"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+
+              <div className="max-h-48 overflow-y-auto mb-4 space-y-1">
+                {filteredTeammates.map(teammate => (
+                  <div
+                    key={teammate}
+                    onClick={() => setSelectedTeammate(teammate)}
+                    className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 border 
+              ${selectedTeammate === teammate
+                        ? 'bg-[#008080]/10 border-[#008080]'
+                        : 'bg-white hover:bg-gray-50 border-gray-200'}
+            `}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 rounded-full bg-[#008080]/90 text-white text-sm font-semibold flex items-center justify-center shadow-sm">
+                        {teammate.split(' ').map(n => n[0]).join('').toUpperCase()}
+                      </div>
+                      <span className="text-sm text-gray-800 font-medium">{teammate}</span>
+                    </div>
+                    {selectedTeammate === teammate && (
+                      <span className="text-xs font-medium text-[#008080]">✓ Selected</span>
+                    )}
+                  </div>
+                ))}
+                {filteredTeammates.length === 0 && (
+                  <div className="text-sm text-gray-500 text-center py-3">No teammates found</div>
+                )}
+              </div>
+
+              <button
+                disabled={!selectedTeammate}
+                onClick={() => {
+                  setShowShareDialog(false);
+                  const msg = `Map shared with ${selectedTeammate}`;
+                  setNotificationMessage(msg);
+                  setShowEmailNotification(true);
+                  addNotification(msg);
+                }}
+                className={`w-full py-2 rounded-md text-sm font-semibold transition-all duration-200
+          ${selectedTeammate
+                    ? 'bg-[#008080] text-white hover:bg-teal-700'
+                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'}
+        `}
+              >
+                Share Map
+              </button>
+            </div>
+          </div>
+        )}
+
+
+
+
+        {isFullScreen ? (
+          <Toolbar
+            isFullScreen={true}
+            showTable={showTable}
+            setShowTable={setShowTable}
+            onSaveMap={onSaveMap}
+            savedMaps={savedMaps}
+            captureAndDownload={captureAndDownload}
+            setShowLegend={setShowLegend}
+            setShowSources={setShowSources}
+            toggleFullScreen={toggleFullScreen}
+            toolbarVisible={toolbarVisible}
+            setToolbarVisible={setToolbarVisible}
+            toolbarPosition={toolbarPosition}
+            setToolbarPosition={setToolbarPosition}
+          />
+        ) : (
+          <Toolbar
+            isFullScreen={false}
+            showTable={showTable}
+            setShowTable={setShowTable}
+            onSaveMap={onSaveMap}
+            savedMaps={savedMaps}
+            captureAndDownload={captureAndDownload}
+            setShowLegend={setShowLegend}
+            setShowSources={setShowSources}
+            toggleFullScreen={toggleFullScreen}
+            toolbarVisible={true}
+            setToolbarVisible={() => { }}
+            toolbarPosition={{ top: 0, left: 0 }}
+            setToolbarPosition={() => { }}
+          />
+        )}
+
+
         {/* Enhanced loading indicator that shows the current stage */}
         {loadingStage !== 'complete' && (
           <div className="absolute bottom-12 right-4 flex flex-col items-center bg-white bg-opacity-90 z-10 p-4 rounded-lg shadow-lg max-w-xs border border-gray-200">
@@ -1875,162 +3320,154 @@ const filteredTeammates = teammateList.filter(name =>
 
         {showLegend && (
           <div className="absolute bottom-4 left-4 w-[300px] bg-white border border-gray-200 rounded-xl shadow-xl p-4 z-[1000] overflow-y-auto max-h-[70vh]">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-base font-semibold text-[#2C3E50] flex items-center">
-              <Layers className="mr-2 text-[#008080]" size={18} /> Layers & Legend
-            </h3>
-            <button
-              onClick={() => setShowLegend(false)}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <X size={18} />
-            </button>
-          </div>
-          <div className="space-y-4">
-            {[
-              {
-                id: 'floodZones',
-                name: 'Flood Zones',
-                icon: <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: layerColors.floodMedium }} />,
-                legend: [
-                  { label: 'Low Risk', color: layerColors.floodLight },
-                  { label: 'Medium Risk', color: layerColors.floodMedium },
-                  { label: 'High Risk', color: layerColors.floodDark }
-                ]
-              },
-              {
-                id: 'infrastructure',
-                name: 'Infrastructure',
-                icon: <div className="w-4 h-0.5 rounded-sm bg-gray-600" />,
-                legend: [
-                  { label: 'Street - Good', color: layerColors.streetGood },
-                  { label: 'Street - Fair', color: layerColors.streetMedium },
-                  { label: 'Street - Poor', color: layerColors.streetPoor },
-                  { label: 'Sewer - Good', color: layerColors.sewerGood, dashed: true },
-                  { label: 'Sewer - Fair', color: layerColors.sewerMedium, dashed: true },
-                  { label: 'Sewer - Poor', color: layerColors.sewerPoor, dashed: true }
-                ]
-              },
-              {
-                id: 'stormwaterProjects',
-                name: 'Stormwater Projects',
-                icon: <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: layerColors.projectActive }} />,
-                legend: [
-                  { label: 'Active Projects', color: layerColors.projectActive },
-                  { label: 'Planned Projects', color: layerColors.projectPlanned }
-                ]
-              },
-              {
-                id: 'data311',
-                name: '311 Service Requests',
-                icon: <div className="w-4 h-4 rounded-full" style={{ backgroundColor: layerColors.data311High }} />,
-                legend: [
-                  {
-                    label: 'Heatmap Intensity',
-                    gradient: [layerColors.data311Low, layerColors.data311Medium, layerColors.data311High]
-                  },
-                  {
-                    label: 'Open/Closed',
-                    markers: [
-                      { color: 'red', label: 'Open' },
-                      { color: 'green', label: 'Closed' }
-                    ]
-                  }
-                ]
-              },
-              {
-                id: 'demographics',
-                name: 'Demographics',
-                icon: <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: layerColors.demoHigh }} />,
-                legend: [
-                  {
-                    label: 'Socio-economic Index',
-                    gradient: [layerColors.demoLow, layerColors.demoMedium, layerColors.demoHigh]
-                  }
-                ]
-              }
-            ].map(section => (
-<div key={section.id} className="border-t border-gray-200 pt-3 first:border-none first:pt-0">
-<div
-                  onClick={() => toggleSection(section.id)}
-                  className="flex justify-between items-center cursor-pointer"
-                >
-                  <label className="flex items-center space-x-2 text-sm font-medium text-[#2C3E50]">
-                    <input
-                      type="checkbox"
-                      checked={activeLayers[section.id]}
-                      onChange={() => toggleLayer(section.id)}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                    <span>{section.name}</span>
-                  </label>
-                  {expandedSections[section.id] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </div>
-        
-                {expandedSections[section.id] && (
-                  <div className="mt-2 pl-6 text-xs space-y-2">
-                    {section.legend.map((item, idx) =>
-                      item.gradient ? (
-                        <div key={idx}>
-                          <div
-                            className="h-2 rounded"
-                            style={{
-                              background: `linear-gradient(to right, ${item.gradient.join(', ')})`
-                            }}
-                          />
-                          <div className="flex justify-between text-[10px] mt-1 text-gray-500">
-                            <span>Low</span>
-                            <span>High</span>
-                          </div>
-                        </div>
-                      ) : item.markers ? (
-                        <div key={idx} className="flex space-x-3">
-                          {item.markers.map((m, i) => (
-                            <div key={i} className="flex items-center space-x-2">
-                              <div
-                                className="w-3 h-3 rounded-full"
-                                style={{ backgroundColor: m.color }}
-                              ></div>
-                              <span>{m.label}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div key={idx} className="flex items-center space-x-2">
-                          <div
-                            className={`w-4 h-2 ${item.dashed ? 'border-t border-dashed border-black' : ''}`}
-                            style={{ backgroundColor: item.color }}
-                          ></div>
-                          <span>{item.label}</span>
-                        </div>
-                      )
-                    )}
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-base font-semibold text-[#2C3E50] flex items-center">
+                <Layers className="mr-2 text-[#008080]" size={18} /> Layers & Legend
+              </h3>
+              <button
+                onClick={() => setShowLegend(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              {[
+                {
+                  id: 'floodZones',
+                  name: 'Flood Zones',
+                  icon: <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: layerColors.floodMedium }} />,
+                  legend: [
+                    { label: 'Low Risk', color: layerColors.floodLight },
+                    { label: 'Medium Risk', color: layerColors.floodMedium },
+                    { label: 'High Risk', color: layerColors.floodDark }
+                  ]
+                },
+                {
+                  id: 'infrastructure',
+                  name: 'Infrastructure',
+                  icon: <div className="w-4 h-0.5 rounded-sm bg-gray-600" />,
+                  legend: [
+                    { label: 'Street - Good', color: layerColors.streetGood },
+                    { label: 'Street - Fair', color: layerColors.streetMedium },
+                    { label: 'Street - Poor', color: layerColors.streetPoor },
+                    { label: 'Sewer - Good', color: layerColors.sewerGood, dashed: true },
+                    { label: 'Sewer - Fair', color: layerColors.sewerMedium, dashed: true },
+                    { label: 'Sewer - Poor', color: layerColors.sewerPoor, dashed: true }
+                  ]
+                },
+                {
+                  id: 'stormwaterProjects',
+                  name: 'Stormwater Projects',
+                  icon: <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: layerColors.projectActive }} />,
+                  legend: [
+                    { label: 'Active Projects', color: layerColors.projectActive },
+                    { label: 'Planned Projects', color: layerColors.projectPlanned }
+                  ]
+                },
+                {
+                  id: 'data311',
+                  name: '311 Service Requests',
+                  icon: <div className="w-4 h-4 rounded-full" style={{ backgroundColor: layerColors.data311High }} />,
+                  legend: [
+                    {
+                      label: 'Heatmap Intensity',
+                      gradient: [layerColors.data311Low, layerColors.data311Medium, layerColors.data311High]
+                    },
+                    {
+                      label: 'Open/Closed',
+                      markers: [
+                        { color: 'red', label: 'Open' },
+                        { color: 'green', label: 'Closed' }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  id: 'demographics',
+                  name: 'Demographics',
+                  icon: <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: layerColors.demoHigh }} />,
+                  legend: [
+                    {
+                      label: 'Socio-economic Index',
+                      gradient: [layerColors.demoLow, layerColors.demoMedium, layerColors.demoHigh]
+                    }
+                  ]
+                }
+              ].map(section => (
+                <div key={section.id} className="border-t border-gray-200 pt-3 first:border-none first:pt-0">
+                  <div
+                    onClick={() => toggleSection(section.id)}
+                    className="flex justify-between items-center cursor-pointer"
+                  >
+                    <label className="flex items-center space-x-2 text-sm font-medium text-[#2C3E50]">
+                      <input
+                        type="checkbox"
+                        checked={activeLayers[section.id]}
+                        onChange={() => toggleLayer(section.id)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <span>{section.name}</span>
+                    </label>
+                    {expandedSections[section.id] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                   </div>
-                )}
-              </div>
-            ))}
+
+                  {expandedSections[section.id] && (
+                    <div className="mt-2 pl-6 text-xs space-y-2">
+                      {section.legend.map((item, idx) =>
+                        item.gradient ? (
+                          <div key={idx}>
+                            <div
+                              className="h-2 rounded"
+                              style={{
+                                background: `linear-gradient(to right, ${item.gradient.join(', ')})`
+                              }}
+                            />
+                            <div className="flex justify-between text-[10px] mt-1 text-gray-500">
+                              <span>Low</span>
+                              <span>High</span>
+                            </div>
+                          </div>
+                        ) : item.markers ? (
+                          <div key={idx} className="flex space-x-3">
+                            {item.markers.map((m, i) => (
+                              <div key={i} className="flex items-center space-x-2">
+                                <div
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: m.color }}
+                                ></div>
+                                <span>{m.label}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div key={idx} className="flex items-center space-x-2">
+                            <div
+                              className={`w-4 h-2 ${item.dashed ? 'border-t border-dashed border-black' : ''}`}
+                              style={{ backgroundColor: item.color }}
+                            ></div>
+                            <span>{item.label}</span>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-        
+
         )}
       </div>
 
       {showEmailNotification && (
-  <div className="fixed top-6 right-6 z-[9999] animate-slide-in group">
-    <div className="relative bg-white border border-[#008080] text-[#008080] px-5 py-3 rounded-lg shadow-lg flex items-center">
-      <span className="text-sm font-medium">
-        {notificationMessage}
-      </span>
-      <button
-        onClick={() => setShowEmailNotification(false)}
-        className="absolute top-1 right-1 w-5 h-5 rounded-full text-[#008080] hover:bg-[#008080]/10 hidden group-hover:flex items-center justify-center"
-        title="Dismiss"
-      >
-        ×
-      </button>
-    </div>
-  </div>
-)}
+        <div className="fixed top-6 right-6 z-[9999] animate-slide-in transition-opacity duration-300">
+          <div className="bg-white border border-[#008080] text-[#008080] px-5 py-3 rounded-lg shadow-lg text-sm font-medium">
+            {notificationMessage}
+          </div>
+        </div>
+      )}
+
 
 
     </div>

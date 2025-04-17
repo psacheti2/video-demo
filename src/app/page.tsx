@@ -1,20 +1,25 @@
 'use client';
 //changes
 import { useState, useEffect, useRef } from 'react';
-import { PanelRight, ArrowLeft, ChevronLeft } from 'lucide-react'; 
+import { X, Trash2 } from 'lucide-react'
 import Navbar from '../components/layout/Navbar';
 import ResponsiveChatLayout from '../components/chat/ChatWindow';
 import ArtifactsPanel from '../components/layout/ArtifactsPanel';
-import WelcomeCard from '../components/chat/WelcomeCard'
-import Sidebar from '../components/layout/Sidebar.jsx';
+import WelcomeCard from '../components/chat/WelcomeCard';
+import rawSidebar from '../components/layout/Sidebar.jsx';
+const Sidebar = rawSidebar as React.ComponentType<any>;
+import { Dialog } from '@headlessui/react';
 
-// Define the artifact type
+
 export interface Artifact {
-  type: string;
+  id: string;
   title: string;
+  type: string;
   component: string;
   data: any;
+  date: string;
 }
+
 
 // Define the chat message type
 export interface ChatMessageType {
@@ -37,11 +42,91 @@ export default function Home() {
   const [lastMessageId, setLastMessageId] = useState<string>(''); // Track last message ID
   const prevArtifactsLength = useRef(0); // Track previous artifacts length
   const [sidebarTab, setSidebarTab] = useState('recent');
-  
+  const [conversationId, setConversationId] = useState(() => `conv_${Date.now()}`);
+const [refreshSidebarKey, setRefreshSidebarKey] = useState(0); // Used to trigger sidebar refresh
+const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
+const [savedArtifacts, setSavedArtifacts] = useState<Artifact[]>([]);
+const isReloading = useRef(false);
+const [pendingSelectedArtifact, setPendingSelectedArtifact] = useState<Artifact | null>(null);
+const [modalArtifact, setModalArtifact] = useState<Artifact | null>(null);
+const [showAllSavedDialog, setShowAllSavedDialog] = useState(false);
+const [searchQuery, setSearchQuery] = useState('');
+
+const loadConversation = (id: string) => {
+  isReloading.current = true;
+  const stored = JSON.parse(localStorage.getItem('conversations') || '{}');
+  const convo = stored[id];
+  if (convo) {
+    const messages: ChatMessageType[] = convo.messages || [];
+
+    const allArtifacts: Artifact[] = [];
+    messages.forEach((msg) => {
+      if (msg.artifacts && msg.artifacts.length > 0) {
+        allArtifacts.push(...msg.artifacts);
+      }
+    });
+
+    setMessages(messages);
+    setArtifacts(allArtifacts);
+    setSelectedArtifact(null); 
+    setArtifactsPanelWidth(0); 
+        setConversationId(id);
+    localStorage.setItem('activeConversationId', id);
+    setIsNewConversation(false);
+    prevArtifactsLength.current = allArtifacts.length;
+    setLastMessageId(prev => prev || `loaded_${id}`);
+    if (pendingSelectedArtifact) {
+      setTimeout(() => {
+        setSelectedArtifact(pendingSelectedArtifact);
+        setPendingSelectedArtifact(null);
+      }, 50); 
+    }
+  }
+  setTimeout(() => {
+    isReloading.current = false;
+  }, 500);
+};
+useEffect(() => {
+  const stored = JSON.parse(localStorage.getItem('savedArtifacts') || '[]');
+  setSavedArtifacts(stored);
+}, []);
+
+useEffect(() => {
+  localStorage.setItem('savedArtifacts', JSON.stringify(savedArtifacts));
+}, [savedArtifacts]);
+
+
   const addArtifact = (artifact: Artifact) => {
     setArtifacts(prev => [...prev, artifact]);
   };
-
+  const saveConversationToLocalStorage = (id: string, messages: ChatMessageType[], artifacts: Artifact[]) => {
+    const allConversations = JSON.parse(localStorage.getItem('conversations') || '{}');
+    allConversations[id] = {
+      messages,
+      artifacts,
+      lastUpdated: new Date().toISOString(),
+    };
+    localStorage.setItem('conversations', JSON.stringify(allConversations));
+  };
+  const startNewConversation = () => {
+    const isEmpty =
+      messages.length === 0 ||
+      (messages.length === 1 && messages[0].text.trim() === '');
+  
+    if (!isEmpty) {
+      setMessages([]);
+      setArtifacts([]);
+      setSelectedArtifact(null); 
+      setArtifactsPanelWidth(0);
+      setIsNewConversation(true);
+  
+      const newId = `conv_${Date.now()}`;
+      setConversationId(newId);
+      localStorage.setItem('activeConversationId', newId);
+    }
+  };
+  
+  
   // Function to handle sending messages
   const handleSendMessage = async ({ text, file }: { text: string, file: string | null }) => {
     if (isNewConversation) {
@@ -65,47 +150,36 @@ export default function Home() {
     prevArtifactsLength.current = artifacts.length;
     
     try {
-      // Call API route
       const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text }),
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to get response');
-      }
-      
+    
+      if (!response.ok) throw new Error('Failed to get response');
+    
       const data = await response.json();
-      
-      // Generate unique ID for assistant message
       const assistantMessageId = `assistant_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-      
-      // Create bot message with any artifacts attached
-      const botMessage: ChatMessageType = { 
-        text: data.text, 
+    
+      const botMessage: ChatMessageType = {
+        text: data.text,
         isUser: false,
-        id: assistantMessageId
+        id: assistantMessageId,
       };
-      
-      // Add artifacts to the message if any were generated
+    
       if (data.artifacts && data.artifacts.length > 0) {
         botMessage.artifacts = data.artifacts;
-        
-        // Add each artifact to the artifacts state
-        data.artifacts.forEach((artifact: Artifact) => {
-          addArtifact(artifact);
-        });
+        data.artifacts.forEach((artifact: Artifact) => addArtifact(artifact));
       }
-      
-      // Add the bot message to the messages state
-      setMessages(prev => [...prev, botMessage]);
-      
-      // Set the last message ID to trigger the artifacts panel update
+    
+      const updatedMessages = [...messages, userMessage, botMessage];
+      const updatedArtifacts = [...artifacts];
+    
+      setMessages(updatedMessages);
+      saveConversationToLocalStorage(conversationId, updatedMessages, updatedArtifacts);
+      setRefreshSidebarKey(prev => prev + 1);
       setLastMessageId(assistantMessageId);
-      
+    
     } catch (error) {
       console.error('Error sending message:', error);
       
@@ -140,6 +214,20 @@ export default function Home() {
     Icon: React.ElementType;
     position: 'left' | 'right';
   }
+  const handleArtifactSelect = (artifact: Artifact) => {
+    console.log('Selected artifact:', artifact);
+    setSelectedArtifact(artifact);
+  
+    if (isNewConversation) {
+      setIsNewConversation(false);
+    }
+  
+    if (artifactsPanelWidth === 0) {
+      setArtifactsPanelWidth(40);
+    }
+  };
+  
+  
   
   const SidebarButton = ({ onClick, Icon, position }: SidebarButtonProps) => (
     <button 
@@ -161,28 +249,39 @@ export default function Home() {
           filter: "opacity(0.1)",
         }}
       />
-      <Sidebar
+<Sidebar
   isOpen={showSidebar}
   onClose={() => setShowSidebar(false)}
   activeTab={sidebarTab}
   setActiveTab={setSidebarTab}
+  onLoadConversation={loadConversation}
+  refreshKey={refreshSidebarKey}
+  onStartNewChat={startNewConversation}
+  savedArtifacts={savedArtifacts}
+  setModalArtifact={setModalArtifact}
 />
-      <Navbar onToggleSidebar={toggleSidebar} sidebarOpen={showSidebar} />
+<Navbar
+  onToggleSidebar={toggleSidebar}
+  sidebarOpen={showSidebar}
+  onStartNewChat={startNewConversation}
+/>
       <div className="flex flex-1 overflow-hidden pt-1">
         {/* Conditional layout based on artifact presence */}
         {isArtifactFullscreen ? (
           // Fullscreen artifact view
           <div className="flex-1 overflow-hidden">
             <ArtifactsPanel
-              artifacts={artifacts}
-              isFullscreen={true}
-              toggleFullscreen={() => setIsArtifactFullscreen(!isArtifactFullscreen)}
-              messageId={lastMessageId}
-              prevArtifactsCount={prevArtifactsLength.current}
-            />
+  artifacts={artifacts}
+  toggleFullscreen={() => setIsArtifactFullscreen(!isArtifactFullscreen)}
+  messageId={lastMessageId}
+  prevArtifactsCount={prevArtifactsLength.current}
+  selectedArtifact={selectedArtifact}
+  setSelectedArtifact={setSelectedArtifact}
+  savedArtifacts={savedArtifacts}
+  setSavedArtifacts={setSavedArtifacts}
+/>
           </div>
-) : hasArtifacts || (!isNewConversation && showSidebar) ? (
-          <div className="flex flex-1 overflow-hidden">
+) : hasArtifacts || selectedArtifact ? (  <div className="flex flex-1 overflow-hidden">
             <div
               className="flex-1 overflow-hidden relative"
               style={{ width: `${100 - artifactsPanelWidth}%` }}
@@ -192,9 +291,10 @@ export default function Home() {
   setMessages={setMessages}
   isLoading={isLoading}
   onSendMessage={handleSendMessage}
-  isCentered={false}
-  sidebarOpen={showSidebar}
+  isCentered={!hasArtifacts && !selectedArtifact}
+    sidebarOpen={showSidebar}
   setSidebarOpen={setShowSidebar}
+  setSelectedArtifact={handleArtifactSelect}
 />
 
             </div>
@@ -228,12 +328,17 @@ export default function Home() {
               style={{ width: `${artifactsPanelWidth}%` }}
               className="bg-white overflow-hidden shadow-md"
             >
-              <ArtifactsPanel
-                artifacts={artifacts}
-                toggleFullscreen={() => setIsArtifactFullscreen(!isArtifactFullscreen)}
-                messageId={lastMessageId}
-                prevArtifactsCount={prevArtifactsLength.current}
-              />
+            <ArtifactsPanel
+  artifacts={artifacts}
+  toggleFullscreen={() => setIsArtifactFullscreen(!isArtifactFullscreen)}
+  messageId={lastMessageId}
+  prevArtifactsCount={prevArtifactsLength.current}
+  selectedArtifact={selectedArtifact}
+  setSelectedArtifact={setSelectedArtifact}
+  savedArtifacts={savedArtifacts}
+  setSavedArtifacts={setSavedArtifacts}
+/>
+
             </div>
           </div>
         ) : (
@@ -243,24 +348,168 @@ export default function Home() {
     
     <div className="w-full max-w-3xl">
     {isNewConversation ? (
-  <WelcomeCard onSendMessage={handleSendMessage} />
-) : (
-        <ResponsiveChatLayout 
-  messages={messages}
-  setMessages={setMessages}
-  isLoading={isLoading}
-  onSendMessage={handleSendMessage}
-  isCentered={false}
-  sidebarOpen={showSidebar}
-  setSidebarOpen={setShowSidebar}
-/>
+  <>
+  <div className="mt-48"> 
+  <div className="mb-1">
+    <WelcomeCard
+      onSendMessage={handleSendMessage}
+      savedArtifacts={savedArtifacts}
+      setModalArtifact={setModalArtifact}
+    />
+  </div>
+  {savedArtifacts.length > 0 && (
+  <div className="w-full mt-6 px-4 flex justify-center">
+    <div className="w-full max-w-[600px]">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+          Recently Saved
+        </h3>
+        <button
+          onClick={() => setShowAllSavedDialog(true)}
+          className="text-xs font-medium text-[#008080] bg-[#e6f9f9] px-3 py-1.5 rounded-full shadow-sm hover:bg-[#d2f3f3] transition"
+        >
+          See All
+        </button>
+      </div>
 
-      )}
+      <div className="flex flex-wrap justify-center gap-4">
+        {savedArtifacts.slice(0, 3).map((artifact) => (
+          <button
+            key={artifact.id}
+            onClick={() => setModalArtifact(artifact)}
+            className="flex flex-col w-[180px] p-4 bg-white rounded-xl border border-gray-200 shadow hover:shadow-md transition group text-left"
+          >
+            <div className="text-[#008080] font-semibold text-sm truncate group-hover:underline">
+              {artifact.title}
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              {artifact.type} • {artifact.date}
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
+
+
+
+</div>
+
+</>
+) : (
+  <ResponsiveChatLayout 
+    messages={messages}
+    setMessages={setMessages}
+    isLoading={isLoading}
+    onSendMessage={handleSendMessage}
+    isCentered={!hasArtifacts && !selectedArtifact}
+    sidebarOpen={showSidebar}
+    setSidebarOpen={setShowSidebar}
+    setSelectedArtifact={handleArtifactSelect}
+  />
+)}
+
     </div>
     
   </div>
         )}
       </div>
+      <Dialog open={!!modalArtifact} onClose={() => setModalArtifact(null)} className="relative z-[500]">
+  <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" aria-hidden="true" />
+  <div className="fixed inset-0 flex items-center justify-center p-4 z-[500]">
+    <Dialog.Panel className="w-full max-w-5xl h-[80vh] overflow-hidden rounded-xl bg-white shadow-xl p-4 relative">
+      <button
+        onClick={() => setModalArtifact(null)}
+        className="absolute top-4 right-4 text-[#008080] hover:text-white bg-white border border-[#008080] hover:bg-[#008080] p-1.5 rounded-full transition"
+      >
+        <span className="text-sm font-bold">X</span>
+      </button>
+      {modalArtifact && (
+        <ArtifactsPanel
+          artifacts={[modalArtifact]}
+          toggleFullscreen={() => {}}
+          selectedArtifact={modalArtifact}
+          setSelectedArtifact={() => {}}
+          savedArtifacts={savedArtifacts}
+          setSavedArtifacts={setSavedArtifacts}
+        />
+      )}
+    </Dialog.Panel>
+  </div>
+</Dialog>
+<Dialog open={showAllSavedDialog} onClose={() => setShowAllSavedDialog(false)} className="relative z-[400]">
+  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" aria-hidden="true" />
+  <div className="fixed inset-0 flex items-center justify-center p-4 z-[400]">
+  <Dialog.Panel className="w-full max-w-xl max-h-[80vh] overflow-y-auto bg-white rounded-2xl shadow-2xl p-6 relative space-y-5 border border-gray-100">
+  {/* Header */}
+  <div className="flex items-center justify-between mb-2">
+    <h2 className="text-base font-semibold text-[#008080]">All Saved Artifacts</h2>
+    <button
+      onClick={() => setShowAllSavedDialog(false)}
+      className="p-2 rounded-full bg-white border border-[#008080] hover:bg-[#008080] group shadow-sm transition"
+      title="Close"
+    >
+      <X className="h-4 w-4 text-[#008080] group-hover:text-white" />
+    </button>
+  </div>
+
+  {/* Search Input */}
+  <input
+    type="text"
+    placeholder="Search by title..."
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+  />
+
+  {/* List */}
+  <div className="space-y-3">
+    {savedArtifacts
+      .filter((artifact) =>
+        artifact.title.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      .map((artifact) => (
+        <div
+          key={artifact.id}
+          className="flex items-center justify-between px-4 py-3 border border-gray-200 rounded-lg bg-[#f9fafa] hover:shadow-sm transition"
+        >
+          {/* Info */}
+          <button
+            onClick={() => {
+              setModalArtifact(artifact);
+              setShowAllSavedDialog(false);
+            }}
+            className="flex-1 text-left"
+          >
+            <div className="font-medium text-sm text-[#008080] truncate">
+              {artifact.title}
+            </div>
+            <div className="text-xs text-gray-500">{artifact.type} • {artifact.date}</div>
+          </button>
+
+          {/* Delete Button */}
+          <button
+            onClick={() =>
+              setSavedArtifacts((prev) =>
+                prev.filter((a) => a.id !== artifact.id)
+              )
+            }
+            className="p-2 rounded-full bg-white border border-[#008080] hover:bg-[#008080] group shadow-sm transition ml-2"
+            title="Delete"
+          >
+            <Trash2 className="h-4 w-4 text-[#008080] group-hover:text-white" />
+          </button>
+        </div>
+      ))}
+  </div>
+</Dialog.Panel>
+
+  </div>
+</Dialog>
+
+
+
     </div>
   );
 }

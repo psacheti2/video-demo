@@ -38,7 +38,8 @@ const BudgetDashboard = ({ onLayersReady }) => {
   const [notificationMessage, setNotificationMessage] = useState('');
   const [showEmailNotification, setShowEmailNotification] = useState(false);
   const addNotification = useNotificationStore((state) => state.addNotification);
-  
+  const [selectedChartType, setSelectedChartType] = useState('bar');
+
   const teammateList = [
     "Alice Johnson", "Bob Smith", "Catherine Nguyen", "David Li", "Emma Patel"
   ];
@@ -247,158 +248,102 @@ const BudgetDashboard = ({ onLayersReady }) => {
     });
   };
 
-  // Render the selected chart
   const renderSelectedChart = () => {
     if (loading) return <div className="flex justify-center items-center h-64">Loading...</div>;
     if (error) return <div className="text-red-500 text-center h-64">{error}</div>;
-    
+  
     switch (selectedChart) {
       case 'category-budget':
+        if (selectedChartType === 'pie') {
+          const pieData = categoryBudgetData.flatMap(d => [
+            { name: `${d.category} - Budget`, value: d.budget },
+            { name: `${d.category} - Spending`, value: d.spending }
+          ]);
+          return (
+            <ResponsiveContainer width="100%" height={400}>
+              <PieChart>
+                <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={150}>
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          );
+        }
+        // Default: Bar chart
         return (
-          <div className="h-96 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={categoryBudgetData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-              >
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart data={categoryBudgetData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="category" />
+              <YAxis />
+              <Tooltip formatter={(value) => `$${value.toFixed(2)}M`} />
+              <Legend />
+              <Bar dataKey="budget" name="Total Budget" fill={COLORS.blue} />
+              <Bar dataKey="spending" name="2025 Spending" fill={COLORS.green} />
+            </BarChart>
+          </ResponsiveContainer>
+        );
+  
+      case 'streets-subcategory':
+        if (selectedChartType === 'pie') {
+          const pieData = streetSubcategoryData.map(d => ({ name: d.subcategory, value: d.budget }));
+          return (
+            <ResponsiveContainer width="100%" height={400}>
+              <PieChart>
+                <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={150}>
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          );
+        }
+        // Default: Bar chart
+        return (
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart data={streetSubcategoryData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="subcategory" />
+              <YAxis />
+              <Tooltip formatter={(value) => `$${value.toFixed(2)}M`} />
+              <Legend />
+              <Bar dataKey="budget" name="Total Budget" fill={COLORS.purple} />
+            </BarChart>
+          </ResponsiveContainer>
+        );
+  
+      case 'yearly-spending':
+        const data = getYearlySpendingData();
+        if (selectedChartType === 'bar') {
+          return (
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="category" 
-                  tick={{ fill: '#333', fontSize: 14 }}
-                  tickLine={{ stroke: '#333' }}
-                  axisLine={{ stroke: '#333', strokeWidth: 2 }}
-                  label={{ 
-                    value: 'Service Categories', 
-                    position: 'bottom', 
-                    offset: 2,
-                    fill: '#333',
-                    fontSize: 16,
-                    fontWeight: 'normal'
-                  }}
-                />
-                <YAxis 
-                  tick={{ fill: '#333', fontSize: 14 }}
-                  tickLine={{ stroke: '#333' }}
-                  axisLine={{ stroke: '#333', strokeWidth: 2 }}
-                  label={{ 
-                    value: 'Amount (Millions $)', 
-                    angle: -90, 
-                    position: 'left',
-                    offset: -10,
-                    dy: -70,  
-                    fill: '#333',
-                    fontSize: 16,
-                    fontWeight: 'normal'
-                  }}
-                  domain={[0, 1000]}
-                  tickCount={6}
-                />
+                <XAxis dataKey="year" />
+                <YAxis />
                 <Tooltip formatter={(value) => `$${value.toFixed(2)}M`} />
-                <Legend wrapperStyle={{ paddingTop: 20 }} />
-                <Bar dataKey="budget" name="Total Budget" fill="#3498DB" />
-                <Bar dataKey="spending" name="2025 Spending" fill="#27AE60" />
+                <Legend />
+                <Bar dataKey="Streets" fill={COLORS.blue} />
+                <Bar dataKey="Water" fill={COLORS.green} />
+                <Bar dataKey="Waste" fill={COLORS.orange} />
               </BarChart>
             </ResponsiveContainer>
-          </div>
-        );
-        
-        case 'streets-subcategory':
-          return (
-            <div className="h-[400px] w-full"> {/* Increased from h-96 (384px) to h-[500px] */}
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={streetSubcategoryData}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 30 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="subcategory"
-                    interval={0}
-                    tick={(props) => {
-                      const { x, y, payload } = props;
-                      const words = payload.value.split(' ');
-                      const lineHeight = 16;
-                      let lines = [];
-                      let currentLine = words[0];
-                      
-                      for (let i = 1; i < words.length; i++) {
-                        if (currentLine.length + words[i].length < 14) {
-                          currentLine += " " + words[i];
-                        } else {
-                          lines.push(currentLine);
-                          currentLine = words[i];
-                        }
-                      }
-                      lines.push(currentLine);
-                      
-                      return (
-                        <g transform={`translate(${x},${y + 10})`}>
-                          {lines.map((line, index) => (
-                            <text 
-                              key={index}
-                              x={0} 
-                              y={0} 
-                              dy={index * lineHeight} 
-                              textAnchor="middle"
-                              fill="#333"
-                              fontSize={14}
-                            >
-                              {line}
-                            </text>
-                          ))}
-                        </g>
-                      );
-                    }}
-                    height={60}
-                    tickLine={{ stroke: '#333' }}
-                    axisLine={{ stroke: '#333', strokeWidth: 2 }}
-                    allowDataOverflow={false}
-                    label={{
-                      value: 'Street Subcategories',
-                      position: 'bottom',
-                      offset: -10,
-                      fill: '#333',
-                      fontSize: 16,
-                      fontWeight: 'normal'
-                    }}
-                  />
-                  <YAxis 
-                    tick={{ fill: '#333', fontSize: 14 }}
-                    tickLine={{ stroke: '#333' }}
-                    axisLine={{ stroke: '#333', strokeWidth: 2 }}
-                    label={{
-                      value: 'Budget (Millions $)',
-                      angle: -90,
-                      position: 'left',
-                      offset: -10,
-                      dy: -70,
-                      fill: '#333',
-                      fontSize: 16,
-                      fontWeight: 'normal'
-                    }}
-                    domain={[0, 500]}
-                    tickCount={6}
-                  />
-                  <Tooltip formatter={(value) => `$${value.toFixed(2)}M`} />
-                  <Legend wrapperStyle={{ paddingTop: 10 }} />
-                  <Bar dataKey="budget" name="Total Budget" fill="#9B59B6" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
           );
-
-      case 'yearly-spending':
+        }
+        // Default: Line chart
         return (
-          <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
-            <LineChart data={getYearlySpendingData()}>
+          <ResponsiveContainer width="100%" height={400}>
+            <LineChart data={data}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-  dataKey="year" 
-  label={{ value: "Fiscal Year", position: "insideBottom", offset: -5 }}
-/>
-<YAxis 
-  label={{ value: "Spending (Millions $)", angle: -90, position: "insideLeft" }}
-/>
+              <XAxis dataKey="year" />
+              <YAxis />
               <Tooltip formatter={(value) => `$${value.toFixed(2)}M`} />
               <Legend />
               <Line type="monotone" dataKey="Streets" stroke={COLORS.blue} strokeWidth={2} />
@@ -407,25 +352,21 @@ const BudgetDashboard = ({ onLayersReady }) => {
             </LineChart>
           </ResponsiveContainer>
         );
-        
+  
       case 'top-projects':
         return (
           <ResponsiveContainer width="100%" height={isMobile ? 400 : 500}>
             <BarChart data={getTopProjectsData()} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-  type="number" 
-  label={{ value: "Budget (Millions $)", position: "insideBottom", offset: -5 }}
-/>
-<YAxis 
-  dataKey="name" 
-  type="category" 
-  width={isMobile ? 120 : 250}
-  tick={{ fontSize: isMobile ? 10 : 12 }}
-  label={{ value: "Project Name", position: "insideLeft", angle: -90 }}
-/>
+              <XAxis type="number" />
+              <YAxis 
+                dataKey="name" 
+                type="category" 
+                width={isMobile ? 120 : 250}
+                tick={{ fontSize: isMobile ? 10 : 12 }}
+              />
               <Tooltip formatter={(value) => `$${value.toFixed(2)}M`} />
-              <Bar dataKey="budget" name="Total Budget" fill={COLORS.teal}>
+              <Bar dataKey="budget" name="Total Budget">
                 {getTopProjectsData().map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                 ))}
@@ -433,7 +374,7 @@ const BudgetDashboard = ({ onLayersReady }) => {
             </BarChart>
           </ResponsiveContainer>
         );
-        
+  
       case 'project-count':
         return (
           <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
@@ -456,41 +397,72 @@ const BudgetDashboard = ({ onLayersReady }) => {
             </PieChart>
           </ResponsiveContainer>
         );
-        
+  
       default:
         return null;
     }
   };
+  
 
   const toggleFullscreen = () => setIsFullscreen(!isFullscreen);
 
   const renderPanelContent = (fullscreen = false) => (
     <div
-    className={`px-4 pt-4 ${fullscreen ? 'fixed inset-0 z-50 p-30 mt-12 overflow-auto' : 'max-h-[90vh] overflow-y-auto pb-4'}`}
-    ref={chartContainerRef}
-    style={{ 
-      backgroundColor: 'rgba(255, 255, 255, 0.7)' 
-    }}
-  >
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4">
-  {/* Dropdown on the left */}
-  <div className="mb-2 md:mb-0">
-    <label htmlFor="chart-select" className="block text-sm font-medium text-gray-700">
-      Select Chart:
-    </label>
-    <select
-      id="chart-select"
-      value={selectedChart}
-      onChange={(e) => setSelectedChart(e.target.value)}
-      className="p-2 border rounded-md w-full md:w-auto"
-    >
-      {chartOptions.map(option => (
-        <option key={option.id} value={option.id}>
-          {option.name}
-        </option>
-      ))}
-    </select>
+  className={`transition-all duration-300 ${
+    fullscreen
+      ? 'fixed top-20 bottom-4 left-4 right-4 z-50 mt-10 overflow-auto bg-white rounded-2xl shadow-2xl border border-gray-300 p-6'
+      : 'px-4 pt-4 max-h-[90vh] overflow-y-auto pb-4'
+  }`}
+  ref={chartContainerRef}
+>
+<div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4 md:gap-8">
+  {/* Chart Selection Section */}
+  <div className="flex flex-col md:flex-row gap-4 md:items-end">
+    <div>
+      <label htmlFor="chart-select" className="block text-sm font-semibold text-gray-700 mb-1">
+        Select Chart
+      </label>
+      <select
+        id="chart-select"
+        value={selectedChart}
+        onChange={(e) => setSelectedChart(e.target.value)}
+        className="w-full md:w-52 p-2 rounded-lg border border-gray-300 shadow-sm text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none transition-all"
+      >
+        {chartOptions.map(option => (
+          <option key={option.id} value={option.id}>
+            {option.name}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    <div>
+      <label htmlFor="chart-type" className="block text-sm font-semibold text-gray-700 mb-1">
+        Chart Type
+      </label>
+      <select
+        id="chart-type"
+        value={selectedChartType}
+        onChange={(e) => setSelectedChartType(e.target.value)}
+        className="w-full md:w-32 p-2 rounded-lg border border-gray-300 shadow-sm text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none transition-all"
+      >
+        {selectedChart === 'category-budget' || selectedChart === 'streets-subcategory' ? (
+          <>
+            <option value="bar">Bar</option>
+            <option value="pie">Pie</option>
+          </>
+        ) : selectedChart === 'yearly-spending' ? (
+          <>
+            <option value="line">Line</option>
+            <option value="bar">Bar</option>
+          </>
+        ) : (
+          <option value="default">Default</option>
+        )}
+      </select>
+    </div>
   </div>
+  
 
   {/* Buttons on the right */}
   <div className="flex items-center space-x-2">

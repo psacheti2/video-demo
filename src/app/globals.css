@@ -9,6 +9,46 @@
   padding: 10px 0;
 }
 
+.leaflet-div-icon {
+  width: 6px !important;
+  height: 6px !important;
+  margin-left: -3px !important;
+  margin-top: -3px !important;
+  border-radius: 50% !important;
+  background-color: #008080 !important;
+  border: 1px solid white !important;
+  box-shadow: none !important;
+}
+
+.leaflet-div-icon.leaflet-editing-icon {
+  width: 16px !important;
+  height: 16px !important;
+  margin-left: -8px !important;
+  margin-top: -8px !important;
+  border: 2px solid #008080 !important;
+  background-color: white !important;
+  border-radius: 50% !important;
+}
+
+.cursor-move {
+
+  cursor: move;
+}
+@keyframes slide-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.animate-slide-out {
+  animation: slide-out 0.3s ease-in forwards;
+}
+
 .typing-indicator span {
   height: 8px;
   width: 8px;

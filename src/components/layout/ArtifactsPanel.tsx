@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Maximize2, Minimize2, ArrowLeft } from 'lucide-react';
 import InfrastructureFloodMap from '../artifacts/InfrastructureFloodMap';
 import ChartComponent from '../artifacts/ChartComponent';
@@ -17,8 +17,10 @@ import PdfViewer from '../artifacts/PdfViewerComponent'
 
 
 interface ArtifactData {
-  type: string;
+  id: string;
+  date: string;
   title: string;
+  type: string;
   component: string;
   data: any;
 }
@@ -27,56 +29,70 @@ interface ArtifactsPanelProps {
   artifacts: ArtifactData[];
   isFullscreen?: boolean;
   toggleFullscreen: () => void;
-  messageId?: string; // Add a messageId prop to detect new messages
-  prevArtifactsCount?: number; // Previous count of artifacts
+  messageId?: string;
+  prevArtifactsCount?: number;
+  selectedArtifact?: ArtifactData | null;
+  setSelectedArtifact?: (artifact: ArtifactData | null) => void;
+  savedArtifacts?: ArtifactData[];
+  setSavedArtifacts?: React.Dispatch<React.SetStateAction<ArtifactData[]>>;
 }
+
 
 export default function ArtifactsPanel({
   artifacts,
   isFullscreen = false,
   toggleFullscreen,
-  messageId = '', // Default to empty string
-  prevArtifactsCount = 0 // Default to 0
+  messageId = '',
+  prevArtifactsCount = 0,
+  selectedArtifact,
+  setSelectedArtifact,
+  savedArtifacts = [], 
+  setSavedArtifacts = () => {} 
 }: ArtifactsPanelProps) {
-  const [selectedArtifact, setSelectedArtifact] = useState<ArtifactData | null>(null);
-  const prevMessageId = useRef(messageId);
+  const controlledArtifact = selectedArtifact;
+  const setControlledArtifact = setSelectedArtifact || (() => {});
+    const prevMessageId = useRef(messageId);
   const prevArtifactsLength = useRef(artifacts.length);
 
-  const InfrastructureFloodMapWithProps = ({ data }: { data: any }) => <InfrastructureFloodMap {...data} />;
+
+const InfrastructureFloodMapWithProps = ({ data }: { data: any }) => {
+  const component = useMemo(() => (
+    <InfrastructureFloodMap
+      {...data}
+      savedMaps={savedArtifacts}
+      setSavedArtifacts={setSavedArtifacts}
+    />
+  ), [data.id]); // Key off stable artifact identity, not full data
+
+  return component;
+};
+
   const ChartComponentWithProps = ({ data }: { data: any }) => <ChartComponent {...data} />;
   const ReportComponentWithProps = ({ data }: { data: any }) => <ReportComponent {...data} />;
   const BudgetDashboardComponentWithProps = ({ data }: { data: any }) => <BudgetDashboard {...data} />;
   const IndexDashboardComponentWithProps = ({ data }: { data: any }) => <IndexDashboard {...data} />;
   const ReportComponentVancouverWithProps = ({ data }: { data: any }) => <ReportComponentVancouver {...data} />;
   const IndexMapComponentWithProps = ({ data }: { data: any }) => <InfrastructureIndexMap {...data} />;
-  const HousingMapComponentWithProps = ({ data }: { data: any }) => <HousingMapComponent {...data} />;
+  const HousingMapComponentWithProps = ({ data }: { data: any }) => <HousingMapComponent {...data} savedMaps={savedArtifacts} setSavedArtifacts={setSavedArtifacts} />
   const SevenExtractComponentWithProps = ({ data }: { data: any }) => <PdfViewer {...data} />;
-  const FourMapComponentWithProps = ({ data }: { data: any }) => <FourMap {...data} />;
+  const FourMapComponentWithProps = ({ data }: { data: any }) => (
+    <FourMap {...data} savedMaps={savedArtifacts} setSavedArtifacts={setSavedArtifacts} />
+  );  
   const PdfViewerComponentWithProps = ({ data }: { data: any }) => <PdfViewer {...data} />;
 
   // This effect detects when a new message arrives (messageId changes)
   useEffect(() => {
-    // Only run when messageId changes and it's not the initial render
-    if (messageId !== '' && messageId !== prevMessageId.current) {
-      console.log(`Message ID changed: ${prevMessageId.current} -> ${messageId}`);
-      console.log(`Artifacts count: ${artifacts.length}, Previous count: ${prevArtifactsCount}`);
-      
-      // A new message has arrived
-      if (artifacts.length === prevArtifactsCount) {
-        // If no new artifacts were added with this message, show the artifact list
-        console.log('No new artifacts detected, showing list view');
-        setSelectedArtifact(null);
-      } else if (artifacts.length > prevArtifactsCount) {
-        // If new artifacts were added, select the newest one
-        console.log('New artifact detected, showing newest artifact');
-        setSelectedArtifact(artifacts[artifacts.length - 1]);
+    // Only react to new user messages, not conversation reloads
+    if (messageId !== '' && messageId !== prevMessageId.current && messageId.startsWith('user_')) {
+      if (artifacts.length > prevArtifactsCount) {
+        setControlledArtifact?.(artifacts[artifacts.length - 1]);
       }
-      
-      // Update the previous message ID
+  
       prevMessageId.current = messageId;
       prevArtifactsLength.current = artifacts.length;
     }
   }, [messageId, artifacts, prevArtifactsCount]);
+  
 
   const renderArtifactComponent = (artifact: ArtifactData) => {
     // You need to implement this function based on your actual components
@@ -115,16 +131,16 @@ export default function ArtifactsPanel({
   return (
     <div className="flex flex-col h-full overflow-hidden relative">
       <div className="sticky top-0 z-10 flex items-center justify-between py-4 px-3 bg-white shadow-sm">
-        {selectedArtifact ? (
+        {controlledArtifact ? (
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setSelectedArtifact(null)}
+              onClick={() =>setControlledArtifact?.(null)}
               className="p-1 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors"
               aria-label="Back to List"
             >
               <ArrowLeft className="h-4 w-4 text-[#008080] group-hover:text-white" />
             </button>
-            <h2 className="text-sm font-semibold text-gray-800">{selectedArtifact.title}</h2>
+            <h2 className="text-sm font-semibold text-gray-800">{controlledArtifact.title}</h2>
           </div>
         ) : (
           <h2 className="text-sm font-semibold text-[#2C3E50]">Artifacts ({artifacts.length})</h2>
@@ -134,9 +150,9 @@ export default function ArtifactsPanel({
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {selectedArtifact ? (
+        {controlledArtifact ? (
           <div className="h-full p-2 overflow-auto">
-            {renderArtifactComponent(selectedArtifact)}
+            {renderArtifactComponent(controlledArtifact)}
           </div>
         ) : (
           <div className="p-4 space-y-4">
@@ -144,8 +160,8 @@ export default function ArtifactsPanel({
               <div
                 key={index}
                 className="border border-[#008080] rounded-lg p-4 cursor-pointer bg-white text-[#008080] hover:bg-[#008080] hover:text-white transition-colors duration-200 group"
-                onClick={() => setSelectedArtifact(artifact)}
-              >
+                onClick={() => setControlledArtifact?.(artifact)}
+                >
                 <div className="flex items-center justify-between">
                   <h3 className="font-medium">{artifact.title}</h3>
                   <span className="bg-gray-100 px-2 py-1 rounded text-xs uppercase text-gray-600 group-hover:text-[#008080]">

@@ -1,12 +1,15 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
   Layers, Maximize2, X, Info, ChevronDown, ChevronUp,
-  Download, Wrench, Palette, Share2, BookmarkPlus, Table, Minimize2
+  Download, Wrench, Palette, Share2, BookmarkPlus, Table, Minimize2, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import _ from 'lodash';
 import { useNotificationStore } from '@/store/NotificationsStore';
+import 'leaflet-control-geocoder';
+import { TbMapSearch } from "react-icons/tb";
+import html2canvas from 'html2canvas';
 
-const AffordableHousingMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) => {
+const AffordableHousingMap = ({ onLayersReady, onSaveMap, savedMaps = [],setSavedArtifacts }) => {
   const mapContainerRef = useRef(null);
   const [map, setMap] = useState(null);
   const infoRef = useRef(null);
@@ -25,7 +28,43 @@ const AffordableHousingMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) => {
   const [showDownloadDialog, setShowDownloadDialog] = useState(false);
   const [downloadSelections, setDownloadSelections] = useState({});
   const [notificationMessage, setNotificationMessage] = useState('');
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [customSaveName, setCustomSaveName] = useState('');
+  const [toolbarVisible, setToolbarVisible] = useState(true);
+  const [toolbarPosition, setToolbarPosition] = useState({ top: 100, left: 100 });
+  const wrenchRef = useRef(null);
+  const [showGeocoder, setShowGeocoder] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [slideOut, setSlideOut] = useState(false);
 
+  const runGeocodeSearch = async (query) => {
+    if (!query) {
+      setSearchResults([]);
+      return;
+    }
+  
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&limit=5`
+      );
+      const data = await res.json();
+      const formattedResults = data.map(result => ({
+        name: result.display_name,
+        center: [parseFloat(result.lat), parseFloat(result.lon)],
+        bbox: L.latLngBounds(
+          [parseFloat(result.boundingbox[0]), parseFloat(result.boundingbox[2])],
+          [parseFloat(result.boundingbox[1]), parseFloat(result.boundingbox[3])]
+        )
+      }));
+      setSearchResults(formattedResults);
+    } catch (err) {
+      console.error("Geocoding error:", err);
+      setSearchResults([]);
+    }
+  };
+  
+   
   const [attachments, setAttachments] = useState([
     { id: 'map', label: '📍 Dallas Affordable Housing Map.jpg' },
     ...tableTitles.map((title, i) => ({
@@ -263,6 +302,21 @@ const AffordableHousingMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) => {
   };
 
   useEffect(() => {
+    if (showEmailNotification) {
+      const timer = setTimeout(() => {
+        setSlideOut(true); // trigger slide-out animation
+        setTimeout(() => {
+          setShowEmailNotification(false);
+          setSlideOut(false); // reset for next time
+        }, 300); // match slide-out duration
+      }, 4000); // show for 4s before sliding out
+  
+      return () => clearTimeout(timer);
+    }
+  }, [showEmailNotification]);
+  
+  
+  useEffect(() => {
     if (map) {
       // Give it a moment to paint/render first
       const timeout = setTimeout(() => {
@@ -387,6 +441,45 @@ const AffordableHousingMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) => {
       addNotification(`Downloaded ${downloadedFiles.length} file${downloadedFiles.length > 1 ? 's' : ''}: ${fileList}`);
     }
   };
+
+  useEffect(() => {
+    if (isFullScreen) {
+      // Centered horizontally, near the top
+      const toolbarWidth = 400; // approximate width in px of the full toolbar
+      const windowWidth = window.innerWidth;
+  
+      setToolbarPosition({
+        top: 20, // top of screen
+        left: windowWidth / 2 - toolbarWidth / 2
+      });
+    }
+  }, [isFullScreen]);
+  
+
+  useEffect(() => {
+  const handleMouseMove = (e) => {
+    if (!wrenchRef.current || !wrenchRef.current.dataset.dragging) return;
+    setToolbarPosition({
+      top: e.clientY - 20,
+      left: e.clientX - 20,
+    });
+  };
+
+  const handleMouseUp = () => {
+    if (wrenchRef.current) {
+      delete wrenchRef.current.dataset.dragging;
+    }
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+  };
+
+  document.addEventListener('mouseup', handleMouseUp);
+  return () => {
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+  };
+}, []);
+
 
   useEffect(() => {
     const initializeMap = async () => {
@@ -857,176 +950,389 @@ const AffordableHousingMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) => {
     }
   };
 
-  const Toolbar = ({ isFullScreen, showTable, setShowTable, onSaveMap, savedMaps, captureAndDownload, setShowLegend, setShowSources, toggleFullScreen }) => {
-    return (
-      <div
-        className={`flex justify-center items-center space-x-2 bg-white bg-opacity-70 backdrop-blur-sm p-2 shadow-sm z-30 transition-all duration-300
-          ${showTable ? 'absolute bottom-[calc(var(--table-height)_+_4px)] left-0 right-0' : 'absolute bottom-0 left-0 right-0'}
-        `}
-        style={{
-          bottom: showTable ? `${tableHeight + 4}px` : '0px'
-        }}
-      >
-        {/* Toggle Table button */}
-        <button
-          onClick={() => setShowTable(!showTable)}
-          className="flex items-center justify-center p-2 rounded-full bg-white transition-all shadow-sm"
-          title={showTable ? "Hide table" : "Show table"}
+   const Toolbar = ({
+      isFullScreen,
+      showTable,
+      setShowTable,
+      onSaveMap,
+      savedMaps,
+      captureAndDownload,
+      setShowLegend,
+      setShowSources,
+      toggleFullScreen,
+      toolbarVisible,
+      setToolbarVisible,
+      toolbarPosition,
+      setToolbarPosition
+    }) => {
+      const toolbarRef = useRef(null);
+      const dragStart = useRef({ x: 0, y: 0 });
+    
+      const handleMouseDown = (e) => {
+        e.preventDefault();
+        dragStart.current = {
+          x: e.clientX - toolbarPosition.left,
+          y: e.clientY - toolbarPosition.top
+        };
+        document.addEventListener("mousemove", handleMouseMove);
+        document.addEventListener("mouseup", handleMouseUp);
+      };
+    
+      const handleMouseMove = (e) => {
+        setToolbarPosition({
+          top: e.clientY - dragStart.current.y,
+          left: e.clientX - dragStart.current.x
+        });
+      };
+    
+      const handleMouseUp = () => {
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
+      };
+    
+      // 🌐 REGULAR VIEW TOOLBAR
+      if (!isFullScreen) {
+        return (
+          <div
+            className="flex justify-center items-center space-x-2 bg-white bg-opacity-70 backdrop-blur-sm p-2 shadow-sm z-30 rounded-full transition-all duration-300"
+            style={{
+              position: 'absolute',
+              bottom: showTable ? `${tableHeight + 4}px` : '0px',
+              left: '50%',
+              transform: 'translateX(-50%)'
+            }}
+          >
+            {/* your normal buttons here... */}
+            <button onClick={() => setShowTable(!showTable)} title="Toggle Table" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+              {showTable ? <Table size={20} /> : <Table size={20} />}
+            </button>
+            <button onClick={() => setShowSaveDialog(true)} title="Save Map" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+              <BookmarkPlus size={20} />
+            </button>
+            <button
+  onClick={() => setShowGeocoder(!showGeocoder)}
+  title="Search Location"
+  className="p-2 rounded-full border"
+  style={{
+    color: '#008080',
+    border: '1px solid #008080',
+    transition: 'all 0.2s ease-in-out'
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.backgroundColor = '#008080';
+    e.currentTarget.style.color = 'white';
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.backgroundColor = 'white';
+    e.currentTarget.style.color = '#008080';
+  }}
+>
+  <TbMapSearch size={20} />
+</button>
+
+            <button onClick={() => setShowSymbologyEditor(true)} title="Symbology" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+              <Palette size={20} />
+            </button>
+            <button onClick={() => setShowLegend(prev => !prev)} title="Legend" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+              <Layers size={20} />
+            </button>
+            <button onClick={() => setShowSources(prev => !prev)} title="Sources" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+              <Info size={20} />
+            </button>
+            <button onClick={() => setShowShareDialog(true)} title="Share" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+              <Share2 size={20} />
+            </button>
+            <button onClick={() => setShowDownloadDialog(true)} title="Download" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+              <Download size={20} />
+            </button>
+            <button onClick={toggleFullScreen} title="Fullscreen" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+              <Maximize2 size={20} />
+            </button>
+          </div>
+        );
+      }
+    
+      // 🧰 FULLSCREEN TOOLBAR WITH WRENCH
+      return (
+        <div
+          ref={toolbarRef}
+          className="flex items-center space-x-2 bg-white bg-opacity-80 backdrop-blur-sm p-2 shadow-lg rounded-full z-50 transition-all duration-300"
           style={{
-            color: COLORS.coral,
-            border: `1px solid ${COLORS.coral}`,
-            transition: 'all 0.2s ease-in-out'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = COLORS.coral;
-            e.currentTarget.style.color = 'white';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'white';
-            e.currentTarget.style.color = COLORS.coral;
+            position: 'absolute',
+            top: `${toolbarPosition.top}px`,
+            left: `${toolbarPosition.left}px`,
+            cursor: 'grab'
           }}
         >
-          {showTable ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
-        </button>
+          {/* 🛠️ Wrench (toggle + drag) */}
+          <button
+            onClick={() => setToolbarVisible(!toolbarVisible)}
+            onMouseDown={handleMouseDown}
+            title={toolbarVisible ? "Collapse tools" : "Expand tools"}
+            className="p-2 rounded-full border cursor-move"
+            style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}
+          >
+{toolbarVisible ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+</button>
+    
+          {/* 👇 Render the rest only if visible */}
+          {toolbarVisible && (
+            <>
+              <button onClick={() => setShowTable(!showTable)} title="Toggle Table" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+                {showTable ? <Table size={20} /> : <Table size={20} />}
+              </button>
+              <button onClick={() => setShowSaveDialog(true)} title="Save Map" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+                <BookmarkPlus size={20} />
+              </button>
+              <button
+  onClick={() => setShowGeocoder(!showGeocoder)}
+  title="Search Location"
+  className="p-2 rounded-full border"
+  style={{
+    color: '#008080',
+    border: '1px solid #008080',
+    transition: 'all 0.2s ease-in-out'
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.backgroundColor = '#008080';
+    e.currentTarget.style.color = 'white';
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.backgroundColor = 'white';
+    e.currentTarget.style.color = '#008080';
+  }}
+>
+  <TbMapSearch size={20} />
+</button>
 
-        <button
-          onClick={() => {
-            const newArtifactNumber = savedMaps?.length + 1 || 1;
-            const artifactName = `Housing Map`;
-            
-            // Show toast and notification without actually saving
-            const message = `${artifactName} has been saved`;
-            setNotificationMessage(message);
-            setShowEmailNotification(true);
-            addNotification(message);
-          }}          
-          className="flex items-center justify-center p-2 rounded-full bg-white hover:bg-neutral transition-all shadow-sm"
-          title="Save map"
-          style={{ color: COLORS.coral, border: `1px solid ${COLORS.coral}` }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = COLORS.coral;
-            e.currentTarget.style.color = 'white';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'white';
-            e.currentTarget.style.color = COLORS.coral;
-          }}
-        >
-          <BookmarkPlus size={20} />
-        </button>
-        
-
-        {/* Symbology button */}
-        <button
-          onClick={() => setShowSymbologyEditor(true)}
-          className="flex items-center justify-center p-2 rounded-full bg-white transition-all shadow-sm"
-          title="Symbology"
-          style={{ color: COLORS.coral, border: `1px solid ${COLORS.coral}` }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = COLORS.coral;
-            e.currentTarget.style.color = 'white';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'white';
-            e.currentTarget.style.color = COLORS.coral;
-          }}
-        >
-          <Palette size={20} />
-        </button>
-
-
-        {/* Legend button */}
-        <button
-          onClick={() => setShowLegend(!showLegend)}
-          title="Layers & Legend"
-          className="flex items-center justify-center p-2 rounded-full bg-white transition-all shadow-sm"
-          style={{ color: COLORS.coral, border: `1px solid ${COLORS.coral}` }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = COLORS.coral;
-            e.currentTarget.style.color = 'white';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'white';
-            e.currentTarget.style.color = COLORS.coral;
-          }}
-        >
-          <Layers size={20} />
-        </button>
-
-        {/* Info / Sources button */}
-        <button
-          onClick={() => setShowSources(prev => !prev)}
-          title="View sources"
-          className="flex items-center justify-center p-2 rounded-full bg-white transition-all shadow-sm"
-          style={{ color: COLORS.coral, border: `1px solid ${COLORS.coral}` }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = COLORS.coral;
-            e.currentTarget.style.color = 'white';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'white';
-            e.currentTarget.style.color = COLORS.coral;
-          }}
-        >
-          <Info size={20} />
-        </button>
-
-        {/* Share button */}
-        <button
-          onClick={() => setShowShareDialog(true)}
-          className="flex items-center justify-center p-2 rounded-full bg-white transition-all shadow-sm"
-          title="Share"
-          style={{ color: COLORS.coral, border: `1px solid ${COLORS.coral}` }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = COLORS.coral;
-            e.currentTarget.style.color = 'white';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'white';
-            e.currentTarget.style.color = COLORS.coral;
-          }}
-        >
-          <Share2 size={20} />
-        </button>
-
-        {/* Download button */}
-        <button
-          onClick={() => setShowDownloadDialog(true)}
-          className="flex items-center justify-center p-2 rounded-full bg-white transition-all shadow-sm"
-          title="Download map or tables"
-          style={{ color: COLORS.coral, border: `1px solid ${COLORS.coral}` }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = COLORS.coral;
-            e.currentTarget.style.color = 'white';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'white';
-            e.currentTarget.style.color = COLORS.coral;
-          }}
-        >
-          <Download size={20} />
-        </button>
-
-        {/* Fullscreen button */}
-        <button
-          onClick={toggleFullScreen}
-          className="flex items-center justify-center p-2 rounded-full bg-white transition-all shadow-sm"
-          title="Fullscreen"
-          style={{ color: COLORS.coral, border: `1px solid ${COLORS.coral}` }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = COLORS.coral;
-            e.currentTarget.style.color = 'white';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'white';
-            e.currentTarget.style.color = COLORS.coral;
-          }}
-        >
-          {isFullScreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
-        </button>
-      </div>
-    );
-  };
+              <button onClick={() => setShowSymbologyEditor(true)} title="Symbology" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+                <Palette size={20} />
+              </button>
+              <button onClick={() => setShowLegend(prev => !prev)} title="Legend" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+                <Layers size={20} />
+              </button>
+              <button onClick={() => setShowSources(prev => !prev)} title="Sources" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+                <Info size={20} />
+              </button>
+              <button onClick={() => setShowShareDialog(true)} title="Share" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+                <Share2 size={20} />
+              </button>
+              <button onClick={() => setShowDownloadDialog(true)} title="Download" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+                <Download size={20} />
+              </button>
+              <button onClick={toggleFullScreen} title="Exit Fullscreen" className="p-2 rounded-full border" style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}>
+                <Minimize2 size={20} />
+              </button>
+            </>
+          )}
+        </div>
+      );
+    };
+    
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTeammate, setSelectedTeammate] = useState(null);
@@ -1038,12 +1344,75 @@ const AffordableHousingMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) => {
   const filteredTeammates = teammateList.filter(name =>
     name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  const handleResultClick = (result) => {
+    setSearchQuery(result.name);
+    setSearchResults([]);
+  
+    // Fly to location and drop a teal map pin
+    const bbox = result.bbox;
+    const poly = L.polygon([
+      bbox.getSouthEast(),
+      bbox.getNorthEast(),
+      bbox.getNorthWest(),
+      bbox.getSouthWest()
+    ]);
+    map.fitBounds(result.bbox);
+    L.marker(result.center, {
+      icon: L.divIcon({
+        html: `<div style="
+          width: 20px;
+          height: 20px;
+          background-color: #008080;
+          border-radius: 50% 50% 50% 0;
+          transform: rotate(-45deg);
+          border: 2px solid white;
+          box-shadow: 0 0 2px rgba(0,0,0,0.3);
+        "></div>`,
+        className: '',
+        iconSize: [20, 20],
+        iconAnchor: [10, 20]
+      })
+    }).addTo(map);
+  };
   
   
   return (
-    <div className={`flex flex-col h-full max-h-screen overflow-hidden ${isFullScreen ? 'fixed inset-0 z-50 bg-white' : ''}`}>
-      
+<div className={`flex flex-col overflow-hidden transition-all duration-300 ${
+  isFullScreen
+    ? 'fixed top-12 bottom-4 left-4 right-4 z-50 bg-white rounded-2xl shadow-2xl border border-gray-300'
+    : 'h-full max-h-screen'
+}`}>      
       <div className="flex-1 relative">
+      <div className="absolute top-6 right-6 z-50 space-y-3">
+      <div className="bg-white border border-gray-300 rounded-xl shadow-md p-4 w-[280px]">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Select Map Layer
+        </label>
+        <select
+          className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008080] text-sm"
+          defaultValue="housing"
+        >
+          <option value="housing">Affordable Housing Units</option>
+          <option value="reinvestment">Reinvestment Zones</option>
+          <option value="demographics">Demographic Overlays</option>
+          <option value="services">City Services</option>
+        </select>
+      </div>
+
+      <div className="bg-white border border-gray-300 rounded-xl shadow-md p-4 w-[280px]">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Select View Style
+        </label>
+        <select
+          className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#008080] text-sm"
+          defaultValue="standard"
+        >
+          <option value="standard">Standard View</option>
+          <option value="heatmap">Heatmap View</option>
+          <option value="cluster">Cluster View</option>
+        </select>
+      </div>
+    </div>
         {showSources && (
           <div ref={infoRef} className="absolute top-4 right-4 w-[280px] bg-white border border-gray-200 rounded-xl shadow-lg p-5 z-50 animate-fade-in">
             <div className="space-y-2 text-sm text-gray-700">
@@ -1071,6 +1440,43 @@ const AffordableHousingMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) => {
             </div>
           </div>
         )}
+
+{showGeocoder && (
+  <div className="absolute top-6 left-6 z-[1000] w-[300px]">
+    <input
+  type="text"
+  placeholder="Search a location..."
+  value={searchQuery}
+  onChange={(e) => {
+    setSearchQuery(e.target.value);
+    runGeocodeSearch(e.target.value);
+  }}
+  className="w-full px-4 py-2 text-sm rounded-full shadow-md border"
+  style={{
+    backgroundColor: 'white',
+    borderColor: '#008080',
+    outline: 'none',
+    boxShadow: '0 0 0 2px rgba(0,128,128,0.1)',
+    transition: 'border 0.2s ease-in-out'
+  }}
+  onFocus={(e) => (e.target.style.boxShadow = '0 0 0 3px rgba(0,128,128,0.3)')}
+  onBlur={(e) => (e.target.style.boxShadow = '0 0 0 2px rgba(0,128,128,0.1)')}
+/>
+    {searchResults.length > 0 && (
+      <div className="bg-white border border-gray-200 rounded-lg shadow-md mt-1 max-h-48 overflow-y-auto divide-y divide-gray-100">
+        {searchResults.map((result, idx) => (
+          <div
+            key={idx}
+            onClick={() => handleResultClick(result)}
+            className="px-4 py-2 hover:bg-[#008080]/10 cursor-pointer text-sm text-gray-700 transition-colors duration-150"
+          >
+            {result.name}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
 
         {showSymbologyEditor && (
           <div className="absolute top-16 right-4 z-[1000]">
@@ -1112,6 +1518,60 @@ const AffordableHousingMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) => {
                   Done
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+        {showSaveDialog && (
+          <div className="absolute bottom-[60px] right-6 z-[1000]">
+            <div className="bg-white w-[300px] rounded-xl shadow-xl p-6 border border-gray-200 relative">
+              <button
+                onClick={() => setShowSaveDialog(false)}
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+              >
+                <X size={20} />
+              </button>
+        
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">Save Map</h2>
+              <input
+                type="text"
+                placeholder="Enter a name"
+                value={customSaveName}
+                onChange={(e) => setCustomSaveName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-[#008080] focus:outline-none"
+              />
+              <button
+                className="mt-4 w-full py-2 rounded-md text-sm font-semibold bg-[#008080] text-white hover:bg-teal-700"
+                onClick={() => {
+                  const name = customSaveName.trim() || 'Untitled Map';
+                  const artifact = {
+                    id: Date.now().toString(),
+                    title: name,
+                    type: 'map',
+                    component: 'MapComponent',
+                    data: {
+                      conversationId: localStorage.getItem('activeConversationId') || '',
+                    },
+                    date: new Date().toLocaleDateString(),
+                  };
+        
+                  if (typeof setSavedArtifacts === 'function') {
+                    setSavedArtifacts((prev) => {
+                      const updated = [...prev, artifact];
+                      localStorage.setItem('savedArtifacts', JSON.stringify(updated));
+                      return updated;
+                    });
+                  }
+        
+                  const msg = `${name} has been saved`;
+                  setShowSaveDialog(false);
+                  setCustomSaveName('');
+                  setNotificationMessage(msg);
+                  setShowEmailNotification(true);
+                  addNotification(msg);
+                }}
+              >
+                Save
+              </button>
             </div>
           </div>
         )}
@@ -1350,17 +1810,39 @@ const AffordableHousingMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) => {
           </div>
         )}
 
-        <Toolbar
-          isFullScreen={isFullScreen}
-          showTable={showTable}
-          setShowTable={setShowTable}
-          onSaveMap={onSaveMap}
-          savedMaps={savedMaps}
-          captureAndDownload={captureAndDownload}
-          setShowLegend={setShowLegend}
-          setShowSources={setShowSources}
-          toggleFullScreen={toggleFullScreen}
-        />
+{isFullScreen ? (
+  <Toolbar
+    isFullScreen={true}
+    showTable={showTable}
+    setShowTable={setShowTable}
+    onSaveMap={onSaveMap}
+    savedMaps={savedMaps}
+    captureAndDownload={captureAndDownload}
+    setShowLegend={setShowLegend}
+    setShowSources={setShowSources}
+    toggleFullScreen={toggleFullScreen}
+    toolbarVisible={toolbarVisible}
+    setToolbarVisible={setToolbarVisible}
+    toolbarPosition={toolbarPosition}
+    setToolbarPosition={setToolbarPosition}
+  />
+) : (
+  <Toolbar
+    isFullScreen={false}
+    showTable={showTable}
+    setShowTable={setShowTable}
+    onSaveMap={onSaveMap}
+    savedMaps={savedMaps}
+    captureAndDownload={captureAndDownload}
+    setShowLegend={setShowLegend}
+    setShowSources={setShowSources}
+    toggleFullScreen={toggleFullScreen}
+    toolbarVisible={true}
+    setToolbarVisible={() => {}}
+    toolbarPosition={{ top: 0, left: 0 }}
+    setToolbarPosition={() => {}}
+  />
+)}
         
         {/* Enhanced loading indicator that shows the current stage */}
         {loadingStage !== 'complete' && (
@@ -1491,21 +1973,13 @@ const AffordableHousingMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) => {
       </div>
 
       {showEmailNotification && (
-        <div className="fixed top-6 right-6 z-[9999] animate-slide-in group">
-          <div className="relative bg-white border border-[#008080] text-[#008080] px-5 py-3 rounded-lg shadow-lg flex items-center">
-            <span className="text-sm font-medium">
-              {notificationMessage}
-            </span>
-            <button
-              onClick={() => setShowEmailNotification(false)}
-              className="absolute top-1 right-1 w-5 h-5 rounded-full text-[#008080] hover:bg-[#008080]/10 hidden group-hover:flex items-center justify-center"
-              title="Dismiss"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      )}
+  <div className="fixed top-6 right-6 z-[9999] animate-slide-in transition-opacity duration-300">
+    <div className="bg-white border border-[#008080] text-[#008080] px-5 py-3 rounded-lg shadow-lg text-sm font-medium">
+      {notificationMessage}
+    </div>
+  </div>
+)}
+
     </div>
   );
 };

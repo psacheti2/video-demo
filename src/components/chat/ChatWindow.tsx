@@ -32,7 +32,9 @@ interface ChatWindowProps {
   isCentered?: boolean;
   sidebarOpen: boolean;
   setSidebarOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+  setSelectedArtifact: (artifact: Artifact) => void; // 👈 Add this
 }
+
 export default function ChatWindow({ 
   messages,
   setMessages,
@@ -40,8 +42,10 @@ export default function ChatWindow({
   onSendMessage,
   isCentered = false,
   sidebarOpen,
-  setSidebarOpen
+  setSidebarOpen,
+  setSelectedArtifact 
 }: ChatWindowProps) {
+ 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -90,7 +94,7 @@ useEffect(() => {
     <div className="flex h-full relative">
       <div
   className="flex flex-col flex-1 transition-all duration-300"
-  style={{ marginLeft: !isCentered && sidebarOpen && messages.length > 0 ? '60px' : '0' }}
+  style={{ marginLeft: !isCentered && sidebarOpen && messages.length > 0 ? '260px' : '0' }}
 >
     
       {/* Only render sidebar if not in centered mode */}
@@ -119,34 +123,32 @@ useEffect(() => {
 </div>
 </Dialog>
       
-      
-      <div 
-        className="flex flex-col flex-1 transition-all duration-300"
-        style={{
-          marginLeft: !isCentered && sidebarOpen ? '260px' : '0'
-        }}
-        
-      >
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-none">
-          {messages.map((message, index) => (
-            <ChatMessage key={index} message={message} isUser={message.isUser} />
-          ))}
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="bg-[#34495E] text-[#FFFFFF] rounded-lg px-4 py-2 rounded-bl-none">
-                <div className="flex space-x-2">
-                  <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                  <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '200ms' }}></div>
-                  <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '400ms' }}></div>
-                </div>
-              </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
+<div className="flex flex-col h-full">
+  <div className="flex-1 overflow-y-auto p-4 space-y-4">
+    {messages.map((message, index) => (
+      <ChatMessage
+        key={index}
+        message={message}
+        isUser={message.isUser}
+        onArtifactClick={(artifact: Artifact) => setSelectedArtifact(artifact)}
+      />
+    ))}
+    {isLoading && (
+      <div className="flex justify-start">
+        <div className="bg-[#34495E] text-[#FFFFFF] rounded-lg px-4 py-2 rounded-bl-none">
+          <div className="flex space-x-2">
+            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '200ms' }}></div>
+            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '400ms' }}></div>
+          </div>
         </div>
-        
-        <ChatInput onSendMessage={onSendMessage} />
       </div>
+    )}
+    <div ref={messagesEndRef} />
+  </div>
+  <ChatInput onSendMessage={onSendMessage} />
+</div>
+
       </div>
     </div>
   );

@@ -1,9 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Maximize2, Download, Edit2, Save, Menu, Minimize2, Info } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize2, Download, Edit2, Save, Menu, Minimize2, Info, X } from "lucide-react";
 import '../../app/globals.css';
 import VancouverFloodInfraMap from './InfrastructureFloodMap';
 import VancouverPriorityDashboard from './BudgetDashboard';
 import VancouverBCAChart from './BenefitCostAnalysisDashboard';
+import { useNotificationStore } from '@/store/NotificationsStore';
 
 
 const ReportComponentVancouver = ({ onLayersReady, reportName = "Vancouver Flood Assessment: Infrastructure, Risk & Opportunity", artifacts = [],
@@ -13,12 +14,16 @@ const ReportComponentVancouver = ({ onLayersReady, reportName = "Vancouver Flood
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const reportContainerRef = useRef(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false); 
   const [showArtifactGallery] = useState(false);
   const [showSources, setShowSources] = useState(false);
   const infoRef = useRef(null);
-
-  
+  const [showReportDownloadDialog, setShowReportDownloadDialog] = useState(false);
+const [reportDownloadSelections, setReportDownloadSelections] = useState({});
+const [notificationMessage, setNotificationMessage] = useState('');
+const [showEmailNotification, setShowEmailNotification] = useState(false);
+const addNotification = useNotificationStore((state) => state.addNotification);
+const [slideOut, setSlideOut] = useState(false);
 
   // Theme colors
   const COLORS = {
@@ -33,6 +38,19 @@ const ReportComponentVancouver = ({ onLayersReady, reportName = "Vancouver Flood
   const [isEditing, setIsEditing] = useState(false);
 const [reportTitle, setReportTitle] = useState(reportName);
 
+  useEffect(() => {
+    if (showEmailNotification) {
+      const timer = setTimeout(() => {
+        setSlideOut(true); // trigger slide-out animation
+        setTimeout(() => {
+          setShowEmailNotification(false);
+          setSlideOut(false); // reset for next time
+        }, 300); // match slide-out duration
+      }, 4000); // show for 4s before sliding out
+  
+      return () => clearTimeout(timer);
+    }
+  }, [showEmailNotification]);
 useEffect(() => {
     const handleClickOutside = (event) => {
       if (infoRef.current && !infoRef.current.contains(event.target)) {
@@ -263,6 +281,32 @@ useEffect(() => {
   const createMarkup = (htmlContent) => {
     return { __html: htmlContent };
   };
+
+  const handleReportDownload = () => {
+    const downloads = [];
+  
+    Object.entries(reportDownloadSelections).forEach(([key, { filename, format }]) => {
+      const fullName = `${filename}${format}`;
+      downloads.push(fullName);
+  
+      const blob = new Blob(['Sample report content'], { type: 'text/plain;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', fullName);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  
+    if (downloads.length > 0) {
+      const msg = `Downloaded ${downloads.length} file${downloads.length > 1 ? 's' : ''}: ${downloads.join(', ')}`;
+      setShowReportDownloadDialog(false);
+      setNotificationMessage(msg);
+      setShowEmailNotification(true);
+      addNotification(msg);
+    }
+  };
+  
   
   const handleDownload = () => {
     if (isEditing) {
@@ -463,7 +507,7 @@ useEffect(() => {
           </button>
 
             <button 
-              onClick={handleDownload}
+              onClick={setShowReportDownloadDialog}
               className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
               title="Download as PDF"
               style={{ 
@@ -647,7 +691,7 @@ useEffect(() => {
 
 
           <button 
-            onClick={handleDownload}
+            onClick={setShowReportDownloadDialog}
             className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2"
             title="Download as PDF"
             style={{ 
@@ -883,7 +927,7 @@ useEffect(() => {
   
                     {/* Download button */}
                     <button 
-                      onClick={handleDownload}
+                      onClick={setShowReportDownloadDialog}
                       className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2"
                       title="Download as PDF"
                       style={{ 
@@ -1056,7 +1100,7 @@ useEffect(() => {
 
   
                       <button 
-                        onClick={handleDownload}
+                        onClick={setShowReportDownloadDialog}
                         className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
                         title="Download as PDF"
                         style={{ 
@@ -1242,6 +1286,78 @@ useEffect(() => {
 return (
     <>
       {isFullscreen ? fullscreenPanelContent : regularPanelContent}
+      {showReportDownloadDialog && (
+  <div className="absolute bottom-[60px] right-6 z-[1000]">
+    <div className="bg-white w-[320px] rounded-xl shadow-2xl p-6 border border-gray-200 relative">
+      <button
+        onClick={() => setShowReportDownloadDialog(false)}
+        className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+      >
+        <X size={20} />
+      </button>
+
+      <h2 className="text-lg font-semibold text-gray-800 mb-4">Download Report</h2>
+
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <div className="text-sm font-medium text-gray-800 mb-2">📄 Resilience Report</div>
+          <div className="flex space-x-2">
+            <input
+              type="text"
+              className="border px-3 py-1 rounded w-[140px] text-sm focus:outline-none focus:ring-2 focus:ring-[#008080]"
+              value={reportDownloadSelections['report']?.filename || 'report_analysis'}
+              onChange={(e) =>
+                setReportDownloadSelections(prev => ({
+                  ...prev,
+                  report: {
+                    filename: e.target.value,
+                    format: prev['report']?.format || '.pdf'
+                  }
+                }))
+              }
+            />
+            <select
+              value={reportDownloadSelections['report']?.format || '.pdf'}
+              onChange={(e) =>
+                setReportDownloadSelections(prev => ({
+                  ...prev,
+                  report: {
+                    filename: prev['report']?.filename || 'report_analysis',
+                    format: e.target.value
+                  }
+                }))
+              }
+              className="border px-2 py-1 rounded text-sm focus:outline-none"
+            >
+              <option value=".pdf">.pdf</option>
+              <option value=".docx">.docx</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <button
+        onClick={handleReportDownload}
+        className="mt-6 w-full py-2 rounded-md text-sm font-semibold bg-[#008080] text-white hover:bg-teal-700"
+      >
+        Download Report
+      </button>
+    </div>
+  </div>
+)}
+{showEmailNotification && (
+  <div
+    className={`fixed top-6 right-6 z-[9999] transition-all duration-300 ${
+      slideOut ? 'animate-slide-out' : 'animate-slide-in'
+    }`}
+  >
+    <div className="bg-white border border-[#008080] text-[#008080] px-5 py-3 rounded-lg shadow-lg text-sm font-medium">
+      {notificationMessage}
+    </div>
+  </div>
+)}
+
+
       {showSources && (
     <div ref={infoRef}className="absolute top-full right-0 mt-2 w-[280px] bg-white border border-gray-200 rounded-xl shadow-lg p-5 z-[1000000]" style={{top:'100px'}}>
       <div className="space-y-2 text-sm text-gray-700">

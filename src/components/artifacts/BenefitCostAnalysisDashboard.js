@@ -482,9 +482,13 @@ const BenefitCostAnalysisDashboard = () => {
   // Render dashboard content (can be used for both normal and fullscreen mode)
   const renderDashboardContent = (fullscreen = false) => (
     <div 
-      className={`bg-white ${fullscreen ? 'fixed inset-0 z-50 overflow-auto pt-20 pb-8 px-8' : 'p-6 rounded-lg shadow-lg z-10'}`}
-      ref={chartContainerRef}
-    >
+  className={`bg-white transition-all duration-300 ${
+    fullscreen
+      ? 'fixed top-12 bottom-4 left-4 right-4 z-50 overflow-auto rounded-2xl shadow-2xl border border-gray-300'
+      : 'p-6 rounded-lg shadow-lg z-10'
+  }`}
+  ref={chartContainerRef}
+>
       {/* Header with buttons */}
 
 

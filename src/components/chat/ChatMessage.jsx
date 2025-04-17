@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 
-export default function ChatMessage({ message, isUser }) {
+export default function ChatMessage({ message, isUser, onArtifactClick }) {
   const [displayedText, setDisplayedText] = useState(isUser ? message.text : '');
-  
+
   useEffect(() => {
-    if (!isUser) {
+    const isLive = !message.id.startsWith('assistant_') && !message.id.startsWith('error_');
+
+    if (!isUser && isLive) {
       let index = 0;
       const interval = setInterval(() => {
         index++;
@@ -12,11 +14,13 @@ export default function ChatMessage({ message, isUser }) {
         if (index >= message.text.length) {
           clearInterval(interval);
         }
-      }, 15); // tweak typing speed here
+      }, 15);
       return () => clearInterval(interval);
+    } else {
+      setDisplayedText(message.text); // Instantly show full message
     }
-  }, [message.text, isUser]);
-  
+  }, [message.text, isUser, message.id]);
+
   return (
     <div className={`flex flex-col mb-6 px-4 md:px-2 w-full ${isUser ? 'items-end' : 'items-start'}`}>
       {message.file && (
@@ -27,6 +31,7 @@ export default function ChatMessage({ message, isUser }) {
           </span>
         </div>
       )}
+
       <div
         className={`max-w-[75%] rounded-lg px-4 py-3 shadow-md break-words ${
           !isUser
@@ -38,6 +43,20 @@ export default function ChatMessage({ message, isUser }) {
           {isUser ? message.text : displayedText}
         </p>
       </div>
+
+      {!isUser && message.artifacts && message.artifacts.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {message.artifacts.map((artifact, index) => (
+            <button
+              key={index}
+              onClick={() => onArtifactClick?.(artifact)}
+              className="px-3 py-1 text-sm text-[#008080] border border-[#008080] rounded-full bg-white hover:bg-[#008080] hover:text-white transition"
+            >
+              {artifact.title}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
