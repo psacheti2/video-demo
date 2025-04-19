@@ -202,9 +202,16 @@ const BudgetDashboard = ({ onLayersReady, setSavedArtifacts, title, onBack }) =>
         )}
       </div>
 
-      <div className="bg-white p-4 rounded-lg shadow relative z-10">
-        {renderChart()}
-      </div>
+<div className="mb-4 text-center">
+  <h2 className="text-xl font-semibold text-gray-800">Capital Budget by Category</h2>
+  <p className="text-sm text-gray-600 mt-1">
+    Comparison of total budget allocation and planned spending across service categories
+  </p>
+</div>
+
+<div className="bg-white p-4 rounded-lg shadow relative z-10">
+  {renderChart()}
+</div>
       
       {/* Bottom Toolbar */}
       <div className="flex justify-center items-center mt-4">

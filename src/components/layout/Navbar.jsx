@@ -67,7 +67,7 @@ const toggleProfileDropdown = () => setProfileOpen(!profileOpen);
   >
     <Bell className="h-5 w-5 text-[#008080] group-hover:text-white" />
     {unreadCount > 0 && (
-      <span className="absolute top-1/2 right-1/2 transform -translate-y-[135%] translate-x-1/2 w-2 h-2 bg-[#FF5747] rounded-full" />
+      <span className="absolute top-1/2 right-2/5 transform -translate-y-[135%] translate-x-1/2 w-2 h-2 bg-[#FF5747] rounded-full" />
              )}
   </button>
 
