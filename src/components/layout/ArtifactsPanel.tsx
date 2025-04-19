@@ -55,21 +55,48 @@ export default function ArtifactsPanel({
   const prevArtifactsLength = useRef(artifacts.length);
 
 
-const InfrastructureFloodMapWithProps = ({ data }: { data: any }) => {
-  const component = useMemo(() => (
-    <InfrastructureFloodMap
-      {...data}
-      savedMaps={savedArtifacts}
-      setSavedArtifacts={setSavedArtifacts}
-    />
-  ), [data.id]); // Key off stable artifact identity, not full data
-
-  return component;
-};
+  const InfrastructureFloodMapWithProps = ({ data }: { data: any }) => {
+    const component = useMemo(() => (
+      <InfrastructureFloodMap
+  {...data}
+  savedMaps={savedArtifacts}
+  setSavedArtifacts={setSavedArtifacts}
+  title={controlledArtifact?.title}
+  onBack={() => {
+    if (isFullscreen) {
+      toggleFullscreen();               // ⬅️ exit fullscreen first
+      setTimeout(() => {
+        setControlledArtifact(null);    // ⬅️ then open gallery
+      }, 300);
+    } else {
+      setControlledArtifact(null);      // ⬅️ regular back just opens gallery
+    }
+  }}
+/>
+    
+    ), [data.id, controlledArtifact?.title, isFullscreen, setControlledArtifact]);    
+    return component;
+  };
 
   const ChartComponentWithProps = ({ data }: { data: any }) => <ChartComponent {...data} />;
   const ReportComponentWithProps = ({ data }: { data: any }) => <ReportComponent {...data} />;
-  const BudgetDashboardComponentWithProps = ({ data }: { data: any }) => <BudgetDashboard {...data} />;
+  const BudgetDashboardComponentWithProps = ({ data }: { data: any }) => (
+    <BudgetDashboard
+      {...data}
+      setSavedArtifacts={setSavedArtifacts}
+      title={controlledArtifact?.title}
+      onBack={() => {
+        if (isFullscreen) {
+          toggleFullscreen();
+          setTimeout(() => {
+            setControlledArtifact(null);
+          }, 300);
+        } else {
+          setControlledArtifact(null);
+        }
+      }}
+    />
+  );  
   const IndexDashboardComponentWithProps = ({ data }: { data: any }) => <IndexDashboard {...data} />;
   const ReportComponentVancouverWithProps = ({ data }: { data: any }) => <ReportComponentVancouver {...data} />;
   const IndexMapComponentWithProps = ({ data }: { data: any }) => <InfrastructureIndexMap {...data} />;
@@ -130,8 +157,10 @@ const InfrastructureFloodMapWithProps = ({ data }: { data: any }) => {
 
   return (
     <div className="flex flex-col h-full overflow-hidden relative">
-      <div className="sticky top-0 z-10 flex items-center justify-between py-4 px-3 bg-white shadow-sm">
-        {controlledArtifact ? (
+<div 
+  className="sticky top-0 z-10 flex items-center justify-between py-4 px-3 bg-white border-t border-b border-gray-300" 
+>
+         {controlledArtifact ? (
           <div className="flex items-center gap-2">
             <button
               onClick={() =>setControlledArtifact?.(null)}

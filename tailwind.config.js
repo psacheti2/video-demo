@@ -15,6 +15,7 @@ module.exports = {
 			closeP:'#486584',
 			closeS:'#577C9E',
 			closeCTA:'#FF7C70',
+			offwhite: '#EFEFE9',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

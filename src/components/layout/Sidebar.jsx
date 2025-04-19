@@ -19,13 +19,6 @@ export default function Sidebar({
 
   
   useEffect(() => {
-    localStorage.removeItem('conversations');
-    localStorage.removeItem('savedArtifacts'); // if you're storing them like this
-  
-    setRecentChats([]); // clear state too if needed
-  }, []);
-  
-  useEffect(() => {
     const stored = JSON.parse(localStorage.getItem('conversations') || '{}');
     const chats = Object.entries(stored).map(([id, convo]) => ({
       id,
@@ -38,55 +31,58 @@ export default function Sidebar({
   return (
     <>
     <aside
-      className={`fixed top-0 left-0 z-[150] w-64 h-full bg-[#008080] transform transition-transform duration-300 ease-in-out ${
-        isOpen ? 'translate-x-0' : '-translate-x-full'
+className={`fixed top-0 left-0 z-[150] w-64 h-full bg-[#FFFFFF] bg-opacity-100 transform transition-transform duration-300 ease-in-out ${        isOpen ? 'translate-x-0' : '-translate-x-full'
       } flex flex-col justify-between`}
     >
       <div className="mt-2 px-4 flex items-center justify-between">
-        <button
-          onClick={onClose}
-          className="p-1.5 rounded-full bg-white border border-gray-300 hover:bg-[#008080]/90 group shadow-sm transition"
-          title="Close Sidebar"
-        >
-          <PanelRight className="h-4 w-4 text-[#008080] group-hover:text-white" />
-        </button>
+      <button
+  onClick={onClose}
+  className="group p-1.5 rounded-full border border-[#008080] text-[#008080] bg-white hover:bg-[#008080]/90 hover:text-white transition shadow-sm"
+  title="Close Sidebar"
+>
+  <PanelRight className="h-4 w-4 text-inherit transition" />
+</button>
+
 
         <div className="flex items-center space-x-1">
-          <button
-onClick={() => setSearchOpen(true)}
-className="p-1.5 rounded-full bg-white border border-gray-300 hover:bg-[#008080]/90 group shadow-sm transition"
-            title="Search"
-          >
-            <Search className="h-4 w-4 text-[#008080] group-hover:text-white" />
-          </button>
-          <button
+        <button
+  onClick={() => setSearchOpen(true)}
+  className="group p-1.5 rounded-full border border-[#008080] text-[#008080] bg-white hover:bg-[#008080]/90 hover:text-white transition shadow-sm"
+  title="Search"
+>
+  <Search className="h-4 w-4 text-inherit transition" />
+</button>
+<button
   onClick={() => {
     onStartNewChat();
     onClose();
   }}
-  className="p-1.5 rounded-full bg-white border border-gray-300 hover:bg-[#008080]/90 group shadow-sm transition"
+  className="group p-1.5 rounded-full border border-[#008080] text-[#008080] bg-white hover:bg-[#008080]/90 hover:text-white transition shadow-sm"
   title="New Chat"
 >
-<Plus className="h-4 w-4 text-[#008080] group-hover:text-white" />
-
-          </button>
+  <Plus className="h-4 w-4 text-inherit transition" />
+</button>
         </div>
       </div>
 
       <div className="p-4 flex space-x-2">
         <button
           onClick={() => setActiveTab('recent')}
-          className={`flex-1 py-1 text-sm rounded-lg transition ${
-            activeTab === 'recent' ? 'bg-white text-[#008080]' : 'bg-[#006666] text-white'
-          }`}
+          className={`flex-1 py-1 text-sm rounded-lg border transition ${
+            activeTab === 'recent'
+              ?  'bg-[#008080] text-white border-[#008080]'
+              :'bg-white text-[#008080] border-[#008080]'
+          } hover:bg-[#008080] hover:text-white`}
         >
           Recent
         </button>
         <button
           onClick={() => setActiveTab('saved')}
-          className={`flex-1 py-1 text-sm rounded-lg transition ${
-            activeTab === 'saved' ? 'bg-white text-[#008080]' : 'bg-[#006666] text-white'
-          }`}
+          className={`flex-1 py-1 text-sm rounded-lg border transition ${
+            activeTab === 'saved'
+              ?  'bg-[#008080] text-white border-[#008080]'
+              :'bg-white text-[#008080] border-[#008080]'
+          } hover:bg-[#008080] hover:text-white`}
         >
           Saved
         </button>
@@ -95,22 +91,24 @@ className="p-1.5 rounded-full bg-white border border-gray-300 hover:bg-[#008080]
       <div className="flex-1 overflow-y-auto p-4">
         {activeTab === 'recent' ? (
           <>
-            <h3 className="text-xs uppercase tracking-wider text-white opacity-80 mb-2">Recent Chats</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#008080] mb-2">
+            Recent Chats</h3>
             <ul className="space-y-2">
             {recentChats.map(chat => (
   <li key={chat.id}>
     <button
-      onClick={() => {
-        onClose();
-        onLoadConversation(chat.id);
-      }}
-      className="w-full text-left block p-2 rounded hover:bg-[#f0fdfa] transition-colors duration-200 group"
-    >
-      <div className="text-sm font-medium text-white truncate group-hover:text-[#008080]">
-        {chat.title}
-      </div>
-      <div className="text-xs text-white group-hover:text-[#008080]">{chat.date}</div>
-    </button>
+  onClick={() => {
+    onClose();
+    onLoadConversation(chat.id);
+  }}
+  className="group w-full text-left block p-2 rounded transition-colors duration-200 hover:bg-[#008080]/90"
+>
+  <div className="text-sm font-medium truncate text-[#2C3E50] group-hover:text-white">
+    {chat.title}
+  </div>
+  <div className="text-xs text-[#2C3E50] group-hover:text-white">{chat.date}</div>
+</button>
+
   </li>
 ))}
 
@@ -118,20 +116,24 @@ className="p-1.5 rounded-full bg-white border border-gray-300 hover:bg-[#008080]
           </>
         ) : (
           <>
-            <h3 className="text-xs uppercase tracking-wider text-white opacity-80 mb-2">Saved Artifacts</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#008080] mb-2">
+Saved Artifacts</h3>
             <ul className="space-y-2">
             {savedArtifacts.map(artifact => (
   <li key={artifact.id}>
     <button
-      onClick={() => {
-        setModalArtifact?.(artifact); // ✅ open the modal
-        onClose(); // optional if you want to close the sidebar
-      }}
-      className="w-full text-left block p-2 rounded hover:bg-[#006666] transition-colors duration-200"
-    >
-      <div className="text-sm font-medium truncate text-white">{artifact.title}</div>
-      <div className="text-xs text-white opacity-70">{artifact.type} • {artifact.date}</div>
-    </button>
+  onClick={() => {
+    setModalArtifact?.(artifact);
+    onClose();
+  }}
+  className="group w-full text-left block p-2 rounded transition-colors duration-200 hover:bg-[#008080]/90"
+>
+  <div className="text-sm font-medium truncate text-[#2C3E50] group-hover:text-white">{artifact.title}</div>
+  <div className="text-xs text-[#2C3E50] opacity-70 group-hover:text-white">
+    {artifact.type} • {artifact.date}
+  </div>
+</button>
+
   </li>
 ))}
             </ul>
@@ -139,16 +141,6 @@ className="p-1.5 rounded-full bg-white border border-gray-300 hover:bg-[#008080]
         )}
       </div>
 
-      <div className="p-4 border-t border-[#006666] space-y-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-            <span className="text-sm font-medium text-[#008080]">JD</span>
-          </div>
-          <div>
-            <div className="text-sm text-white font-medium">John Doe</div>
-          </div>
-        </div>
-      </div>
     </aside>
     <Dialog open={searchOpen} onClose={() => setSearchOpen(false)} className="relative z-[200]">
     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" aria-hidden="true" />

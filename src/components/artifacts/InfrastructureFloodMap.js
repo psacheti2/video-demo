@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import {
   Layers, Maximize2, X, Info, ChevronDown, ChevronUp,
-  Download, Wrench, Palette, Share2, BookmarkPlus, Table, Minimize2, ChevronLeft, ChevronRight, Pencil
+  Download, Wrench, Palette, Share2, BookmarkPlus, Table, Minimize2, ChevronLeft, ArrowLeft, ChevronRight, Pencil
 } from 'lucide-react';
 import { TbMapSearch } from "react-icons/tb";
 import html2canvas from 'html2canvas';
@@ -13,7 +13,16 @@ import 'leaflet-draw';
 import 'leaflet-draw/dist/leaflet.draw.js';
 import _ from 'lodash';
 
-const InfrastructureFloodMap = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts }) => {
+import { PiPolygon } from "react-icons/pi";
+import { FaRegCircle } from "react-icons/fa6";
+import { GiPathDistance } from "react-icons/gi";
+import { LiaShareAltSolid } from "react-icons/lia";
+import { LuMove3D, LuSquiggle } from "react-icons/lu";
+import { MdDraw } from "react-icons/md";
+
+
+const InfrastructureFloodMap = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts, title, 
+  onBack  }) => {
 
   const mapContainerRef = useRef(null);
   const [map, setMap] = useState(null);
@@ -52,10 +61,16 @@ const InfrastructureFloodMap = ({ onLayersReady, onSaveMap, savedMaps = [], setS
   const [drawDialogPos, setDrawDialogPos] = useState({ top: 0, left: 0 });
   const [selectedRowIndex, setSelectedRowIndex] = useState(null);
   const [selectedColIndex, setSelectedColIndex] = useState(null);
-  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, type: null });
-  const [activeEditingCell, setActiveEditingCell] = useState(null); // { row: 2, col: 1 }
-const [editingFormula, setEditingFormula] = useState('');
-const formulaInputRef = useRef(null);
+  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, type: null, index: null,
+    columnName: null, });
+  const [editingCell, setEditingCell] = useState(null);
+  const [cellValue, setCellValue] = useState('');
+  const [originalRowsMap, setOriginalRowsMap] = useState({});
+  const [showFilterDialog, setShowFilterDialog] = useState(false);
+  const [filterColumn, setFilterColumn] = useState(null);
+  const [filterOptions, setFilterOptions] = useState([]);
+  const [selectedFilters, setSelectedFilters] = useState({});
+  const [filterSearch, setFilterSearch] = useState('');
 
   const [attachments, setAttachments] = useState([
     { id: 'map', label: '📍 Vancouver Infrastructure & Flood Assessment Map.jpg' },
@@ -74,12 +89,22 @@ const formulaInputRef = useRef(null);
   // Drag handle reference
   const dragHandleRef = useRef(null);
   // Enhanced loading states
-  const [loadingStage, setLoadingStage] = useState('initializing');
-  const [loadingProgress, setLoadingProgress] = useState(0);
-  const [isFullScreen, setIsFullScreen] = useState(false);
-  const [showLegend, setShowLegend] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+// Count how many layers are active in initial state
+const initialActiveLayerCount = Object.values({
+  floodZones: true,
+  infrastructure: true,
+  stormwaterProjects: true,
+  infrastructureOutsideProjects: true,
+  data311: true,
+  demographics: true
+}).filter(isActive => isActive).length;
+
+// Set showLegend to true if more than 4 layers are active
+const [showLegend, setShowLegend] = useState(initialActiveLayerCount > 4);
   const [showSources, setShowSources] = useState(false);
   const [expandedSections, setExpandedSections] = useState({});
+  const [isModified, setIsModified] = useState(false);
 
   const [showSymbologyEditor, setShowSymbologyEditor] = useState(false);
 
@@ -169,68 +194,13 @@ const formulaInputRef = useRef(null);
     return value;
   };
   
-  const handleCellEdit = (rowIndex, header, value) => {
+  const handleCellEdit = (rowIdx, columnName, newValue) => {
     setTableData(prev => {
       const updated = [...prev];
-      updated[currentTableIndex].rows[rowIndex][header] = value;
-      return updated;
-    });
-  };
-  
-  const addRow = () => {
-    setTableData(prev => {
-      const updated = [...prev];
-      const table = updated[currentTableIndex];
-      const newRow = Object.fromEntries(table.headers.map(h => [h, '']));
-      table.rows.push(newRow);
+      updated[currentTableIndex].rows[rowIdx][columnName] = newValue;
       return updated;
     });
   };  
-  
-  const addColumn = () => {
-    const name = prompt('Enter column name:');
-    if (!name) return;
-  
-    setTableData(prev => {
-      const updated = [...prev];
-      const currentTable = updated[currentTableIndex];
-      if (!currentTable.headers.includes(name)) {
-        currentTable.headers.push(name);
-        currentTable.rows = currentTable.rows.map(row => ({ ...row, [name]: '' }));
-      }
-      return updated;
-    });
-  };
-  
-  const insertRow = (index) => {
-    setTableData(prev => {
-      const updated = [...prev];
-      const table = updated[currentTableIndex];
-      const newRow = Object.fromEntries(table.headers.map(h => [h, '']));
-      table.rows.splice(index, 0, newRow);
-      return updated;
-    });
-  };
-  
-  const insertColumn = (index) => {
-    const name = prompt("Enter column name:");
-    if (!name) return;
-    setTableData(prev => {
-      const updated = [...prev];
-      const table = updated[currentTableIndex];
-      if (!table.headers.includes(name)) {
-        table.headers.splice(index, 0, name);
-        table.rows = table.rows.map(row => {
-          const newRow = {};
-          table.headers.forEach(h => {
-            newRow[h] = h === name ? '' : row[h] ?? '';
-          });
-          return newRow;
-        });
-      }
-      return updated;
-    });
-  };
   
   const handleRightClick = (e, type, index) => {
     e.preventDefault();
@@ -247,11 +217,12 @@ const formulaInputRef = useRef(null);
     return () => window.removeEventListener("click", handleClick);
   }, []);
   
+  
   const handleMouseDown = (e) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const container = isFullScreen
+    const container = isFullscreen
       ? document.querySelector('.fullscreen-container')
       : mapContainerRef.current;
 
@@ -436,8 +407,8 @@ const formulaInputRef = useRef(null);
     }
   };
 
-  const toggleFullScreen = () => {
-    setIsFullScreen(!isFullScreen);
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
     if (map) {
       setTimeout(() => map.invalidateSize(), 300);
     }
@@ -473,7 +444,7 @@ const formulaInputRef = useRef(null);
     if (showDrawTools && pencilRef.current) {
       const rect = pencilRef.current.getBoundingClientRect();
 
-      const top = isFullScreen
+      const top = isFullscreen
         ? rect.bottom + window.scrollY + 12
         : rect.top + window.scrollY + 12;
 
@@ -481,7 +452,7 @@ const formulaInputRef = useRef(null);
 
       setDrawDialogPos({ top, left });
     }
-  }, [showDrawTools, isFullScreen]);
+  }, [showDrawTools, isFullscreen]);
 
 
   useEffect(() => {
@@ -503,24 +474,22 @@ const formulaInputRef = useRef(null);
   
     map.on(L.Draw.Event.CREATED, function (e) {
       const layer = e.layer;
-      map.drawnItems.addLayer(layer); // ✅ this ensures drawings are saved
+      map.drawnItems.addLayer(layer);
     });
   }, [map]);
   
 
   useEffect(() => {
-    if (isFullScreen) {
-      // Centered horizontally, near the top
-      const toolbarWidth = 400; // approximate width in px of the full toolbar
-      const windowWidth = window.innerWidth;
-
+    if (isFullscreen) {
+      // Position on the left side, vertically centered
+      const windowHeight = window.innerHeight;
+      
       setToolbarPosition({
-        top: 20, // top of screen
-        left: windowWidth / 2 - toolbarWidth / 2
+        top: windowHeight / 2 - 330, 
+        left: 20 // Left margin
       });
     }
-  }, [isFullScreen]);
-
+  }, [isFullscreen]);
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -672,6 +641,15 @@ const formulaInputRef = useRef(null);
     }
   };
   useEffect(() => {
+    if (tableData.length > 0 && !isModified) {
+      setOriginalRowsMap(prev => ({
+        ...prev,
+        [currentTableIndex]: JSON.parse(JSON.stringify(tableData[currentTableIndex].rows))
+      }));
+    }
+  }, [tableData, currentTableIndex, isModified]);  
+  
+  useEffect(() => {
     if (!map) return;
 
     const drawnItems = new L.FeatureGroup();
@@ -749,27 +727,503 @@ const formulaInputRef = useRef(null);
   };
   
   
+  const fetchFloodZones = async () => {
+    try {
+      const res = await fetch('/data/floodplains-data.geojson');
+      const floodData = await res.json();
+      const floodLayer = L.layerGroup();
+
+      floodData.features.forEach(feature => {
+        if (feature.geometry && feature.geometry.type === 'Polygon' || feature.geometry.type === 'MultiPolygon') {
+          // Convert GeoJSON coordinates to Leaflet format
+          let coordinates;
+
+          if (feature.geometry.type === 'Polygon') {
+            // For simple polygons
+            coordinates = feature.geometry.coordinates[0].map(coord => [coord[1], coord[0]]);
+          } else {
+            // For multipolygons (first polygon in the collection)
+            coordinates = feature.geometry.coordinates[0][0].map(coord => [coord[1], coord[0]]);
+          }
+
+          // Determine color based on feature properties (if available)
+          // Assuming there's a risk_level or similar property
+          let color = layerColors.floodMedium;
+          let fillColor = layerColors.floodLight;
+
+          if (feature.properties) {
+            if (feature.properties.risk_level === 'high') {
+              color = layerColors.floodDark;
+              fillColor = layerColors.floodMedium;
+            } else if (feature.properties.risk_level === 'low') {
+              color = layerColors.floodLight;
+              fillColor = layerColors.floodLight;
+            }
+          }
+
+          const polygon = L.polygon(coordinates, {
+            color: color,
+            fillColor: fillColor,
+            weight: 2,
+            opacity: 0.8,
+            fillOpacity: 0.5
+          });
+          snapLayersRef.current.push(polygon);
+          // Create popup with relevant information
+          let popupContent = '<strong>Flood Zone</strong>';
+          if (feature.properties) {
+            if (feature.properties.risk_level) {
+              popupContent += `<br>Risk Level: ${feature.properties.risk_level}`;
+            }
+            if (feature.properties.elevation) {
+              popupContent += `<br>Elevation: ${feature.properties.elevation}m above sea level`;
+            }
+          }
+
+          polygon.bindPopup(popupContent);
+          floodPolygonsRef.current.push({ polygon, properties: feature.properties });
+          floodLayer.addLayer(polygon);
+        }
+      });
+
+      return { floodLayer, floodData };
+    } catch (error) {
+      console.error("Error fetching flood zones:", error);
+      return L.layerGroup(); // Return empty layer on error
+    }
+  };
+
+  const fetchInfrastructureData = async () => {
+    try {
+      // Create a layerGroup to hold all infrastructure
+      const infraLayer = L.layerGroup();
+
+      // Fetch street data
+      const streetRes = await fetch('/data/streetcondition-data.geojson');
+      const streetData = await streetRes.json();
+
+      // Process street data
+      if (streetData.features && streetData.features.length > 0) {
+        streetData.features.forEach(feature => {
+          if (feature.geometry && feature.geometry.coordinates) {
+            // Convert GeoJSON linestring coordinates to Leaflet format
+            const coords = feature.geometry.coordinates.map(coord => [coord[1], coord[0]]);
+
+            // Determine color based on condition
+            let color = layerColors.streetMedium;
+            const condition = feature.properties?.condition || 'C';
+
+            if (condition === 'A' || condition === 'B') {
+              color = layerColors.streetGood;
+            } else if (condition === 'C' || condition === 'D') {
+              color = layerColors.streetMedium;
+            } else {
+              color = layerColors.streetPoor;
+            }
+
+            // Create polyline for street
+            const streetLine = L.polyline(coords, {
+              color: color,
+              weight: 4,
+              opacity: 0.8
+            });
+            snapLayersRef.current.push(streetLine);
+
+            // Create popup with street information
+            let popupContent = '<strong>Street</strong>';
+            if (feature.properties) {
+              if (feature.properties.hblock) {
+                popupContent += `<br>Location: ${feature.properties.hblock}`;
+              }
+              if (feature.properties.streetuse) {
+                popupContent += `<br>Type: ${feature.properties.streetuse}`;
+              }
+              if (feature.properties.condition) {
+                popupContent += `<br>Condition: ${feature.properties.condition}`;
+              }
+            }
+
+            streetLine.bindPopup(popupContent);
+            streetLine.on('click', () => {
+              selectRowByFeatureProperties(feature.properties);
+            });            
+            streetLinesRef.current.push({ line: streetLine, condition: feature.properties?.condition });
+            infraLayer.addLayer(streetLine);
+          }
+        });
+      }
+
+      // Fetch sewer/stormwater data
+      const sewerRes = await fetch('/data/stormwaste-data.geojson');
+      const sewerData = await sewerRes.json();
+
+      // Process sewer data
+      if (sewerData.features && sewerData.features.length > 0) {
+        sewerData.features.forEach(feature => {
+          if (feature.geometry && feature.geometry.coordinates) {
+            // Convert GeoJSON linestring coordinates to Leaflet format
+            const coords = feature.geometry.coordinates.map(coord => [coord[1], coord[0]]);
+
+            // Determine color based on condition
+            let color = layerColors.sewerMedium;
+            const condition = feature.properties?.condition || 'C';
+
+            if (condition === 'A' || condition === 'B') {
+              color = layerColors.sewerGood;
+            } else if (condition === 'C' || condition === 'D') {
+              color = layerColors.sewerMedium;
+            } else {
+              color = layerColors.sewerPoor;
+            }
+
+            // Create polyline for sewer line
+            const sewerLine = L.polyline(coords, {
+              color: color,
+              weight: 3,
+              opacity: 0.8,
+              dashArray: '5, 5'
+            });
+            snapLayersRef.current.push(sewerLine);
 
 
+            // Create popup with sewer information
+            let popupContent = `<strong>${feature.properties?.effluent_type || 'Sewer'} Line</strong>`;
+            if (feature.properties) {
+              if (feature.properties.diameter_mm) {
+                popupContent += `<br>Diameter: ${feature.properties.diameter_mm}mm`;
+              }
+              if (feature.properties.material) {
+                popupContent += `<br>Material: ${feature.properties.material}`;
+              }
+              if (feature.properties.condition) {
+                popupContent += `<br>Condition: ${feature.properties.condition}`;
+              }
+              if (feature.properties.install_yr) {
+                popupContent += `<br>Installed: ${feature.properties.install_yr}`;
+              }
+            }
+
+            sewerLine.bindPopup(popupContent);
+            sewerLinesRef.current.push({ line: sewerLine, condition: feature.properties?.condition });
+            infraLayer.addLayer(sewerLine);
+          }
+        });
+      }
+
+      return { infraLayer, streetData, sewerData };
+    } catch (error) {
+      console.error("Error fetching infrastructure data:", error);
+      return L.layerGroup(); // Return empty layer on error
+    }
+  };
+
+  const fetchStormwaterProjects = async () => {
+    try {
+      const res = await fetch('/data/projects-data.geojson');
+      const projectsData = await res.json();
+      const projectsLayer = L.layerGroup();
+
+      if (projectsData.features && projectsData.features.length > 0) {
+        projectsData.features.forEach(feature => {
+          if (feature.geometry) {
+            // Convert coordinates based on geometry type
+            let projectCoords = [];
+
+            if (feature.geometry.type === 'Point') {
+              // For point features, create a marker
+              const marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], {
+                icon: L.divIcon({
+                  html: `<div style="background-color: ${layerColors.projectActive}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
+                  className: '',
+                  iconSize: [16, 16]
+                })
+              });
+
+              // Create popup content
+              let popupContent = '<strong>Project</strong>';
+              if (feature.properties) {
+                if (feature.properties.project) {
+                  popupContent += `<br>${feature.properties.project}`;
+                }
+                if (feature.properties.location) {
+                  popupContent += `<br>Location: ${feature.properties.location}`;
+                }
+                if (feature.properties.comp_date) {
+                  popupContent += `<br>Completion Date: ${feature.properties.comp_date}`;
+                }
+              }
+
+              marker.bindPopup(popupContent);
+              marker.on('click', () => {
+                selectRowByFeatureProperties(feature.properties);
+              });
+              
+              projectFeaturesRef.current.push({ element: marker });
+              projectsLayer.addLayer(marker);
+
+            } else if (feature.geometry.type === 'LineString') {
+              // For linestring features
+              projectCoords = feature.geometry.coordinates.map(coord => [coord[1], coord[0]]);
+
+              const line = L.polyline(projectCoords, {
+                color: layerColors.projectActive,
+                weight: 4,
+                opacity: 0.8
+              });
+              snapLayersRef.current.push(line);
+
+              // Create popup content
+              let popupContent = '<strong>Project</strong>';
+              if (feature.properties) {
+                if (feature.properties.project) {
+                  popupContent += `<br>${feature.properties.project}`;
+                }
+                if (feature.properties.location) {
+                  popupContent += `<br>Location: ${feature.properties.location}`;
+                }
+                if (feature.properties.comp_date) {
+                  popupContent += `<br>Completion Date: ${feature.properties.comp_date}`;
+                }
+              }
+
+              line.bindPopup(popupContent);
+              line.on('click', () => {
+                selectRowByFeatureProperties(feature.properties);
+              });
+              
+              projectFeaturesRef.current.push({ element: line });
+              projectsLayer.addLayer(line);
+
+            } else if (feature.geometry.type === 'MultiLineString') {
+              // For multilinestring features
+              feature.geometry.coordinates.forEach(lineCoords => {
+                const line = L.polyline(lineCoords.map(coord => [coord[1], coord[0]]), {
+                  color: layerColors.projectActive,
+                  weight: 4,
+                  opacity: 0.8
+                });
+
+                // Create popup content
+                let popupContent = '<strong>Project</strong>';
+                if (feature.properties) {
+                  if (feature.properties.project) {
+                    popupContent += `<br>${feature.properties.project}`;
+                  }
+                  if (feature.properties.location) {
+                    popupContent += `<br>Location: ${feature.properties.location}`;
+                  }
+                  if (feature.properties.comp_date) {
+                    popupContent += `<br>Completion Date: ${feature.properties.comp_date}`;
+                  }
+                }
+
+                line.bindPopup(popupContent);
+                projectFeaturesRef.current.push({ element: line });
+                projectsLayer.addLayer(line);
+              });
+            }
+          }
+        });
+      }
+
+      return { projectsLayer, projectsData };
+    } catch (error) {
+      console.error("Error fetching stormwater projects:", error);
+      return L.layerGroup(); // Return empty layer on error
+    }
+  };
+
+
+  const fetch311Data = async () => {
+    try {
+      const res = await fetch('/data/311-data.geojson');
+      const data311 = await res.json();
+      const data311Layer = L.layerGroup();
+
+      // Process the actual 311 data
+      const heatData = [];
+      const neighborhoodCountMap = new Map(); // We'll still count requests by neighborhood for heatmap data
+
+      // Filter for features with valid geometry
+      const validFeatures = data311.features.filter(feature =>
+        feature.geometry && feature.geometry.type === 'Point' &&
+        feature.geometry.coordinates &&
+        feature.geometry.coordinates.length === 2
+      );
+
+      // Count features by neighborhood for those without geometry (still needed for heatmap)
+      data311.features.forEach(feature => {
+        if (feature.properties && feature.properties.local_area) {
+          const area = feature.properties.local_area;
+          neighborhoodCountMap.set(area, (neighborhoodCountMap.get(area) || 0) + 1);
+        }
+      });
+
+      // Add markers for valid points
+      validFeatures.forEach(feature => {
+        const coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
+
+        // Determine priority based on request type
+        let priority = "Medium";
+        if (feature.properties.service_request_type.includes("Damage")) {
+          priority = "High";
+        } else if (feature.properties.service_request_type.includes("Locate")) {
+          priority = "Low";
+        }
+
+        // Calculate intensity for heatmap
+        const intensity = priority === "High" ? 1.0 :
+          priority === "Medium" ? 0.7 : 0.4;
+
+        heatData.push([coords[0], coords[1], intensity]);
+
+        // Determine colors
+        const color = priority === "High" ? layerColors.data311High :
+          priority === "Medium" ? layerColors.data311Medium : layerColors.data311Low;
+
+        const statusColor = feature.properties.status === "Open" ? "red" : "green";
+
+        // Create marker
+        const marker = L.marker(coords, {
+          icon: L.divIcon({
+            html: `<div style="background-color: ${color}; color: white; width: 10px; height: 10px; border-radius: 50%; border: 2px solid ${statusColor};"></div>`,
+            className: '',
+            iconSize: [14, 14]
+          })
+        });
+
+        // Create popup content
+        let popupContent = `<strong>311 Request: ${feature.properties.service_request_type}</strong>`;
+        if (feature.properties.address) popupContent += `<br>Address: ${feature.properties.address}`;
+        popupContent += `<br>Status: ${feature.properties.status}`;
+        popupContent += `<br>Department: ${feature.properties.department}`;
+        if (feature.properties.local_area) popupContent += `<br>Area: ${feature.properties.local_area}`;
+        if (feature.properties.service_request_open_timestamp) {
+          const openDate = new Date(feature.properties.service_request_open_timestamp);
+          popupContent += `<br>Opened: ${openDate.toLocaleDateString()}`;
+        }
+
+        marker.bindPopup(popupContent);
+        marker.on('click', () => {
+          selectRowByFeatureProperties(feature.properties);
+        });
+        
+        data311Layer.addLayer(marker);
+      });
+
+      // For neighborhoods without specific coordinates but with counts
+      // We still need these coordinates for the heatmap data
+      const neighborhoodCenters = {
+        "Downtown": [49.281, -123.120],
+        "Fairview": [49.265, -123.135],
+        "Marpole": [49.210, -123.130],
+        "Dunbar-Southlands": [49.240, -123.185],
+        "Grandview-Woodland": [49.275, -123.070],
+        "Hastings-Sunrise": [49.281, -123.039],
+        "Renfrew-Collingwood": [49.240, -123.040],
+        "Sunset": [49.223, -123.090],
+        "Oakridge": [49.230, -123.120]
+      };
+
+      // Only add heatmap data from neighborhoods (not the marker circles)
+      neighborhoodCountMap.forEach((count, neighborhood) => {
+        if (neighborhoodCenters[neighborhood] && count > 0) {
+          const coords = neighborhoodCenters[neighborhood];
+          // Add to heatmap with intensity based on count
+          const intensity = Math.min(count / 5, 1.0); // Normalize, max at 5+ requests
+          heatData.push([coords[0], coords[1], intensity]);
+
+          // We remove the cluster marker creation here
+          // No more gray circles with numbers
+        }
+      });
+
+      // Add heatmap for 311 calls
+      if (window.L.heatLayer && heatData.length > 0) {
+        const heatmap = window.L.heatLayer(heatData, {
+          radius: 30,
+          blur: 15,
+          maxZoom: 17,
+          gradient: {
+            0.2: layerColors.data311Low,
+            0.5: layerColors.data311Medium,
+            0.8: layerColors.data311High
+          }
+        });
+
+        data311Layer.addLayer(heatmap);
+      }
+
+      return { data311Layer, data311 };
+    } catch (error) {
+      console.error("Error fetching 311 data:", error);
+      return { data311Layer: L.layerGroup(), data311: { features: [] } };
+    }
+  };
+
+  const fetchDemographics = async () => {
+    try {
+      const res = await fetch('/data/demographic-data.geojson');
+      const demographicsData = await res.json();
+      const demographicsLayer = L.layerGroup();
+
+      if (demographicsData.features && demographicsData.features.length > 0) {
+        demographicsData.features.forEach(feature => {
+          if (feature.geometry && feature.geometry.type === 'Polygon') {
+            // Convert GeoJSON coordinates to Leaflet format
+            const coords = feature.geometry.coordinates[0].map(coord => [coord[1], coord[0]]);
+
+            // Get demographic information from properties
+            const name = feature.properties?.name || 'Neighborhood';
+            const socioEconomicValue = feature.properties?.socioEconomicValue || 50;
+
+            // Normalize value to determine color
+            const normalized = socioEconomicValue / 100;
+
+            const color = normalized > 0.8 ? layerColors.demoHigh :
+              normalized > 0.5 ? layerColors.demoMedium : layerColors.demoLow;
+
+            const polygon = L.polygon(coords, {
+              color: COLORS.primary,
+              fillColor: color,
+              weight: 1,
+              opacity: 0.5,
+              fillOpacity: 0.3
+            }).bindPopup(`<strong>${name}</strong><br>Socio-Economic Index: ${socioEconomicValue}`);
+
+            snapLayersRef.current.push(polygon);
+
+            demographicsLayer.addLayer(polygon);
+            demographicPolygonsRef.current.push({ polygon, socioEconomicValue });
+
+
+          }
+        });
+      }
+
+      return { demographicsLayer, demographicsData };
+    } catch (error) {
+      console.error("Error fetching demographics data:", error);
+      return L.layerGroup(); // Return empty layer on error
+    }
+  };
+  
   useEffect(() => {
     const initializeMap = async () => {
-      setLoadingStage('initializing');
-      setLoadingProgress(5);
-
+      
+  
       const L = await import('leaflet');
       await import('leaflet/dist/leaflet.css');
-
+  
       if (map || !mapContainerRef.current) return;
-
+  
       // Load heatmap plugin
       const script = document.createElement('script');
       script.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js';
       document.head.appendChild(script);
       await new Promise(resolve => script.onload = resolve);
-
-      setLoadingStage('map');
-      setLoadingProgress(15);
-
+  
+    
       // Initialize base map
       const leafletMap = L.map(mapContainerRef.current, {
         zoomControl: false,
@@ -780,28 +1234,24 @@ const formulaInputRef = useRef(null);
       }).setView([49.24, -123.119], 12);
       leafletMap.createPane('drawPane');
       leafletMap.getPane('drawPane').style.zIndex = 100000000000;
-
-
+  
       L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
         subdomains: 'abcd',
         maxZoom: 19
       }).addTo(leafletMap);
-
+  
       L.control.zoom({ position: 'topright' }).addTo(leafletMap);
       L.control.attribution({ position: 'bottomright' }).addTo(leafletMap);
-
-
+  
       setMap(leafletMap);
-      setLoadingProgress(15);
-
-
-
+      
+      // Initialize geocoder
       const geocoderControl = L.Control.geocoder({
         defaultMarkGeocode: false
       });
       geocoderRef.current = geocoderControl;
-
+  
       geocoderControl.on('markgeocode', function (e) {
         const bbox = e.geocode.bbox;
         const poly = L.polygon([
@@ -810,396 +1260,98 @@ const formulaInputRef = useRef(null);
           bbox.getNorthWest(),
           bbox.getSouthWest()
         ]);
-        map.fitBounds(poly.getBounds());
-        L.marker(e.geocode.center).addTo(map);
+        leafletMap.fitBounds(poly.getBounds());
+        L.marker(e.geocode.center).addTo(leafletMap);
       });
-
-
-      await new Promise(r => setTimeout(r, 500));
-
-      // 1. Add Flood Zones Layer
-      setLoadingStage('floodZones');
-      floodPolygonsRef.current = [];
-
-
-      const fetchFloodZones = async () => {
-        try {
-          const res = await fetch('/data/floodplains-data.geojson');
-          const floodData = await res.json();
-          const floodLayer = L.layerGroup();
-
-          floodData.features.forEach(feature => {
-            if (feature.geometry && feature.geometry.type === 'Polygon' || feature.geometry.type === 'MultiPolygon') {
-              // Convert GeoJSON coordinates to Leaflet format
-              let coordinates;
-
-              if (feature.geometry.type === 'Polygon') {
-                // For simple polygons
-                coordinates = feature.geometry.coordinates[0].map(coord => [coord[1], coord[0]]);
-              } else {
-                // For multipolygons (first polygon in the collection)
-                coordinates = feature.geometry.coordinates[0][0].map(coord => [coord[1], coord[0]]);
-              }
-
-              // Determine color based on feature properties (if available)
-              // Assuming there's a risk_level or similar property
-              let color = layerColors.floodMedium;
-              let fillColor = layerColors.floodLight;
-
-              if (feature.properties) {
-                if (feature.properties.risk_level === 'high') {
-                  color = layerColors.floodDark;
-                  fillColor = layerColors.floodMedium;
-                } else if (feature.properties.risk_level === 'low') {
-                  color = layerColors.floodLight;
-                  fillColor = layerColors.floodLight;
-                }
-              }
-
-              const polygon = L.polygon(coordinates, {
-                color: color,
-                fillColor: fillColor,
-                weight: 2,
-                opacity: 0.8,
-                fillOpacity: 0.5
-              });
-              snapLayersRef.current.push(polygon);
-              // Create popup with relevant information
-              let popupContent = '<strong>Flood Zone</strong>';
-              if (feature.properties) {
-                if (feature.properties.risk_level) {
-                  popupContent += `<br>Risk Level: ${feature.properties.risk_level}`;
-                }
-                if (feature.properties.elevation) {
-                  popupContent += `<br>Elevation: ${feature.properties.elevation}m above sea level`;
-                }
-              }
-
-              polygon.bindPopup(popupContent);
-              floodPolygonsRef.current.push({ polygon, properties: feature.properties });
-              floodLayer.addLayer(polygon);
-            }
-          });
-
-          return { floodLayer, floodData };
-        } catch (error) {
-          console.error("Error fetching flood zones:", error);
-          return L.layerGroup(); // Return empty layer on error
-        }
-      };
-
-      const { floodLayer: floodZoneLayer, floodData } = await fetchFloodZones();
-      floodZoneLayer.addTo(leafletMap);
-      leafletMap.floodZoneLayer = floodZoneLayer;
-
-      setLoadingProgress(30);
-      await new Promise(r => setTimeout(r, 4000));
-
-
-      // 2. Infrastructure Conditions (streets, sewer lines, etc.)
-      setLoadingStage('infrastructure');
-      setLoadingProgress(35); // Start at 35%
-      streetLinesRef.current = [];
-
-
-      const fetchInfrastructureData = async () => {
-        try {
-          // Create a layerGroup to hold all infrastructure
-          const infraLayer = L.layerGroup();
-
-          // Fetch street data
-          const streetRes = await fetch('/data/streetcondition-data.geojson');
-          const streetData = await streetRes.json();
-
-          // Process street data
-          if (streetData.features && streetData.features.length > 0) {
-            streetData.features.forEach(feature => {
-              if (feature.geometry && feature.geometry.coordinates) {
-                // Convert GeoJSON linestring coordinates to Leaflet format
-                const coords = feature.geometry.coordinates.map(coord => [coord[1], coord[0]]);
-
-                // Determine color based on condition
-                let color = layerColors.streetMedium;
-                const condition = feature.properties?.condition || 'C';
-
-                if (condition === 'A' || condition === 'B') {
-                  color = layerColors.streetGood;
-                } else if (condition === 'C' || condition === 'D') {
-                  color = layerColors.streetMedium;
-                } else {
-                  color = layerColors.streetPoor;
-                }
-
-                // Create polyline for street
-                const streetLine = L.polyline(coords, {
-                  color: color,
-                  weight: 4,
-                  opacity: 0.8
-                });
-                snapLayersRef.current.push(streetLine);
-
-                // Create popup with street information
-                let popupContent = '<strong>Street</strong>';
-                if (feature.properties) {
-                  if (feature.properties.hblock) {
-                    popupContent += `<br>Location: ${feature.properties.hblock}`;
-                  }
-                  if (feature.properties.streetuse) {
-                    popupContent += `<br>Type: ${feature.properties.streetuse}`;
-                  }
-                  if (feature.properties.condition) {
-                    popupContent += `<br>Condition: ${feature.properties.condition}`;
-                  }
-                }
-
-                streetLine.bindPopup(popupContent);
-                streetLinesRef.current.push({ line: streetLine, condition: feature.properties?.condition });
-                infraLayer.addLayer(streetLine);
-              }
+  
+      
+      
+      // Fetch all data in parallel
+      const [
+        floodZonesResult,
+        infrastructureResult,
+        stormwaterResult,
+        data311Result,
+        demographicsResult
+      ] = await Promise.all([
+        fetchFloodZones(),
+        fetchInfrastructureData(),
+        fetchStormwaterProjects(),
+        fetch311Data(),
+        fetchDemographics()
+      ]);
+      
+      
+      // Process tables if needed
+      if (infrastructureResult.streetData && infrastructureResult.sewerData) {
+        const combinedInfraData = {
+          features: []
+        };
+        if (infrastructureResult.streetData.features) {
+          infrastructureResult.streetData.features.forEach(feature => {
+            combinedInfraData.features.push({
+              ...feature,
+              properties: { ...feature.properties, type: 'Street' }
             });
-          }
-
-          // Fetch sewer/stormwater data
-          const sewerRes = await fetch('/data/stormwaste-data.geojson');
-          const sewerData = await sewerRes.json();
-
-          // Process sewer data
-          if (sewerData.features && sewerData.features.length > 0) {
-            sewerData.features.forEach(feature => {
-              if (feature.geometry && feature.geometry.coordinates) {
-                // Convert GeoJSON linestring coordinates to Leaflet format
-                const coords = feature.geometry.coordinates.map(coord => [coord[1], coord[0]]);
-
-                // Determine color based on condition
-                let color = layerColors.sewerMedium;
-                const condition = feature.properties?.condition || 'C';
-
-                if (condition === 'A' || condition === 'B') {
-                  color = layerColors.sewerGood;
-                } else if (condition === 'C' || condition === 'D') {
-                  color = layerColors.sewerMedium;
-                } else {
-                  color = layerColors.sewerPoor;
-                }
-
-                // Create polyline for sewer line
-                const sewerLine = L.polyline(coords, {
-                  color: color,
-                  weight: 3,
-                  opacity: 0.8,
-                  dashArray: '5, 5'
-                });
-                snapLayersRef.current.push(sewerLine);
-
-
-                // Create popup with sewer information
-                let popupContent = `<strong>${feature.properties?.effluent_type || 'Sewer'} Line</strong>`;
-                if (feature.properties) {
-                  if (feature.properties.diameter_mm) {
-                    popupContent += `<br>Diameter: ${feature.properties.diameter_mm}mm`;
-                  }
-                  if (feature.properties.material) {
-                    popupContent += `<br>Material: ${feature.properties.material}`;
-                  }
-                  if (feature.properties.condition) {
-                    popupContent += `<br>Condition: ${feature.properties.condition}`;
-                  }
-                  if (feature.properties.install_yr) {
-                    popupContent += `<br>Installed: ${feature.properties.install_yr}`;
-                  }
-                }
-
-                sewerLine.bindPopup(popupContent);
-                sewerLinesRef.current.push({ line: sewerLine, condition: feature.properties?.condition });
-                infraLayer.addLayer(sewerLine);
-              }
-            });
-          }
-
-          return { infraLayer, streetData, sewerData };
-        } catch (error) {
-          console.error("Error fetching infrastructure data:", error);
-          return L.layerGroup(); // Return empty layer on error
-        }
-      };
-
-
-      const { infraLayer: infrastructureLayer, streetData, sewerData } = await fetchInfrastructureData();
-      infrastructureLayer.addTo(leafletMap);
-      leafletMap.infrastructureLayer = infrastructureLayer;
-      // Combine street and sewer data for the infrastructure table
-      const combinedInfraData = {
-        features: []
-      };
-      if (streetData && streetData.features) {
-        streetData.features.forEach(feature => {
-          combinedInfraData.features.push({
-            ...feature,
-            properties: { ...feature.properties, type: 'Street' }
           });
+        }
+        if (infrastructureResult.sewerData.features) {
+          infrastructureResult.sewerData.features.forEach(feature => {
+            combinedInfraData.features.push({
+              ...feature,
+              properties: { ...feature.properties, type: 'Sewer Line' }
+            });
+          });
+        }
+        const infrastructureTable = convertGeoJSONToTable(combinedInfraData, 'infrastructure');
+        setTableData(prevData => {
+          const newData = [...prevData];
+          newData[0] = infrastructureTable;
+          return newData;
         });
       }
-      if (sewerData && sewerData.features) {
-        sewerData.features.forEach(feature => {
-          combinedInfraData.features.push({
-            ...feature,
-            properties: { ...feature.properties, type: 'Sewer Line' }
-          });
+      
+      if (stormwaterResult.projectsData) {
+        const stormwaterProjectsTable = convertGeoJSONToTable(stormwaterResult.projectsData, 'stormwaterProjects');
+        setTableData(prevData => {
+          const newData = [...prevData];
+          newData[1] = stormwaterProjectsTable;
+          return newData;
         });
       }
-      const infrastructureTable = convertGeoJSONToTable(combinedInfraData, 'infrastructure');
-      setTableData(prevData => {
-        const newData = [...prevData];
-        newData[0] = infrastructureTable;
-        return newData;
-      });
-      setLoadingProgress(50); // End at 50%
-      // Visual transition
-      await new Promise(r => setTimeout(r, 4000));
-
-      // 3. Current Stormwater Projects
-      setLoadingStage('stormwaterProjects');
-      setLoadingProgress(55); // Start at 55%
-      sewerLinesRef.current = [];
-
-      const fetchStormwaterProjects = async () => {
-        try {
-          const res = await fetch('/data/projects-data.geojson');
-          const projectsData = await res.json();
-          const projectsLayer = L.layerGroup();
-
-          if (projectsData.features && projectsData.features.length > 0) {
-            projectsData.features.forEach(feature => {
-              if (feature.geometry) {
-                // Convert coordinates based on geometry type
-                let projectCoords = [];
-
-                if (feature.geometry.type === 'Point') {
-                  // For point features, create a marker
-                  const marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], {
-                    icon: L.divIcon({
-                      html: `<div style="background-color: ${layerColors.projectActive}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
-                      className: '',
-                      iconSize: [16, 16]
-                    })
-                  });
-
-                  // Create popup content
-                  let popupContent = '<strong>Project</strong>';
-                  if (feature.properties) {
-                    if (feature.properties.project) {
-                      popupContent += `<br>${feature.properties.project}`;
-                    }
-                    if (feature.properties.location) {
-                      popupContent += `<br>Location: ${feature.properties.location}`;
-                    }
-                    if (feature.properties.comp_date) {
-                      popupContent += `<br>Completion Date: ${feature.properties.comp_date}`;
-                    }
-                  }
-
-                  marker.bindPopup(popupContent);
-                  projectFeaturesRef.current.push({ element: marker });
-                  projectsLayer.addLayer(marker);
-
-                } else if (feature.geometry.type === 'LineString') {
-                  // For linestring features
-                  projectCoords = feature.geometry.coordinates.map(coord => [coord[1], coord[0]]);
-
-                  const line = L.polyline(projectCoords, {
-                    color: layerColors.projectActive,
-                    weight: 4,
-                    opacity: 0.8
-                  });
-                  snapLayersRef.current.push(line);
-
-                  // Create popup content
-                  let popupContent = '<strong>Project</strong>';
-                  if (feature.properties) {
-                    if (feature.properties.project) {
-                      popupContent += `<br>${feature.properties.project}`;
-                    }
-                    if (feature.properties.location) {
-                      popupContent += `<br>Location: ${feature.properties.location}`;
-                    }
-                    if (feature.properties.comp_date) {
-                      popupContent += `<br>Completion Date: ${feature.properties.comp_date}`;
-                    }
-                  }
-
-                  line.bindPopup(popupContent);
-                  projectFeaturesRef.current.push({ element: line });
-                  projectsLayer.addLayer(line);
-
-                } else if (feature.geometry.type === 'MultiLineString') {
-                  // For multilinestring features
-                  feature.geometry.coordinates.forEach(lineCoords => {
-                    const line = L.polyline(lineCoords.map(coord => [coord[1], coord[0]]), {
-                      color: layerColors.projectActive,
-                      weight: 4,
-                      opacity: 0.8
-                    });
-
-                    // Create popup content
-                    let popupContent = '<strong>Project</strong>';
-                    if (feature.properties) {
-                      if (feature.properties.project) {
-                        popupContent += `<br>${feature.properties.project}`;
-                      }
-                      if (feature.properties.location) {
-                        popupContent += `<br>Location: ${feature.properties.location}`;
-                      }
-                      if (feature.properties.comp_date) {
-                        popupContent += `<br>Completion Date: ${feature.properties.comp_date}`;
-                      }
-                    }
-
-                    line.bindPopup(popupContent);
-                    projectFeaturesRef.current.push({ element: line });
-                    projectsLayer.addLayer(line);
-                  });
-                }
-              }
-            });
-          }
-
-          return { projectsLayer, projectsData };
-        } catch (error) {
-          console.error("Error fetching stormwater projects:", error);
-          return L.layerGroup(); // Return empty layer on error
-        }
-      };
-
-      const { projectsLayer: stormwaterProjectsLayer, projectsData } = await fetchStormwaterProjects();
-      stormwaterProjectsLayer.addTo(leafletMap);
-      leafletMap.stormwaterProjectsLayer = stormwaterProjectsLayer;
-      const stormwaterProjectsTable = convertGeoJSONToTable(projectsData, 'stormwaterProjects');
-      setTableData(prevData => {
-        const newData = [...prevData];
-        newData[1] = stormwaterProjectsTable;
-        return newData;
-      });
-      setLoadingProgress(65); // End at 65%
-      // Visual transition
-      await new Promise(r => setTimeout(r, 4000));
-
-      // 4. Infrastructure Outside Project Boundaries
-      setLoadingStage('infrastructureOutsideProjects');
-      setLoadingProgress(70);
-
+      
+      if (data311Result.data311) {
+        const data311Table = convertGeoJSONToTable(data311Result.data311, 'data311');
+        setTableData(prevData => {
+          const newData = [...prevData];
+          newData[2] = data311Table;
+          return newData;
+        });
+      }
+      
+      if (demographicsResult.demographicsData) {
+        const demographicsTable = convertGeoJSONToTable(demographicsResult.demographicsData, 'demographics');
+        setTableData(prevData => {
+          const newData = [...prevData];
+          newData[3] = demographicsTable;
+          return newData;
+        });
+      }
+      
+      // Create infrastructure outside layer
       const createInfrastructureOutsideLayer = async (map) => {
         try {
-          if (!map.infrastructureLayer || !map.stormwaterProjectsLayer) {
+          if (!infrastructureResult.infraLayer || !stormwaterResult.projectsLayer) {
             console.error("Required layers not available for spatial analysis");
             return L.layerGroup();
           }
-
+  
           // This is a simplified approach since we can't easily do true GIS operations in the browser
           // For a production app, you would use a server-side GIS library or service
-
+  
           // 1. First we need to get all the infrastructure items
           const infraItems = [];
-          map.infrastructureLayer.eachLayer(layer => {
+          infrastructureResult.infraLayer.eachLayer(layer => {
             if (layer instanceof L.Polyline) {
               infraItems.push({
                 layer: layer,
@@ -1212,10 +1364,10 @@ const formulaInputRef = useRef(null);
               });
             }
           });
-
+  
           // 2. Now we need to get all project areas
           const projectAreas = [];
-          map.stormwaterProjectsLayer.eachLayer(layer => {
+          stormwaterResult.projectsLayer.eachLayer(layer => {
             if (layer instanceof L.Polyline || layer instanceof L.Polygon) {
               projectAreas.push({
                 layer: layer,
@@ -1224,14 +1376,14 @@ const formulaInputRef = useRef(null);
               });
             }
           });
-
+  
           // 3. Find infrastructure that doesn't intersect with any project area
           // and prioritize poor condition infrastructure
           const outsideLayer = L.layerGroup();
           const criticalInfra = infraItems.filter(item => {
             // Check if the infrastructure is in poor condition
             const isPoorCondition = item.condition === 'E' || item.condition === 'F' || item.condition === 'D';
-
+  
             // Check if it's outside of all project areas
             const isOutside = projectAreas.every(project => {
               // Create buffered bounds
@@ -1239,19 +1391,19 @@ const formulaInputRef = useRef(null);
                 [project.bounds.getSouth() - project.buffer, project.bounds.getWest() - project.buffer],
                 [project.bounds.getNorth() + project.buffer, project.bounds.getEast() + project.buffer]
               );
-
+  
               // Check if infrastructure is outside the buffered project area
               return !bufferedBounds.contains(item.center);
             });
-
+  
             return isPoorCondition && isOutside;
           });
-
+  
           // 4. Add the critical infrastructure as markers only (no lines)
           criticalInfra.forEach(item => {
             // Create popup with infrastructure information
             let popupContent = `<strong>Warning: ${item.type}</strong><br>Condition: ${item.condition}<br>Priority: High<br>Status: Outside Current Project Areas`;
-
+  
             // Create a marker at the center point of the infrastructure
             const marker = L.marker(item.center, {
               icon: L.divIcon({
@@ -1260,247 +1412,59 @@ const formulaInputRef = useRef(null);
                 iconSize: [14, 14]
               })
             }).bindPopup(popupContent);
-
+  
             outsideLayer.addLayer(marker);
           });
-
+  
           return outsideLayer;
         } catch (error) {
           console.error("Error creating infrastructure outside projects layer:", error);
           return L.layerGroup(); // Return empty layer on error
         }
       };
+      
       const infrastructureOutsideLayer = await createInfrastructureOutsideLayer(leafletMap);
-      infrastructureOutsideLayer.addTo(leafletMap);
+      
+      
+      
+      
+      // Create a layer group to hold all layers
+      const allLayers = L.layerGroup();
+      
+      // Add all layers to the group
+      allLayers.addLayer(floodZonesResult.floodLayer);
+      allLayers.addLayer(infrastructureResult.infraLayer);
+      allLayers.addLayer(stormwaterResult.projectsLayer);
+      allLayers.addLayer(infrastructureOutsideLayer);
+      allLayers.addLayer(data311Result.data311Layer);
+      allLayers.addLayer(demographicsResult.demographicsLayer);
+      
+      // Add the layer group to the map (this makes all layers appear at once)
+      allLayers.addTo(leafletMap);
+      
+      // Store references to layers in the map object for later use
+      leafletMap.floodZoneLayer = floodZonesResult.floodLayer;
+      leafletMap.infrastructureLayer = infrastructureResult.infraLayer;
+      leafletMap.stormwaterProjectsLayer = stormwaterResult.projectsLayer;
       leafletMap.infrastructureOutsideLayer = infrastructureOutsideLayer;
-      setLoadingProgress(80); // End at 80%
-      // Visual transition
-      await new Promise(r => setTimeout(r, 4000));
-
-      // 5. Map 311 Data
-      setLoadingStage('data311');
-      setLoadingProgress(85);
-      projectFeaturesRef.current = [];
-
-
-      const fetch311Data = async () => {
-        try {
-          const res = await fetch('/data/311-data.geojson');
-          const data311 = await res.json();
-          const data311Layer = L.layerGroup();
-
-          // Process the actual 311 data
-          const heatData = [];
-          const neighborhoodCountMap = new Map(); // We'll still count requests by neighborhood for heatmap data
-
-          // Filter for features with valid geometry
-          const validFeatures = data311.features.filter(feature =>
-            feature.geometry && feature.geometry.type === 'Point' &&
-            feature.geometry.coordinates &&
-            feature.geometry.coordinates.length === 2
-          );
-
-          // Count features by neighborhood for those without geometry (still needed for heatmap)
-          data311.features.forEach(feature => {
-            if (feature.properties && feature.properties.local_area) {
-              const area = feature.properties.local_area;
-              neighborhoodCountMap.set(area, (neighborhoodCountMap.get(area) || 0) + 1);
-            }
-          });
-
-          // Add markers for valid points
-          validFeatures.forEach(feature => {
-            const coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
-
-            // Determine priority based on request type
-            let priority = "Medium";
-            if (feature.properties.service_request_type.includes("Damage")) {
-              priority = "High";
-            } else if (feature.properties.service_request_type.includes("Locate")) {
-              priority = "Low";
-            }
-
-            // Calculate intensity for heatmap
-            const intensity = priority === "High" ? 1.0 :
-              priority === "Medium" ? 0.7 : 0.4;
-
-            heatData.push([coords[0], coords[1], intensity]);
-
-            // Determine colors
-            const color = priority === "High" ? layerColors.data311High :
-              priority === "Medium" ? layerColors.data311Medium : layerColors.data311Low;
-
-            const statusColor = feature.properties.status === "Open" ? "red" : "green";
-
-            // Create marker
-            const marker = L.marker(coords, {
-              icon: L.divIcon({
-                html: `<div style="background-color: ${color}; color: white; width: 10px; height: 10px; border-radius: 50%; border: 2px solid ${statusColor};"></div>`,
-                className: '',
-                iconSize: [14, 14]
-              })
-            });
-
-            // Create popup content
-            let popupContent = `<strong>311 Request: ${feature.properties.service_request_type}</strong>`;
-            if (feature.properties.address) popupContent += `<br>Address: ${feature.properties.address}`;
-            popupContent += `<br>Status: ${feature.properties.status}`;
-            popupContent += `<br>Department: ${feature.properties.department}`;
-            if (feature.properties.local_area) popupContent += `<br>Area: ${feature.properties.local_area}`;
-            if (feature.properties.service_request_open_timestamp) {
-              const openDate = new Date(feature.properties.service_request_open_timestamp);
-              popupContent += `<br>Opened: ${openDate.toLocaleDateString()}`;
-            }
-
-            marker.bindPopup(popupContent);
-
-            data311Layer.addLayer(marker);
-          });
-
-          // For neighborhoods without specific coordinates but with counts
-          // We still need these coordinates for the heatmap data
-          const neighborhoodCenters = {
-            "Downtown": [49.281, -123.120],
-            "Fairview": [49.265, -123.135],
-            "Marpole": [49.210, -123.130],
-            "Dunbar-Southlands": [49.240, -123.185],
-            "Grandview-Woodland": [49.275, -123.070],
-            "Hastings-Sunrise": [49.281, -123.039],
-            "Renfrew-Collingwood": [49.240, -123.040],
-            "Sunset": [49.223, -123.090],
-            "Oakridge": [49.230, -123.120]
-          };
-
-          // Only add heatmap data from neighborhoods (not the marker circles)
-          neighborhoodCountMap.forEach((count, neighborhood) => {
-            if (neighborhoodCenters[neighborhood] && count > 0) {
-              const coords = neighborhoodCenters[neighborhood];
-              // Add to heatmap with intensity based on count
-              const intensity = Math.min(count / 5, 1.0); // Normalize, max at 5+ requests
-              heatData.push([coords[0], coords[1], intensity]);
-
-              // We remove the cluster marker creation here
-              // No more gray circles with numbers
-            }
-          });
-
-          // Add heatmap for 311 calls
-          if (window.L.heatLayer && heatData.length > 0) {
-            const heatmap = window.L.heatLayer(heatData, {
-              radius: 30,
-              blur: 15,
-              maxZoom: 17,
-              gradient: {
-                0.2: layerColors.data311Low,
-                0.5: layerColors.data311Medium,
-                0.8: layerColors.data311High
-              }
-            });
-
-            data311Layer.addLayer(heatmap);
-          }
-
-          return { data311Layer, data311 };
-        } catch (error) {
-          console.error("Error fetching 311 data:", error);
-          return { data311Layer: L.layerGroup(), data311: { features: [] } };
-        }
-      };
-
-      const { data311Layer, data311 } = await fetch311Data();
-      data311Layer.addTo(leafletMap);
-      leafletMap.data311Layer = data311Layer;
-      const data311Table = convertGeoJSONToTable(data311, 'data311');
-      setTableData(prevData => {
-        const newData = [...prevData];
-        newData[2] = data311Table;
-        return newData;
-      });
-      setLoadingProgress(92); // End at 92%
-      // Visual transition
-      await new Promise(r => setTimeout(r, 4000));
-      // 6. Map Demographics
-      setLoadingStage('demographics');
-      setLoadingProgress(95); // Start at 95%
-      demographicPolygonsRef.current = [];
-
-      const fetchDemographics = async () => {
-        try {
-          const res = await fetch('/data/demographic-data.geojson');
-          const demographicsData = await res.json();
-          const demographicsLayer = L.layerGroup();
-
-          if (demographicsData.features && demographicsData.features.length > 0) {
-            demographicsData.features.forEach(feature => {
-              if (feature.geometry && feature.geometry.type === 'Polygon') {
-                // Convert GeoJSON coordinates to Leaflet format
-                const coords = feature.geometry.coordinates[0].map(coord => [coord[1], coord[0]]);
-
-                // Get demographic information from properties
-                const name = feature.properties?.name || 'Neighborhood';
-                const socioEconomicValue = feature.properties?.socioEconomicValue || 50;
-
-                // Normalize value to determine color
-                const normalized = socioEconomicValue / 100;
-
-                const color = normalized > 0.8 ? layerColors.demoHigh :
-                  normalized > 0.5 ? layerColors.demoMedium : layerColors.demoLow;
-
-                const polygon = L.polygon(coords, {
-                  color: COLORS.primary,
-                  fillColor: color,
-                  weight: 1,
-                  opacity: 0.5,
-                  fillOpacity: 0.3
-                }).bindPopup(`<strong>${name}</strong><br>Socio-Economic Index: ${socioEconomicValue}`);
-
-                snapLayersRef.current.push(polygon);
-
-                demographicsLayer.addLayer(polygon);
-                demographicPolygonsRef.current.push({ polygon, socioEconomicValue });
-
-
-              }
-            });
-          }
-
-          return { demographicsLayer, demographicsData };
-        } catch (error) {
-          console.error("Error fetching demographics data:", error);
-          return L.layerGroup(); // Return empty layer on error
-        }
-      };
-
-      const { demographicsLayer, demographicsData } = await fetchDemographics();
-      demographicsLayer.addTo(leafletMap);
-      leafletMap.demographicsLayer = demographicsLayer;
-      const demographicsTable = convertGeoJSONToTable(demographicsData, 'demographics');
-      setTableData(prevData => {
-        const newData = [...prevData];
-        newData[3] = demographicsTable;
-        return newData;
-      });
-      setLoadingProgress(100);
-      setLoadingStage('complete');
-
-      await new Promise(r => setTimeout(r, 4000));
-
+      leafletMap.data311Layer = data311Result.data311Layer;
+      leafletMap.demographicsLayer = demographicsResult.demographicsLayer;
+      
+      
+      
       if (onLayersReady) {
         onLayersReady();
       }
-
+  
       if (window.setResponseReady) {
         window.setResponseReady(true);
       }
     };
-
-
+  
     initializeMap();
-
+  
     return () => map?.remove();
   }, []);
-
-
 
   useEffect(() => {
     if (!map) return;
@@ -1668,26 +1632,48 @@ const formulaInputRef = useRef(null);
   }, [layerColors, map]);
 
 
-
-
-  // Get loading status message
-  const getLoadingMessage = () => {
-    switch (loadingStage) {
-      case 'initializing': return 'Initializing map...';
-      case 'map': return 'Loading base map...';
-      case 'floodZones': return 'Loading flood zones...';
-      case 'infrastructure': return 'Loading infrastructure data...';
-      case 'stormwaterProjects': return 'Loading stormwater projects...';
-      case 'infrastructureOutsideProjects': return 'Analyzing infrastructure outside projects...';
-      case 'data311': return 'Loading 311 data...';
-      case 'demographics': return 'Loading demographic data...';
-      case 'complete': return 'Map ready';
-      default: return 'Loading...';
+  const getLayerKeyFromLegend = (layerId, label) => {
+    const clean = (str) => str.toLowerCase().replace(/[^a-z]/g, '');
+  
+    if (layerId === 'floodZones') {
+      if (label.includes('Low')) return 'floodLight';
+      if (label.includes('Medium')) return 'floodMedium';
+      if (label.includes('High')) return 'floodDark';
     }
+  
+    if (layerId === 'infrastructure') {
+      if (label.includes('Street') && label.includes('Good')) return 'streetGood';
+      if (label.includes('Street') && label.includes('Fair')) return 'streetMedium';
+      if (label.includes('Street') && label.includes('Poor')) return 'streetPoor';
+      if (label.includes('Sewer') && label.includes('Good')) return 'sewerGood';
+      if (label.includes('Sewer') && label.includes('Fair')) return 'sewerMedium';
+      if (label.includes('Sewer') && label.includes('Poor')) return 'sewerPoor';
+    }
+  
+    if (layerId === 'stormwaterProjects') {
+      if (label.includes('Active')) return 'projectActive';
+      if (label.includes('Planned')) return 'projectPlanned';
+    }
+  
+    if (layerId === 'data311') {
+      if (label.includes('Low')) return 'data311Low';
+      if (label.includes('Medium')) return 'data311Medium';
+      if (label.includes('High')) return 'data311High';
+    }
+  
+    if (layerId === 'demographics') {
+      if (label.includes('Low')) return 'demoLow';
+      if (label.includes('Medium')) return 'demoMedium';
+      if (label.includes('High')) return 'demoHigh';
+    }
+  
+    return '';
   };
+  
+
 
   const Toolbar = ({
-    isFullScreen,
+    isFullscreen,
     showTable,
     setShowTable,
     onSaveMap,
@@ -1695,7 +1681,7 @@ const formulaInputRef = useRef(null);
     captureAndDownload,
     setShowLegend,
     setShowSources,
-    toggleFullScreen,
+    toggleFullscreen,
     toolbarVisible,
     setToolbarVisible,
     toolbarPosition,
@@ -1727,7 +1713,7 @@ const formulaInputRef = useRef(null);
     };
 
     // 🌐 REGULAR VIEW TOOLBAR
-    if (!isFullScreen) {
+    if (!isFullscreen) {
       return (
         <div
           className="flex justify-center items-center space-x-2 bg-white bg-opacity-70 backdrop-blur-sm p-2 shadow-sm z-30 rounded-full transition-all duration-300"
@@ -1752,7 +1738,7 @@ const formulaInputRef = useRef(null);
               e.currentTarget.style.backgroundColor = 'white';
               e.currentTarget.style.color = COLORS.coral;
             }}>
-            {showTable ? <Table size={20} /> : <Table size={20} />}
+            {showTable ? <Table size={16} /> : <Table size={16} />}
           </button>
           <button onClick={() => setShowSaveDialog(true)} title="Save Map" className="p-2 rounded-full border" style={{
             color: COLORS.coral,
@@ -1767,7 +1753,7 @@ const formulaInputRef = useRef(null);
               e.currentTarget.style.backgroundColor = 'white';
               e.currentTarget.style.color = COLORS.coral;
             }}>
-            <BookmarkPlus size={20} />
+            <BookmarkPlus size={16} />
           </button>
           <button
             ref={pencilRef}
@@ -1788,45 +1774,11 @@ const formulaInputRef = useRef(null);
               e.currentTarget.style.color = COLORS.coral;
             }}
           >
-            <Pencil size={20} />
+            <Wrench size={16} />
           </button>
+          
 
-          <button
-            onClick={() => setShowGeocoder(!showGeocoder)}
-            title="Search Location"
-            className="p-2 rounded-full border"
-            style={{
-              color: COLORS.coral,
-              border: `1px solid ${COLORS.coral}`,
-              transition: 'all 0.2s ease-in-out'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = COLORS.coral;
-              e.currentTarget.style.color = 'white';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'white';
-              e.currentTarget.style.color = COLORS.coral;
-            }}
-          >
-            <TbMapSearch size={20} />
-          </button>
-
-          <button onClick={() => setShowSymbologyEditor(true)} title="Symbology" className="p-2 rounded-full border" style={{
-            color: COLORS.coral,
-            border: `1px solid ${COLORS.coral}`,
-            transition: 'all 0.2s ease-in-out'
-          }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = COLORS.coral;
-              e.currentTarget.style.color = 'white';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'white';
-              e.currentTarget.style.color = COLORS.coral;
-            }}>
-            <Palette size={20} />
-          </button>
+          
           <button onClick={() => setShowLegend(prev => !prev)} title="Legend" className="p-2 rounded-full border" style={{
             color: COLORS.coral,
             border: `1px solid ${COLORS.coral}`,
@@ -1840,7 +1792,7 @@ const formulaInputRef = useRef(null);
               e.currentTarget.style.backgroundColor = 'white';
               e.currentTarget.style.color = COLORS.coral;
             }}>
-            <Layers size={20} />
+            <Layers size={16} />
           </button>
           <button onClick={() => setShowSources(prev => !prev)} title="Sources" className="p-2 rounded-full border" style={{
             color: COLORS.coral,
@@ -1855,7 +1807,7 @@ const formulaInputRef = useRef(null);
               e.currentTarget.style.backgroundColor = 'white';
               e.currentTarget.style.color = COLORS.coral;
             }}>
-            <Info size={20} />
+            <Info size={16} />
           </button>
           <button onClick={() => setShowShareDialog(true)} title="Share" className="p-2 rounded-full border" style={{
             color: COLORS.coral,
@@ -1870,9 +1822,10 @@ const formulaInputRef = useRef(null);
               e.currentTarget.style.backgroundColor = 'white';
               e.currentTarget.style.color = COLORS.coral;
             }}>
-            <Share2 size={20} />
+            <Share2 size={16} />
           </button>
-          <button onClick={() => setShowDownloadDialog(true)} title="Download" className="p-2 rounded-full border" style={{
+          
+          <button onClick={toggleFullscreen} title="Fullscreen" className="p-2 rounded-full border" style={{
             color: COLORS.coral,
             border: `1px solid ${COLORS.coral}`,
             transition: 'all 0.2s ease-in-out'
@@ -1885,22 +1838,7 @@ const formulaInputRef = useRef(null);
               e.currentTarget.style.backgroundColor = 'white';
               e.currentTarget.style.color = COLORS.coral;
             }}>
-            <Download size={20} />
-          </button>
-          <button onClick={toggleFullScreen} title="Fullscreen" className="p-2 rounded-full border" style={{
-            color: COLORS.coral,
-            border: `1px solid ${COLORS.coral}`,
-            transition: 'all 0.2s ease-in-out'
-          }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = COLORS.coral;
-              e.currentTarget.style.color = 'white';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'white';
-              e.currentTarget.style.color = COLORS.coral;
-            }}>
-            <Maximize2 size={20} />
+            <Maximize2 size={16} />
           </button>
         </div>
       );
@@ -1910,7 +1848,7 @@ const formulaInputRef = useRef(null);
     return (
       <div
         ref={toolbarRef}
-        className="flex items-center space-x-2 bg-white bg-opacity-80 backdrop-blur-sm p-2 shadow-lg rounded-full z-50 transition-all duration-300"
+        className="flex flex-col items-center space-y-2 bg-white bg-opacity-80 backdrop-blur-sm p-2 shadow-lg rounded-full z-50 transition-all duration-300"
         style={{
           position: 'absolute',
           top: `${toolbarPosition.top}px`,
@@ -1938,7 +1876,7 @@ const formulaInputRef = useRef(null);
             e.currentTarget.style.color = COLORS.coral;
           }}
         >
-          {toolbarVisible ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+          {toolbarVisible ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
 
         {/* 👇 Render the rest only if visible */}
@@ -1957,7 +1895,7 @@ const formulaInputRef = useRef(null);
                 e.currentTarget.style.backgroundColor = 'white';
                 e.currentTarget.style.color = COLORS.coral;
               }}>
-              {showTable ? <Table size={20} /> : <Table size={20} />}
+              {showTable ? <Table size={16} /> : <Table size={16} />}
             </button>
             <button onClick={() => setShowSaveDialog(true)} title="Save Map" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
@@ -1972,7 +1910,7 @@ const formulaInputRef = useRef(null);
                 e.currentTarget.style.backgroundColor = 'white';
                 e.currentTarget.style.color = COLORS.coral;
               }}>
-              <BookmarkPlus size={20} />
+              <BookmarkPlus size={16} />
             </button>
             <button
               ref={pencilRef}
@@ -1993,45 +1931,11 @@ const formulaInputRef = useRef(null);
                 e.currentTarget.style.color = COLORS.coral;
               }}
             >
-              <Pencil size={20} />
+              <Wrench size={16} />
             </button>
 
-            <button
-              onClick={() => setShowGeocoder(!showGeocoder)}
-              title="Search Location"
-              className="p-2 rounded-full border"
-              style={{
-                color: COLORS.coral,
-                border: `1px solid ${COLORS.coral}`,
-                transition: 'all 0.2s ease-in-out'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = COLORS.coral;
-                e.currentTarget.style.color = 'white';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'white';
-                e.currentTarget.style.color = COLORS.coral;
-              }}
-            >
-              <TbMapSearch size={20} />
-            </button>
+          
 
-            <button onClick={() => setShowSymbologyEditor(true)} title="Symbology" className="p-2 rounded-full border" style={{
-              color: COLORS.coral,
-              border: `1px solid ${COLORS.coral}`,
-              transition: 'all 0.2s ease-in-out'
-            }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = COLORS.coral;
-                e.currentTarget.style.color = 'white';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'white';
-                e.currentTarget.style.color = COLORS.coral;
-              }}>
-              <Palette size={20} />
-            </button>
             <button onClick={() => setShowLegend(prev => !prev)} title="Legend" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
@@ -2045,7 +1949,7 @@ const formulaInputRef = useRef(null);
                 e.currentTarget.style.backgroundColor = 'white';
                 e.currentTarget.style.color = COLORS.coral;
               }}>
-              <Layers size={20} />
+              <Layers size={16} />
             </button>
             <button onClick={() => setShowSources(prev => !prev)} title="Sources" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
@@ -2060,7 +1964,7 @@ const formulaInputRef = useRef(null);
                 e.currentTarget.style.backgroundColor = 'white';
                 e.currentTarget.style.color = COLORS.coral;
               }}>
-              <Info size={20} />
+              <Info size={16} />
             </button>
             <button onClick={() => setShowShareDialog(true)} title="Share" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
@@ -2075,9 +1979,10 @@ const formulaInputRef = useRef(null);
                 e.currentTarget.style.backgroundColor = 'white';
                 e.currentTarget.style.color = COLORS.coral;
               }}>
-              <Share2 size={20} />
+              <Share2 size={16} />
             </button>
-            <button onClick={() => setShowDownloadDialog(true)} title="Download" className="p-2 rounded-full border" style={{
+           
+            <button onClick={toggleFullscreen} title="Exit Fullscreen" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -2090,22 +1995,7 @@ const formulaInputRef = useRef(null);
                 e.currentTarget.style.backgroundColor = 'white';
                 e.currentTarget.style.color = COLORS.coral;
               }}>
-              <Download size={20} />
-            </button>
-            <button onClick={toggleFullScreen} title="Exit Fullscreen" className="p-2 rounded-full border" style={{
-              color: COLORS.coral,
-              border: `1px solid ${COLORS.coral}`,
-              transition: 'all 0.2s ease-in-out'
-            }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = COLORS.coral;
-                e.currentTarget.style.color = 'white';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'white';
-                e.currentTarget.style.color = COLORS.coral;
-              }}>
-              <Minimize2 size={20} />
+              <Minimize2 size={16} />
             </button>
           </>
         )}
@@ -2127,11 +2017,24 @@ const formulaInputRef = useRef(null);
   );
 
   return (
-    <div className={`flex flex-col overflow-hidden transition-all duration-300 ${isFullScreen
-        ? 'fixed top-12 bottom-4 left-4 right-4 z-50 bg-white rounded-2xl shadow-2xl border border-gray-300'
-        : 'h-full max-h-screen'
+    <div className={`flex flex-col overflow-visible transition-all duration-300 ${isFullscreen
+      ? 'fixed top-12 bottom-4 left-4 right-4 z-50 bg-transparent rounded-2xl shadow-2xl border border-gray-300'
+      : 'h-full max-h-screen'
       }`}>
-
+        {isFullscreen && title && (
+  <div className="absolute top-4 left-4 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur-md shadow-md border border-gray-200">
+    {onBack && (
+      <button
+        onClick={onBack}
+        className="p-1 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors"
+        aria-label="Back to List"
+      >
+        <ArrowLeft className="h-4 w-4 text-[#008080] group-hover:text-white" />
+      </button>
+    )}
+    <h2 className="text-sm font-semibold text-gray-800">{title}</h2>
+  </div>
+)}
       <div className="flex-1 relative">
         {showSources && (
           <div ref={infoRef} className="absolute top-4 right-4 w-[280px] bg-white border border-gray-200 rounded-xl shadow-lg p-5 z-50 animate-fade-in">
@@ -2173,7 +2076,7 @@ const formulaInputRef = useRef(null);
                 onClick={() => setShowSaveDialog(false)}
                 className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
               >
-                <X size={20} />
+                <X size={16} />
               </button>
 
               <h2 className="text-lg font-semibold text-gray-800 mb-4">Save Map</h2>
@@ -2227,7 +2130,7 @@ const formulaInputRef = useRef(null);
               <div className="flex justify-between items-center mb-3">
                 <h3 className="text-base font-semibold text-gray-800">Customize Layer Colors</h3>
                 <button onClick={() => setShowSymbologyEditor(false)}>
-                  <X size={20} className="text-gray-500 hover:text-gray-700" />
+                  <X size={16} className="text-gray-500 hover:text-gray-700" />
                 </button>
               </div>
 
@@ -2270,8 +2173,9 @@ const formulaInputRef = useRef(null);
           </div>
         )}
         {showGeocoder && (
-          <div className="absolute top-6 left-6 z-[1000] w-[300px]">
-            <input
+          <div className="absolute top-6 left-6 z-[999999] w-[300px] overflow-visible">
+<div className="relative w-full max-w-xs z-10">
+<input
               type="text"
               placeholder="Search a location..."
               value={searchQuery}
@@ -2279,7 +2183,7 @@ const formulaInputRef = useRef(null);
                 setSearchQuery(e.target.value);
                 runGeocodeSearch(e.target.value);
               }}
-              className="w-full px-4 py-2 text-sm rounded-full shadow-md border"
+              className="w-full px-4 pr-10 py-2 text-sm rounded-full shadow-md border"
               style={{
                 backgroundColor: 'white',
                 borderColor: '#008080',
@@ -2289,7 +2193,13 @@ const formulaInputRef = useRef(null);
               }}
               onFocus={(e) => (e.target.style.boxShadow = '0 0 0 3px rgba(0,128,128,0.3)')}
               onBlur={(e) => (e.target.style.boxShadow = '0 0 0 2px rgba(0,128,128,0.1)')}
+              
             />
+     
+
+
+
+            </div>
             {searchResults.length > 0 && (
               <div className="bg-white border border-gray-200 rounded-lg shadow-md mt-1 max-h-48 overflow-y-auto divide-y divide-gray-100">
                 {searchResults.map((result, idx) => (
@@ -2305,12 +2215,15 @@ const formulaInputRef = useRef(null);
             )}
           </div>
         )}
+
+
+
         {showDrawTools && (
           <div
             className="absolute z-[9999] w-[260px] bg-white border border-gray-200 rounded-xl shadow-xl p-4 transition-all animate-fade-in"
             style={{
-              top: isFullScreen ? '80px' : '280px',
-              left: isFullScreen ? '500px' : '60px',
+              top: isFullscreen ? '80px' : '280px',
+              left: isFullscreen ? '100px' : '60px',
             }}
           >
             <div className="flex justify-between items-center mb-3">
@@ -2320,6 +2233,28 @@ const formulaInputRef = useRef(null);
               </button>
             </div>
             <div className="grid gap-2">
+
+
+          <button
+            onClick={() => setShowGeocoder(!showGeocoder)}
+            title="Search Location"
+            className="p-2 rounded-full border"
+            style={{
+              color: COLORS.coral,
+              border: `1px solid ${COLORS.coral}`,
+              transition: 'all 0.2s ease-in-out'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.coral;
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.color = COLORS.coral;
+            }}
+          >
+            <TbMapSearch size={16} />
+          </button>
               <button
                 className="w-full px-3 py-2 rounded-md border text-sm font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
                 onClick={() => {
@@ -2443,8 +2378,8 @@ const formulaInputRef = useRef(null);
                 }}
 
               >
-                Draw Polygon
-              </button>
+  <PiPolygon size={16}/>
+  </button>
               <button
                 className="w-full px-3 py-2 rounded-md border text-sm font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
                 onClick={() => {
@@ -2475,8 +2410,8 @@ const formulaInputRef = useRef(null);
                   });
                 }}
               >
-                Draw Circle
-              </button>
+  <FaRegCircle size={16}/>
+  </button>
               <button
                 className="w-full px-3 py-2 rounded-md border text-sm font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
                 onClick={() => {
@@ -2528,8 +2463,8 @@ const formulaInputRef = useRef(null);
                   });
                 }}
               >
-                Measure Distance
-              </button>
+  <GiPathDistance size={16}/>
+  </button>
 
               <button
                 className="w-full px-3 py-2 rounded-md border text-sm font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
@@ -2679,8 +2614,8 @@ const formulaInputRef = useRef(null);
                   });
                 }}
               >
-                Measure Area
-              </button>
+  <LiaShareAltSolid size={16}/>
+  </button>
               <button
                 className="w-full px-3 py-2 rounded-md border text-sm font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
                 onClick={() => {
@@ -2726,8 +2661,8 @@ const formulaInputRef = useRef(null);
                   });
                 }}
               >
-                Edit Vertices
-              </button>
+  <LuMove3D size={16}/>
+  </button>
 
               <button
   className="w-full px-3 py-2 rounded-md border text-sm font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
@@ -2761,7 +2696,7 @@ const formulaInputRef = useRef(null);
     });
   }}
 >
-  Freehand Drawing
+<MdDraw size={16}/>
 </button>
             </div>
           </div>
@@ -2783,81 +2718,6 @@ const formulaInputRef = useRef(null);
 
 
 
-        {showDownloadDialog && (
-          <div className="absolute bottom-[60px] right-6 z-[1000]">
-            <div className="bg-white w-[320px] rounded-xl shadow-2xl p-6 border border-gray-200 relative">
-              <button
-                onClick={() => setShowDownloadDialog(false)}
-                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
-              >
-                <X size={20} />
-              </button>
-
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">Download Map</h2>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="text-sm font-medium text-gray-800 mb-2">📍 Vancouver Flood Assessment Map</div>
-
-                  <div className="flex space-x-2">
-                    <input
-                      type="text"
-                      className="border px-3 py-1 rounded w-[140px] text-sm focus:outline-none focus:ring-2 focus:ring-[#008080]"
-                      value={downloadSelections['map']?.filename || 'vancouver_flood_map'}
-                      onChange={(e) =>
-                        setDownloadSelections(prev => ({
-                          ...prev,
-                          map: {
-                            filename: e.target.value,
-                            format: prev['map']?.format || '.jpg'
-                          }
-                        }))
-                      }
-                      placeholder="File name"
-                    />
-                    <select
-                      value={downloadSelections['map']?.format || '.jpg'}
-                      onChange={(e) =>
-                        setDownloadSelections(prev => ({
-                          ...prev,
-                          map: {
-                            filename: prev['map']?.filename || 'vancouver_flood_map',
-                            format: e.target.value
-                          }
-                        }))
-                      }
-                      className="border px-2 py-1 rounded text-sm focus:outline-none"
-                    >
-                      <option value=".jpg">.jpg</option>
-                      <option value=".png">.png</option>
-                      <option value=".shp">.shp</option>
-                      <option value=".gdb">.gdb</option>
-                      <option value=".csv">.csv</option>
-                      <option value=".pdf">.pdf</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => {
-                  // Initialize map selection if not already set
-                  if (!downloadSelections['map']) {
-                    setDownloadSelections(prev => ({
-                      ...prev,
-                      map: { filename: 'vancouver_flood_map', format: '.jpg' }
-                    }));
-                  }
-                  handleDownloadAll();
-                  setShowDownloadDialog(false);
-                }}
-                className="mt-6 w-full py-2 rounded-md text-sm font-semibold bg-[#008080] text-white hover:bg-teal-700"
-              >
-                Download Map
-              </button>
-            </div>
-          </div>
-        )}
 
 
 
@@ -2890,7 +2750,7 @@ const formulaInputRef = useRef(null);
             style={{ height: `${tableHeight}px` }}
           >
             {/* Table header with tabs */}
-            {!isFullScreen && <Toolbar showTable={true} />}
+            {!isFullscreen && <Toolbar showTable={true} />}
             <div className="flex justify-between items-center p-1 bg-white text-gray-800 border-b border-gray-200 h-10 px-4">
   {/* Tabs on the left */}
   <div className="flex space-x-1">
@@ -2902,8 +2762,15 @@ const formulaInputRef = useRef(null);
             ? 'bg-[#008080] text-white border-[#008080]'
             : 'bg-white text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white'}
         `}
-        onClick={() => setCurrentTableIndex(index)}
-      >
+        onClick={() => {
+          setCurrentTableIndex(index);
+          setOriginalRowsMap(prev => ({
+            ...prev,
+            [index]: JSON.parse(JSON.stringify(tableData[index].rows)) // deep clone
+          }));
+          setIsModified(false);
+        }}
+              >
         {title}
       </button>
     ))}
@@ -2925,7 +2792,17 @@ const formulaInputRef = useRef(null);
         onClick={() =>
           setSelectedColIndex((prev) => (prev === colIdx ? null : colIdx))
         }
-                onContextMenu={(e) => handleRightClick(e, 'column', colIdx)}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          setContextMenu({
+            visible: true,
+            x: e.clientX,
+            y: e.clientY,
+            type: 'column',
+            index: colIdx,
+            columnName: tableData[currentTableIndex].headers[colIdx],
+          });
+        }}        
         className={`px-3 py-1 text-center text-[10px] font-semibold text-gray-700 uppercase border border-gray-300
           ${selectedColIndex === colIdx ? 'bg-[#ccecec]' : 'bg-gray-100'}`}
       >
@@ -2963,76 +2840,28 @@ onClick={() =>
                       {tableData[currentTableIndex].headers.map((header, colIdx) => (
                        <td
                        key={colIdx}
-                       onClick={(e) => {
-                        if (
-                          activeEditingCell &&
-                          (activeEditingCell.row !== rowIdx || activeEditingCell.col !== colIdx)
-                        ) {
-                          e.preventDefault(); // stop focus from shifting
-                          e.stopPropagation(); // stop bubbling
-                          const cellRef = `${String.fromCharCode(65 + colIdx)}${rowIdx + 1}`;
-                          insertCellReferenceIntoFormula(cellRef);
-                          return;
-                        }
-                        
-                     
-                         setActiveEditingCell({ row: rowIdx, col: colIdx });
-                         setEditingFormula(
-                           tableData[currentTableIndex].rows[rowIdx][tableData[currentTableIndex].headers[colIdx]] ?? ''
-                         );
-                     
-                         setTimeout(() => {
-                           const node = formulaInputRef.current;
-                           if (node) {
-                             node.focus();
-                             document.getSelection()?.collapse(node, node.innerText.length);
-                           }
-                         }, 0);
+                       contentEditable
+                       suppressContentEditableWarning
+                       onBlur={(e) => {
+                         const value = e.target.innerText.trim();
+                         const header = tableData[currentTableIndex].headers[colIdx];
+                         setTableData(prev => {
+                           const updated = [...prev];
+                           updated[currentTableIndex].rows[rowIdx][header] = value;
+                           return updated;
+                         });
                        }}
-                       onBlur={() => {
-                         handleCellEdit(rowIdx, tableData[currentTableIndex].headers[colIdx], editingFormula);
-                         setActiveEditingCell(null);
-                         setEditingFormula('');
-                       }}
-                       className={`px-2 py-1 text-xs border border-gray-200 whitespace-nowrap min-w-[80px] align-top ${
-                         selectedColIndex === colIdx || selectedRowIndex === rowIdx ? 'bg-[#f0fdfa]' : ''
-                       }`}
+                       className="px-2 py-1 text-xs border border-gray-200 min-w-[80px] whitespace-nowrap align-top hover:bg-[#f0fdfa]"
+                       style={{ outline: 'none' }}
                      >
-                       {activeEditingCell?.row === rowIdx && activeEditingCell?.col === colIdx ? (
-                         <div
-                         ref={formulaInputRef}
-                         contentEditable
-                         suppressContentEditableWarning
-                         dir="ltr"
-                         className="outline-none w-full h-full text-left"
-                         onInput={(e) => setEditingFormula(e.currentTarget.innerText)}
-                         onFocus={(e) => {
-                           // Only inject the formula manually to avoid React interference
-                           if (formulaInputRef.current?.innerText !== editingFormula) {
-                             formulaInputRef.current.innerText = editingFormula;
-                           }
-                       
-                           // Move caret to end
-                           const range = document.createRange();
-                           const sel = window.getSelection();
-                           const node = formulaInputRef.current?.firstChild;
-                           if (node && sel) {
-                             range.setStart(node, node.textContent?.length || 0);
-                             range.collapse(true);
-                             sel.removeAllRanges();
-                             sel.addRange(range);
-                           }
-                         }}
-                       ></div>
-                       
-                       
-                       ) : (
-                         evaluateCell(
-                           tableData[currentTableIndex].rows[rowIdx][tableData[currentTableIndex].headers[colIdx]],
-                           tableData[currentTableIndex]
-                         )
-                       )}
+                       {
+                         tableData[currentTableIndex].rows[rowIdx][
+                           tableData[currentTableIndex].headers[colIdx]
+                         ]
+                       }
                      </td>
+                     
+                     
                      
                       
                       ))}
@@ -3055,30 +2884,13 @@ onClick={() =>
         )}
        {contextMenu.visible && (
   <div
-  className="fixed z-[9999] context-menu bg-white rounded-xl border border-gray-200 shadow-xl animate-fade-in"
-    style={{ top: contextMenu.y, left: contextMenu.x, width: 190 }}
-  >
-    <div className="p-1.5 space-y-1 text-sm text-gray-800">
+  className="fixed z-[9999] bg-white rounded-lg border border-gray-200 shadow-md animate-fade-in text-[13px] w-[140px]"
+  style={{ top: contextMenu.y, left: contextMenu.x }}
+>
+  <div className="p-1.5 space-y-0.5 text-gray-800">
       {contextMenu.type === 'row' && (
         <>
-          <button
-            onClick={() => {
-              insertRow(contextMenu.index);
-              closeContextMenu();
-            }}
-            className="w-full text-left px-3 py-2 rounded-md text-sm hover:bg-[#e0f7f7] hover:text-[#008080] transition"
-          >
-            Insert Row Above
-          </button>
-          <button
-            onClick={() => {
-              insertRow(contextMenu.index + 1);
-              closeContextMenu();
-            }}
-            className="w-full text-left px-3 py-2 rounded-md text-sm hover:bg-[#e0f7f7] hover:text-[#008080] transition"
-          >
-            Insert Row Below
-          </button>
+          {/* REMOVE insert row buttons */}
           <button
             onClick={() => {
               setTableData(prev => {
@@ -3089,58 +2901,187 @@ onClick={() =>
               setSelectedRowIndex(null);
               closeContextMenu();
             }}
-            className="w-full text-left px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50 transition"
-          >
+            className="w-full text-left px-2.5 py-1.5 rounded-md text-red-600 hover:bg-red-50 transition"
+            >
             Delete Row
           </button>
         </>
       )}
 
-      {contextMenu.type === 'column' && (
-        <>
-          <button
-            onClick={() => {
-              insertColumn(contextMenu.index);
-              closeContextMenu();
-            }}
-            className="w-full text-left px-3 py-2 rounded-md text-sm hover:bg-[#e0f7f7] hover:text-[#008080] transition"
-          >
-            Insert Column Left
-          </button>
-          <button
-            onClick={() => {
-              insertColumn(contextMenu.index + 1);
-              closeContextMenu();
-            }}
-            className="w-full text-left px-3 py-2 rounded-md text-sm hover:bg-[#e0f7f7] hover:text-[#008080] transition"
-          >
-            Insert Column Right
-          </button>
-          <button
-            onClick={() => {
-              setTableData(prev => {
-                const updated = [...prev];
-                const colName = updated[currentTableIndex].headers[contextMenu.index];
-                updated[currentTableIndex].headers.splice(contextMenu.index, 1);
-                updated[currentTableIndex].rows = updated[currentTableIndex].rows.map(row => {
-                  const { [colName]: _, ...rest } = row;
-                  return rest;
-                });
-                return updated;
-              });
-              setSelectedColIndex(null);
-              closeContextMenu();
-            }}
-            className="w-full text-left px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50 transition"
-          >
-            Delete Column
-          </button>
-        </>
-      )}
+{contextMenu.type === 'column' && (
+  <>
+  <button
+  onClick={() => {
+    setTableData(prev => {
+      const updated = [...prev];
+      const table = { ...updated[currentTableIndex] };
+
+      // Remove the column from headers
+      table.headers = table.headers.filter(h => h !== contextMenu.columnName);
+
+      // Remove the column from each row
+      table.rows = table.rows.map(row => {
+        const { [contextMenu.columnName]: _, ...rest } = row;
+        return rest;
+      });
+
+      updated[currentTableIndex] = table;
+      return updated;
+    });
+    closeContextMenu();
+  }}
+  className="w-full text-left px-2.5 py-1.5 rounded-md text-red-600 hover:bg-red-50 transition"
+>
+  Delete Column
+</button>
+
+    <button
+  onClick={() => {
+    const uniqueVals = [...new Set(tableData[currentTableIndex].rows.map(row => row[contextMenu.columnName]))];
+    setFilterOptions(uniqueVals);
+    setSelectedFilters(prev => ({
+      ...prev,
+      [contextMenu.columnName]: new Set(uniqueVals) // default: all selected
+    }));
+    setFilterColumn(contextMenu.columnName);
+    setShowFilterDialog(true);
+    closeContextMenu();
+  }}
+  className="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-gray-100 transition"
+>
+  Filter
+</button>
+
+
+    {/* Sort Buttons */}
+    <button
+      onClick={() => {
+        setTableData(prev => {
+          const updated = [...prev];
+          updated[currentTableIndex].rows.sort((a, b) =>
+            String(a[contextMenu.columnName] || '').localeCompare(String(b[contextMenu.columnName] || ''))
+          );
+          return updated;
+        });
+        setIsModified(true); // ✅ Mark as modified
+        closeContextMenu();
+      }}
+      className="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-gray-100 transition"
+      >
+      Sort A → Z
+    </button>
+    <button
+      onClick={() => {
+        setTableData(prev => {
+          const updated = [...prev];
+          updated[currentTableIndex].rows.sort((a, b) =>
+            String(b[contextMenu.columnName] || '').localeCompare(String(a[contextMenu.columnName] || ''))
+          );
+          return updated;
+        });
+        setIsModified(true); // ✅ Mark as modified
+        closeContextMenu();
+      }}
+      className="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-gray-100 transition"
+      >
+      Sort Z → A
+    </button>
+
+    {/* ✅ Remove Sort / Filter */}
+    {isModified && (
+      <button
+      onClick={() => {
+        const original = originalRowsMap[currentTableIndex];
+        if (!original) return;
+      
+        setTableData(prev => {
+          const updated = [...prev];
+          updated[currentTableIndex].rows = JSON.parse(JSON.stringify(original)); // deep clone again
+          return updated;
+        });
+        setIsModified(false);
+        closeContextMenu();
+      }}  
+        className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+      >
+        Remove Sort / Filter
+      </button>
+      
+
+    )}
+  </>
+)}
+
     </div>
   </div>
 )}
 
+{showFilterDialog && filterColumn && (
+  <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[9999] bg-white rounded-xl border shadow-xl w-[280px] p-4">
+    <div className="flex justify-between items-center mb-3">
+      <h3 className="text-sm font-semibold text-gray-800">Filter: {filterColumn}</h3>
+      <button onClick={() => setShowFilterDialog(false)} className="text-gray-500 hover:text-gray-700">
+        <X size={18} />
+      </button>
+    </div>
+
+    <div className="mb-2">
+  <input
+    type="text"
+    placeholder="Search..."
+    value={filterSearch}
+    onChange={(e) => setFilterSearch(e.target.value)}
+    className="w-full px-2 py-1 border border-gray-300 rounded-md text-sm"
+  />
+</div>
+
+<div className="space-y-2 max-h-[200px] overflow-y-auto">
+  {filterOptions
+    .filter(option =>
+      String(option).toLowerCase().includes(filterSearch.toLowerCase())
+    )
+    .map((option, idx) => (
+      <label key={idx} className="flex items-center space-x-2 text-sm text-gray-700">
+        <input
+          type="checkbox"
+          checked={selectedFilters[filterColumn]?.has(option)}
+          onChange={() => {
+            setSelectedFilters(prev => {
+              const updated = new Set(prev[filterColumn]);
+              if (updated.has(option)) {
+                updated.delete(option);
+              } else {
+                updated.add(option);
+              }
+              return { ...prev, [filterColumn]: updated };
+            });
+          }}
+        />
+        <span>{String(option)}</span>
+      </label>
+    ))}
+</div>
+
+
+    <button
+      onClick={() => {
+        setTableData(prev => {
+          const updated = [...prev];
+          const original = originalRowsMap[currentTableIndex];
+          updated[currentTableIndex].rows = original.filter(row =>
+            selectedFilters[filterColumn]?.has(row[filterColumn])
+          );
+          return updated;
+        });
+        setIsModified(true);
+        setShowFilterDialog(false);
+      }}
+      className="mt-4 w-full py-2 rounded-md bg-[#008080] text-white text-sm font-semibold hover:bg-teal-700"
+    >
+      Apply Filter
+    </button>
+  </div>
+)}
 
 
 
@@ -3166,84 +3107,146 @@ onClick={() =>
             ✅ Done Drawing
           </button>
         )}
+{showShareDialog && (
+  <div className="absolute bottom-[20px] right-6 z-[1000]">
+    <div className="bg-white w-[340px] rounded-2xl shadow-2xl p-6 border border-gray-200 relative animate-fade-in">
+      <button
+        className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+        onClick={() => setShowShareDialog(false)}
+      >
+        <X size={16} />
+      </button>
 
-        {showShareDialog && (
-          <div className="absolute bottom-[20px] right-6 z-[1000]">
-            <div className="bg-white w-[300px] rounded-xl shadow-xl p-6 border border-gray-200 relative">
-              <button
-                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
-                onClick={() => setShowShareDialog(false)}
-              >
-                <X size={20} />
-              </button>
+      <h2 className="text-lg font-semibold text-gray-800 mb-4">Share This Map</h2>
 
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Share This Map</h2>
+      {/* Teammate Search */}
+      <div className="mb-4">
+        <label className="text-sm font-medium text-gray-700 mb-1 block">Search Teammate</label>
+        <input
+          type="text"
+          placeholder="Type a name..."
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#008080] focus:outline-none"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
 
-              <div className="mb-4">
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Search Teammate</label>
-                <input
-                  type="text"
-                  placeholder="Type a name..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-[#008080] focus:outline-none"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-
-              <div className="max-h-48 overflow-y-auto mb-4 space-y-1">
-                {filteredTeammates.map(teammate => (
-                  <div
-                    key={teammate}
-                    onClick={() => setSelectedTeammate(teammate)}
-                    className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 border 
+      {/* Teammate List */}
+      <div className="max-h-40 overflow-y-auto mb-4 space-y-1 pr-1">
+        {filteredTeammates.map(teammate => (
+          <div
+            key={teammate}
+            onClick={() => setSelectedTeammate(teammate)}
+            className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition border 
               ${selectedTeammate === teammate
-                        ? 'bg-[#008080]/10 border-[#008080]'
-                        : 'bg-white hover:bg-gray-50 border-gray-200'}
+                ? 'bg-[#008080]/10 border-[#008080]'
+                : 'bg-white hover:bg-gray-50 border-gray-200'}
             `}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-full bg-[#008080]/90 text-white text-sm font-semibold flex items-center justify-center shadow-sm">
-                        {teammate.split(' ').map(n => n[0]).join('').toUpperCase()}
-                      </div>
-                      <span className="text-sm text-gray-800 font-medium">{teammate}</span>
-                    </div>
-                    {selectedTeammate === teammate && (
-                      <span className="text-xs font-medium text-[#008080]">✓ Selected</span>
-                    )}
-                  </div>
-                ))}
-                {filteredTeammates.length === 0 && (
-                  <div className="text-sm text-gray-500 text-center py-3">No teammates found</div>
-                )}
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-full bg-[#008080]/90 text-white text-sm font-semibold flex items-center justify-center shadow-sm">
+                {teammate.split(' ').map(n => n[0]).join('').toUpperCase()}
               </div>
-
-              <button
-                disabled={!selectedTeammate}
-                onClick={() => {
-                  setShowShareDialog(false);
-                  const msg = `Map shared with ${selectedTeammate}`;
-                  setNotificationMessage(msg);
-                  setShowEmailNotification(true);
-                  addNotification(msg);
-                }}
-                className={`w-full py-2 rounded-md text-sm font-semibold transition-all duration-200
-          ${selectedTeammate
-                    ? 'bg-[#008080] text-white hover:bg-teal-700'
-                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'}
-        `}
-              >
-                Share Map
-              </button>
+              <span className="text-sm text-gray-800 font-medium">{teammate}</span>
             </div>
+            {selectedTeammate === teammate && (
+              <span className="text-xs font-medium text-[#008080]">✓</span>
+            )}
           </div>
+        ))}
+        {filteredTeammates.length === 0 && (
+          <div className="text-sm text-gray-500 text-center py-3">No teammates found</div>
         )}
+      </div>
+
+      {/* Share Button */}
+      <button
+        disabled={!selectedTeammate}
+        onClick={() => {
+          setShowShareDialog(false);
+          const msg = `Map shared with ${selectedTeammate}`;
+          setNotificationMessage(msg);
+          setShowEmailNotification(true);
+          addNotification(msg);
+        }}
+        className={`w-full py-2 rounded-md text-sm font-semibold transition-all duration-200 mb-6
+          ${selectedTeammate
+            ? 'bg-[#008080] text-white hover:bg-teal-700'
+            : 'bg-gray-200 text-gray-500 cursor-not-allowed'}
+        `}
+      >
+        Share Map
+      </button>
+
+      {/* Divider */}
+      <div className="border-t border-gray-200 mb-6" />
+
+      {/* Download Section */}
+      <h3 className="text-sm font-semibold text-gray-700 mb-3">Download This Map</h3>
+
+      <div className="flex space-x-2 mb-3">
+        <input
+          type="text"
+          className="border px-3 py-2 rounded-lg w-[160px] text-sm focus:outline-none focus:ring-2 focus:ring-[#008080]"
+          value={downloadSelections['map']?.filename || 'vancouver_flood_map'}
+          onChange={(e) =>
+            setDownloadSelections(prev => ({
+              ...prev,
+              map: {
+                filename: e.target.value,
+                format: prev['map']?.format || '.jpg'
+              }
+            }))
+          }
+          placeholder="File name"
+        />
+        <select
+          value={downloadSelections['map']?.format || '.jpg'}
+          onChange={(e) =>
+            setDownloadSelections(prev => ({
+              ...prev,
+              map: {
+                filename: prev['map']?.filename || 'vancouver_flood_map',
+                format: e.target.value
+              }
+            }))
+          }
+          className="border px-2 py-2 rounded-lg text-sm focus:outline-none"
+        >
+          <option value=".jpg">.jpg</option>
+          <option value=".png">.png</option>
+          <option value=".shp">.shp</option>
+          <option value=".gdb">.gdb</option>
+          <option value=".csv">.csv</option>
+          <option value=".pdf">.pdf</option>
+        </select>
+      </div>
+
+      <button
+        onClick={() => {
+          if (!downloadSelections['map']) {
+            setDownloadSelections(prev => ({
+              ...prev,
+              map: { filename: 'vancouver_flood_map', format: '.jpg' }
+            }));
+          }
+          handleDownloadAll();
+          setShowShareDialog(false);
+        }}
+        className="w-full py-2 rounded-md text-sm font-semibold bg-[#008080] text-white hover:bg-teal-700"
+      >
+        Download Map
+      </button>
+    </div>
+  </div>
+)}
 
 
 
 
-        {isFullScreen ? (
+        {isFullscreen ? (
           <Toolbar
-            isFullScreen={true}
+            isFullscreen={true}
             showTable={showTable}
             setShowTable={setShowTable}
             onSaveMap={onSaveMap}
@@ -3251,7 +3254,7 @@ onClick={() =>
             captureAndDownload={captureAndDownload}
             setShowLegend={setShowLegend}
             setShowSources={setShowSources}
-            toggleFullScreen={toggleFullScreen}
+            toggleFullscreen={toggleFullscreen}
             toolbarVisible={toolbarVisible}
             setToolbarVisible={setToolbarVisible}
             toolbarPosition={toolbarPosition}
@@ -3259,7 +3262,7 @@ onClick={() =>
           />
         ) : (
           <Toolbar
-            isFullScreen={false}
+            isFullscreen={false}
             showTable={showTable}
             setShowTable={setShowTable}
             onSaveMap={onSaveMap}
@@ -3267,7 +3270,7 @@ onClick={() =>
             captureAndDownload={captureAndDownload}
             setShowLegend={setShowLegend}
             setShowSources={setShowSources}
-            toggleFullScreen={toggleFullScreen}
+            toggleFullscreen={toggleFullscreen}
             toolbarVisible={true}
             setToolbarVisible={() => { }}
             toolbarPosition={{ top: 0, left: 0 }}
@@ -3276,48 +3279,7 @@ onClick={() =>
         )}
 
 
-        {/* Enhanced loading indicator that shows the current stage */}
-        {loadingStage !== 'complete' && (
-          <div className="absolute bottom-12 right-4 flex flex-col items-center bg-white bg-opacity-90 z-10 p-4 rounded-lg shadow-lg max-w-xs border border-gray-200">
-            <div className="flex items-center space-x-2 mb-2">
-              <div className="w-6 h-6 border-3 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
-              <p className="text-sm font-medium text-gray-800">{getLoadingMessage()}</p>
-            </div>
-
-            {/* Progress bar */}
-            <div className="w-full h-2 bg-gray-200 rounded-full">
-              <div
-                className="h-full bg-blue-500 rounded-full transition-all duration-300 ease-out"
-                style={{ width: `${loadingProgress}%` }}
-              ></div>
-            </div>
-
-            {/* Layer indicators */}
-            <div className="grid grid-cols-3 gap-1 mt-2 w-full">
-              <div className={`text-center p-1 rounded text-xs ${loadingStage === 'map' || loadingStage === 'floodZones' || loadingStage === 'complete' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}`}>
-                Base Map
-              </div>
-              <div className={`text-center p-1 rounded text-xs ${loadingStage === 'floodZones' || loadingStage === 'infrastructure' || loadingStage === 'complete' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}`}>
-                Flood Zones
-              </div>
-              <div className={`text-center p-1 rounded text-xs ${loadingStage === 'infrastructure' || loadingStage === 'stormwaterProjects' || loadingStage === 'complete' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}`}>
-                Infrastructure
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-1 mt-1 w-full">
-              <div className={`text-center p-1 rounded text-xs ${loadingStage === 'stormwaterProjects' || loadingStage === 'infrastructureOutsideProjects' || loadingStage === 'complete' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}`}>
-                Projects
-              </div>
-              <div className={`text-center p-1 rounded text-xs ${loadingStage === 'data311' || loadingStage === 'demographics' || loadingStage === 'complete' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}`}>
-                311 Data
-              </div>
-              <div className={`text-center p-1 rounded text-xs ${loadingStage === 'demographics' || loadingStage === 'complete' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}`}>
-                Demographics
-              </div>
-            </div>
-          </div>
-        )}
-
+        
         {showLegend && (
           <div className="absolute bottom-4 left-4 w-[300px] bg-white border border-gray-200 rounded-xl shadow-xl p-4 z-[1000] overflow-y-auto max-h-[70vh]">
             <div className="flex justify-between items-center mb-4">
@@ -3442,10 +3404,18 @@ onClick={() =>
                           </div>
                         ) : (
                           <div key={idx} className="flex items-center space-x-2">
-                            <div
-                              className={`w-4 h-2 ${item.dashed ? 'border-t border-dashed border-black' : ''}`}
-                              style={{ backgroundColor: item.color }}
-                            ></div>
+                            <input
+  type="color"
+  value={item.color}
+  onChange={(e) => {
+    const newColor = e.target.value;
+    setLayerColors((prev) => ({
+      ...prev,
+      [getLayerKeyFromLegend(section.id, item.label)]: newColor
+    }));
+  }}
+  className="w-6 h-4 border rounded cursor-pointer"
+/>
                             <span>{item.label}</span>
                           </div>
                         )
