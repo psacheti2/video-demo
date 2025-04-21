@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Maximize2, X, Info, Share2, BookmarkPlus, ArrowLeft } from 'lucide-react';
+import { Maximize2, X, Info, Share2, BookmarkPlus, ArrowLeft, Palette } from 'lucide-react';
 import Papa from 'papaparse';
 import { useNotificationStore } from '@/store/NotificationsStore';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 // Color scheme for charts
 const COLORS = {
@@ -36,11 +38,19 @@ const BudgetDashboard = ({ onLayersReady, setSavedArtifacts, title, onBack }) =>
   const addNotification = useNotificationStore((state) => state.addNotification);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [customSaveName, setCustomSaveName] = useState('');
-
+  const [showPaletteDialog, setShowPaletteDialog] = useState(false);
+  const [customColors, setCustomColors] = useState({
+    blue: COLORS.blue,
+    green: COLORS.green
+  });
   const teammateList = [
     "Alice Johnson", "Bob Smith", "Catherine Nguyen", "David Li", "Emma Patel"
   ];
-
+  const [showDownloadDialog, setShowDownloadDialog] = useState(false);
+  const [downloadSelections, setDownloadSelections] = useState({});
+  const [attachments, setAttachments] = useState([
+    { id: 'chart', label: '📊 Budget Category Chart.jpg' }
+  ]);
   useEffect(() => {
     const checkIfMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -165,11 +175,99 @@ const BudgetDashboard = ({ onLayersReady, setSavedArtifacts, title, onBack }) =>
           <YAxis label={{ value: 'Millions ($)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#4a5568' } }} />
           <Tooltip formatter={(value) => `$${value.toFixed(2)}M`} />
           <Legend />
-          <Bar dataKey="budget" name="Total Budget" fill={COLORS.blue} />
-          <Bar dataKey="spending" name="2025 Spending" fill={COLORS.green} />
+          <Bar dataKey="budget" name="Total Budget" fill={customColors.blue} />
+          <Bar dataKey="spending" name="2025 Spending" fill={customColors.green} />
         </BarChart>
       </ResponsiveContainer>
     );
+  };
+ 
+  const handleDownloadAll = () => {
+    const downloadedFiles = [];
+  
+    Object.entries(downloadSelections).forEach(([key, { filename, format }]) => {
+      const fullName = `${filename}${format}`;
+      downloadedFiles.push(fullName);
+  
+      if (key === 'chart') {
+        // Get the chart container element
+        const chartElement = chartContainerRef.current.querySelector('.rounded-lg.shadow');
+        
+        if (!chartElement) {
+          console.error("Chart element not found");
+          return;
+        }
+        
+        if (format === '.pdf') {
+          // For PDF format
+          html2canvas(chartElement, {
+            backgroundColor: 'white',
+            scale: 2,
+            logging: true,
+            useCORS: true,
+            allowTaint: true
+          }).then(canvas => {
+            try {
+              // Convert canvas to image
+              const imgData = canvas.toDataURL('image/jpeg', 1.0);
+              
+              // Initialize PDF
+              const pdf = new jsPDF({
+                orientation: 'landscape',
+                unit: 'mm'
+              });
+              
+              // Get canvas dimensions
+              const imgWidth = 280; // mm
+              const imgHeight = (canvas.height * imgWidth) / canvas.width;
+              
+              // Add image to PDF
+              pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight);
+              
+              // Save PDF
+              pdf.save(`${filename}.pdf`);
+            } catch (err) {
+              console.error("Error creating PDF:", err);
+            }
+          }).catch(err => {
+            console.error("Error rendering canvas for PDF:", err);
+          });
+        } else {
+          // For JPG and PNG formats (existing code)
+          html2canvas(chartElement, {
+            backgroundColor: 'white',
+            scale: 2,
+            logging: true,
+            useCORS: true,
+            allowTaint: true
+          }).then(canvas => {
+            try {
+              const mimeType = format === '.png' ? 'image/png' : 'image/jpeg';
+              const imageData = canvas.toDataURL(mimeType, 0.9);
+              const link = document.createElement('a');
+              link.href = imageData;
+              link.download = fullName;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            } catch (err) {
+              console.error("Error creating download:", err);
+            }
+          }).catch(err => {
+            console.error("Error rendering canvas:", err);
+          });
+        }
+      }
+    });
+  
+    // Push notification
+    if (downloadedFiles.length > 0) {
+      const fileList = downloadedFiles.join(', ');
+      setShowShareDialog(false);
+      setNotificationMessage(`Downloaded ${downloadedFiles.length} file${downloadedFiles.length > 1 ? 's' : ''}: ${fileList}`);
+      setShowEmailNotification(true);
+      addNotification(`Downloaded ${downloadedFiles.length} file${downloadedFiles.length > 1 ? 's' : ''}: ${fileList}`);
+    }
   };
 
   const toggleFullscreen = () => setIsFullscreen(!isFullscreen);
@@ -281,7 +379,29 @@ const BudgetDashboard = ({ onLayersReady, setSavedArtifacts, title, onBack }) =>
           >
             <BookmarkPlus size={16} />
           </button>
+{/* Palette button */}
+<button
+  onClick={() => setShowPaletteDialog(true)}
+  title="Change Colors"
+  className="p-2 rounded-full border"
+  style={{ 
+    color: COLORS.teal,
+    backgroundColor: COLORS.white,
+    border: `1px solid ${COLORS.teal}`,
+    transition: 'all 0.2s ease-in-out'
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.backgroundColor = COLORS.teal;
+    e.currentTarget.style.color = COLORS.white;
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.backgroundColor = COLORS.white;
+    e.currentTarget.style.color = COLORS.teal;
+  }}
+>
+<Palette size={16} />
 
+</button>
           {/* Share button */}
           <button
             onClick={() => setShowShareDialog(true)}
@@ -401,10 +521,124 @@ const BudgetDashboard = ({ onLayersReady, setSavedArtifacts, title, onBack }) =>
             >
               Share Chart
             </button>
+            {/* Divider */}
+<div className="border-t border-gray-200 mb-6 mt-4" />
+
+{/* Download Section */}
+<h3 className="text-sm font-semibold text-gray-700 mb-3">Download This Chart</h3>
+
+<div className="flex space-x-2 mb-3">
+  <input
+    type="text"
+    className="border px-3 py-2 rounded-lg w-[160px] text-sm focus:outline-none focus:ring-2 focus:ring-[#008080]"
+    value={downloadSelections['chart']?.filename || 'budget_category_chart'}
+    onChange={(e) =>
+      setDownloadSelections(prev => ({
+        ...prev,
+        chart: {
+          filename: e.target.value,
+          format: prev['chart']?.format || '.jpg'
+        }
+      }))
+    }
+    placeholder="File name"
+  />
+  <select
+    value={downloadSelections['chart']?.format || '.jpg'}
+    onChange={(e) =>
+      setDownloadSelections(prev => ({
+        ...prev,
+        chart: {
+          filename: prev['chart']?.filename || 'budget_category_chart',
+          format: e.target.value
+        }
+      }))
+    }
+    className="border px-2 py-2 rounded-lg text-sm focus:outline-none"
+  >
+    <option value=".jpg">.jpg</option>
+    <option value=".png">.png</option>
+    <option value=".pdf">.pdf</option>
+  </select>
+</div>
+
+<button
+  onClick={() => {
+    if (!downloadSelections['chart']) {
+      setDownloadSelections(prev => ({
+        ...prev,
+        chart: { filename: 'budget_category_chart', format: '.jpg' }
+      }));
+    }
+    handleDownloadAll();
+  }}
+  className="w-full py-2 rounded-md text-sm font-semibold bg-[#008080] text-white hover:bg-teal-700"
+>
+  Download Chart
+</button>
           </div>
+          
         </div>
       )}
-      
+{/* Palette Dialog */}
+{showPaletteDialog && (
+  <div className="absolute bottom-4 right-4 z-[1000]">
+    <div className="bg-white w-[240px] rounded-xl shadow-lg border border-gray-200 p-4 relative text-sm">
+      {/* Close Button */}
+      <button
+        className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 transition"
+        onClick={() => setShowPaletteDialog(false)}
+        aria-label="Close Palette"
+      >
+        <X className="w-3.5 h-3.5" />
+      </button>
+
+      {/* Header */}
+      <h2 className="text-base font-semibold text-gray-800 mb-4">Chart Colors</h2>
+
+      {/* Color Pickers */}
+      <div className="space-y-3">
+        {[
+          { label: "Budget Color", key: "blue" },
+          { label: "Spending Color", key: "green" },
+        ].map(({ label, key }) => (
+          <div key={key}>
+            <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+            <input
+              type="color"
+              value={customColors[key]}
+              onChange={(e) => setCustomColors({ ...customColors, [key]: e.target.value })}
+              className="w-full h-6 cursor-pointer appearance-none rounded-md border border-gray-300"
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Buttons */}
+      <div className="flex gap-2 mt-4">
+        <button
+          className="flex-1 py-1.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
+          onClick={() =>
+            setCustomColors({
+              blue: COLORS.blue,
+              green: COLORS.green,
+            })
+          }
+        >
+          Reset
+        </button>
+        <button
+          className="flex-1 py-1.5 rounded-md text-xs font-medium bg-[#008080] text-white hover:bg-teal-700 transition"
+          onClick={() => setShowPaletteDialog(false)}
+        >
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
       {/* Save Dialog */}
       {showSaveDialog && (
         <div className="absolute bottom-[20px] right-6 z-[1000]">
@@ -483,8 +717,7 @@ const BudgetDashboard = ({ onLayersReady, setSavedArtifacts, title, onBack }) =>
 
   return (
     <>
-      {renderPanelContent(false)}
-      {isFullscreen && renderPanelContent(true)}
+      {isFullscreen ? renderPanelContent(true) : renderPanelContent(false)}
     </>
   );
 };

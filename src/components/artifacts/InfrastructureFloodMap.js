@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import {
   Layers, Maximize2, X, Info, ChevronDown, ChevronUp,
-  Download, Wrench, Palette, Share2, BookmarkPlus, Table, Minimize2, ChevronLeft, ArrowLeft, ChevronRight, Pencil
+  Download, Wrench, Palette, Share2, BookmarkPlus, Table, Minimize2, ChevronLeft, ArrowLeft, ChevronRight, Pencil, ListFilter
 } from 'lucide-react';
 import { TbMapSearch } from "react-icons/tb";
 import html2canvas from 'html2canvas';
@@ -71,7 +71,8 @@ const InfrastructureFloodMap = ({ onLayersReady, onSaveMap, savedMaps = [], setS
   const [filterOptions, setFilterOptions] = useState([]);
   const [selectedFilters, setSelectedFilters] = useState({});
   const [filterSearch, setFilterSearch] = useState('');
-
+  const [filterDialogPosition, setFilterDialogPosition] = useState({ x: 0, y: 0 });
+  const [showFilterIcons, setShowFilterIcons] = useState(false);
   const [attachments, setAttachments] = useState([
     { id: 'map', label: '📍 Vancouver Infrastructure & Flood Assessment Map.jpg' },
     ...tableTitles.map((title, i) => ({
@@ -588,40 +589,95 @@ const [showLegend, setShowLegend] = useState(initialActiveLayerCount > 4);
 
     return { headers, rows };
   };
+  
   const handleDownloadAll = () => {
     const downloadedFiles = [];
-
+  
     Object.entries(downloadSelections).forEach(([key, { filename, format }]) => {
       const fullName = `${filename}${format}`;
       downloadedFiles.push(fullName);
-
+  
       if (key === 'map') {
-        html2canvas(mapContainerRef.current, {
-          backgroundColor: 'white',
-          scale: 2,
-          useCORS: true
-        }).then(canvas => {
-          const mimeType = format === '.png' ? 'image/png' : 'image/jpeg';
-          const imageData = canvas.toDataURL(mimeType, 0.9);
-          const link = document.createElement('a');
-          link.href = imageData;
-          link.download = fullName;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        });
+        // Get the map container element
+        const mapElement = mapContainerRef.current;
+        
+        if (!mapElement) {
+          console.error("Map element not found");
+          return;
+        }
+        
+        if (format === '.pdf') {
+          // For PDF format
+          html2canvas(mapElement, {
+            backgroundColor: 'white',
+            scale: 2,
+            logging: true,
+            useCORS: true,
+            allowTaint: true
+          }).then(canvas => {
+            try {
+              // Convert canvas to image
+              const imgData = canvas.toDataURL('image/jpeg', 1.0);
+              
+              // Initialize PDF
+              const pdf = new jsPDF({
+                orientation: 'landscape',
+                unit: 'mm'
+              });
+              
+              // Get canvas dimensions
+              const imgWidth = 280; // mm
+              const imgHeight = (canvas.height * imgWidth) / canvas.width;
+              
+              // Add image to PDF
+              pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight);
+              
+              // Save PDF
+              pdf.save(`${filename}.pdf`);
+            } catch (err) {
+              console.error("Error creating PDF:", err);
+            }
+          }).catch(err => {
+            console.error("Error rendering canvas for PDF:", err);
+          });
+        } else {
+          // For JPG and PNG formats
+          html2canvas(mapElement, {
+            backgroundColor: 'white',
+            scale: 2,
+            logging: true,
+            useCORS: true,
+            allowTaint: true
+          }).then(canvas => {
+            try {
+              const mimeType = format === '.png' ? 'image/png' : 'image/jpeg';
+              const imageData = canvas.toDataURL(mimeType, 0.9);
+              const link = document.createElement('a');
+              link.href = imageData;
+              link.download = fullName;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            } catch (err) {
+              console.error("Error creating download:", err);
+            }
+          }).catch(err => {
+            console.error("Error rendering canvas:", err);
+          });
+        }
       } else if (key.startsWith('table-')) {
+        // Existing table download functionality
         const tableIndex = parseInt(key.split('-')[1], 10);
         const data = tableData[tableIndex];
-
+  
         if (!data || !data.headers || !data.rows) return;
-
+  
         const csvRows = [
           data.headers.join(','),
           ...data.rows.map(row => data.headers.map(h => `"${(row[h] ?? '').toString().replace(/"/g, '""')}"`).join(','))
         ];
         const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-
+  
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         link.setAttribute('download', fullName);
@@ -630,11 +686,11 @@ const [showLegend, setShowLegend] = useState(initialActiveLayerCount > 4);
         document.body.removeChild(link);
       }
     });
-
-    // ✅ Push notification
+  
+    // Push notification
     if (downloadedFiles.length > 0) {
       const fileList = downloadedFiles.join(', ');
-      setShowDownloadDialog(false);
+      setShowShareDialog(false);
       setNotificationMessage(`Downloaded ${downloadedFiles.length} file${downloadedFiles.length > 1 ? 's' : ''}: ${fileList}`);
       setShowEmailNotification(true);
       addNotification(`Downloaded ${downloadedFiles.length} file${downloadedFiles.length > 1 ? 's' : ''}: ${fileList}`);
@@ -2812,16 +2868,51 @@ const [showLegend, setShowLegend] = useState(initialActiveLayerCount > 4);
   </tr>
   {/* Actual column names */}
   <tr>
-    <th className="w-8 bg-white"></th>
-    {tableData[currentTableIndex].headers.map((header, idx) => (
-      <th
-        key={`label-${idx}`}
-        className="px-3 py-1 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200"
-      >
-        {header}
-      </th>
-    ))}
-  </tr>
+  <th className="w-8 bg-white"></th>
+  {tableData[currentTableIndex].headers.map((header, idx) => (
+    <th
+      key={`label-${idx}`}
+      className="px-3 py-1 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200"
+    >
+      <div className="flex items-center justify-between">
+        <span>{header}</span>
+        {showFilterIcons && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              const rect = e.currentTarget.getBoundingClientRect();
+              const uniqueVals = [...new Set(tableData[currentTableIndex].rows.map(row => row[header]))];
+              setFilterOptions(uniqueVals);
+              setSelectedFilters(prev => ({
+                ...prev,
+                [header]: new Set(uniqueVals) // default: all selected
+              }));
+              setFilterColumn(header);
+              setShowFilterDialog(true);
+              // Position the filter dialog near the icon
+              setFilterDialogPosition({ x: rect.right, y: rect.bottom });
+            }}
+            className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none"
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              width="10" 
+              height="10" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+            </svg>
+          </button>
+        )}
+      </div>
+    </th>
+  ))}
+</tr>
 </thead>
 
                 <tbody>
@@ -2882,204 +2973,215 @@ onClick={() =>
 
           </div>
         )}
-       {contextMenu.visible && (
+        {contextMenu.visible && (
   <div
-  className="fixed z-[9999] bg-white rounded-lg border border-gray-200 shadow-md animate-fade-in text-[13px] w-[140px]"
-  style={{ top: contextMenu.y, left: contextMenu.x }}
->
-  <div className="p-1.5 space-y-0.5 text-gray-800">
+    className="fixed z-[9999] w-28 rounded-md border border-gray-200 bg-white shadow-xl text-xs font-medium"
+    style={{ top: contextMenu.y, left: contextMenu.x }}
+  >
+    <div className="py-1 text-gray-800">
       {contextMenu.type === 'row' && (
+        <button
+          onClick={() => {
+            setTableData(prev => {
+              const updated = [...prev];
+              updated[currentTableIndex].rows.splice(contextMenu.index, 1);
+              return updated;
+            });
+            setSelectedRowIndex(null);
+            closeContextMenu();
+          }}
+          className="w-full text-left px-3 py-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+        >
+          Delete Row
+        </button>
+      )}
+
+      {contextMenu.type === 'column' && (
         <>
-          {/* REMOVE insert row buttons */}
           <button
             onClick={() => {
               setTableData(prev => {
                 const updated = [...prev];
-                updated[currentTableIndex].rows.splice(contextMenu.index, 1);
+                const table = { ...updated[currentTableIndex] };
+                table.headers = table.headers.filter(h => h !== contextMenu.columnName);
+                table.rows = table.rows.map(row => {
+                  const { [contextMenu.columnName]: _, ...rest } = row;
+                  return rest;
+                });
+                updated[currentTableIndex] = table;
                 return updated;
               });
-              setSelectedRowIndex(null);
               closeContextMenu();
             }}
-            className="w-full text-left px-2.5 py-1.5 rounded-md text-red-600 hover:bg-red-50 transition"
-            >
-            Delete Row
+            className="w-full text-left px-3 py-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+          >
+            Delete Column
           </button>
+
+          <hr className="my-1 border-gray-200" />
+
+          <button
+            onClick={() => {
+              setShowFilterIcons(true);
+              closeContextMenu();
+            }}
+            className="w-full text-left px-3 py-1.5 hover:bg-gray-100 rounded transition-colors"
+          >
+            Filter
+          </button>
+
+          <button
+            onClick={() => {
+              setTableData(prev => {
+                const updated = [...prev];
+                updated[currentTableIndex].rows.sort((a, b) =>
+                  String(a[contextMenu.columnName] || '').localeCompare(String(b[contextMenu.columnName] || ''))
+                );
+                return updated;
+              });
+              setIsModified(true);
+              closeContextMenu();
+            }}
+            className="w-full text-left px-3 py-1.5 hover:bg-gray-100 rounded transition-colors"
+          >
+            Sort A → Z
+          </button>
+
+          <button
+            onClick={() => {
+              setTableData(prev => {
+                const updated = [...prev];
+                updated[currentTableIndex].rows.sort((a, b) =>
+                  String(b[contextMenu.columnName] || '').localeCompare(String(a[contextMenu.columnName] || ''))
+                );
+                return updated;
+              });
+              setIsModified(true);
+              closeContextMenu();
+            }}
+            className="w-full text-left px-3 py-1.5 hover:bg-gray-100 rounded transition-colors"
+          >
+            Sort Z → A
+          </button>
+
+          {isModified && (
+            <>
+              <hr className="my-1 border-gray-200" />
+              <button
+                onClick={() => {
+                  const original = originalRowsMap[currentTableIndex];
+                  if (!original) return;
+                  setTableData(prev => {
+                    const updated = [...prev];
+                    updated[currentTableIndex].rows = JSON.parse(JSON.stringify(original));
+                    return updated;
+                  });
+                  setIsModified(false);
+                  closeContextMenu();
+                }}
+                className="w-full text-left px-3 py-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+              >
+                Reset
+              </button>
+            </>
+          )}
         </>
       )}
-
-{contextMenu.type === 'column' && (
-  <>
-  <button
-  onClick={() => {
-    setTableData(prev => {
-      const updated = [...prev];
-      const table = { ...updated[currentTableIndex] };
-
-      // Remove the column from headers
-      table.headers = table.headers.filter(h => h !== contextMenu.columnName);
-
-      // Remove the column from each row
-      table.rows = table.rows.map(row => {
-        const { [contextMenu.columnName]: _, ...rest } = row;
-        return rest;
-      });
-
-      updated[currentTableIndex] = table;
-      return updated;
-    });
-    closeContextMenu();
-  }}
-  className="w-full text-left px-2.5 py-1.5 rounded-md text-red-600 hover:bg-red-50 transition"
->
-  Delete Column
-</button>
-
-    <button
-  onClick={() => {
-    const uniqueVals = [...new Set(tableData[currentTableIndex].rows.map(row => row[contextMenu.columnName]))];
-    setFilterOptions(uniqueVals);
-    setSelectedFilters(prev => ({
-      ...prev,
-      [contextMenu.columnName]: new Set(uniqueVals) // default: all selected
-    }));
-    setFilterColumn(contextMenu.columnName);
-    setShowFilterDialog(true);
-    closeContextMenu();
-  }}
-  className="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-gray-100 transition"
->
-  Filter
-</button>
-
-
-    {/* Sort Buttons */}
-    <button
-      onClick={() => {
-        setTableData(prev => {
-          const updated = [...prev];
-          updated[currentTableIndex].rows.sort((a, b) =>
-            String(a[contextMenu.columnName] || '').localeCompare(String(b[contextMenu.columnName] || ''))
-          );
-          return updated;
-        });
-        setIsModified(true); // ✅ Mark as modified
-        closeContextMenu();
-      }}
-      className="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-gray-100 transition"
-      >
-      Sort A → Z
-    </button>
-    <button
-      onClick={() => {
-        setTableData(prev => {
-          const updated = [...prev];
-          updated[currentTableIndex].rows.sort((a, b) =>
-            String(b[contextMenu.columnName] || '').localeCompare(String(a[contextMenu.columnName] || ''))
-          );
-          return updated;
-        });
-        setIsModified(true); // ✅ Mark as modified
-        closeContextMenu();
-      }}
-      className="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-gray-100 transition"
-      >
-      Sort Z → A
-    </button>
-
-    {/* ✅ Remove Sort / Filter */}
-    {isModified && (
-      <button
-      onClick={() => {
-        const original = originalRowsMap[currentTableIndex];
-        if (!original) return;
-      
-        setTableData(prev => {
-          const updated = [...prev];
-          updated[currentTableIndex].rows = JSON.parse(JSON.stringify(original)); // deep clone again
-          return updated;
-        });
-        setIsModified(false);
-        closeContextMenu();
-      }}  
-        className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition"
-      >
-        Remove Sort / Filter
-      </button>
-      
-
-    )}
-  </>
-)}
-
     </div>
   </div>
 )}
 
-{showFilterDialog && filterColumn && (
-  <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[9999] bg-white rounded-xl border shadow-xl w-[280px] p-4">
-    <div className="flex justify-between items-center mb-3">
-      <h3 className="text-sm font-semibold text-gray-800">Filter: {filterColumn}</h3>
-      <button onClick={() => setShowFilterDialog(false)} className="text-gray-500 hover:text-gray-700">
-        <X size={18} />
-      </button>
-    </div>
 
-    <div className="mb-2">
+{showFilterDialog && filterColumn && (
+  <div
+    className="fixed z-[9999] bg-white rounded-xl p-2"
+    style={{
+      top: `${filterDialogPosition.y}px`,
+      left: `${filterDialogPosition.x}px`,
+      transform: 'translate(-90%, 10px)',
+      display: 'flex',
+      flexDirection: 'column',
+      maxHeight: '220px',
+      width: '140px',
+      border: 'none',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.05)'
+    }}
+  >
+<div className="flex justify-between items-center mb-1">
+  <h3 className="text-[10px] font-semibold text-gray-800">Filter: {filterColumn}</h3>
+  <button onClick={() => setShowFilterDialog(false)} className="text-gray-500 hover:text-gray-700">
+    <X size={14} />
+  </button>
+</div>
+    
+    {/* Search input - smaller */}
+    {/* Search input - with smaller placeholder text */}
+<div className="mb-1">
   <input
     type="text"
     placeholder="Search..."
     value={filterSearch}
     onChange={(e) => setFilterSearch(e.target.value)}
-    className="w-full px-2 py-1 border border-gray-300 rounded-md text-sm"
+    className="w-full px-1 py-0.5 border border-gray-300 rounded-md text-[9px]"
+    style={{ fontSize: '10px' }} 
   />
 </div>
-
-<div className="space-y-2 max-h-[200px] overflow-y-auto">
-  {filterOptions
-    .filter(option =>
-      String(option).toLowerCase().includes(filterSearch.toLowerCase())
-    )
-    .map((option, idx) => (
-      <label key={idx} className="flex items-center space-x-2 text-sm text-gray-700">
-        <input
-          type="checkbox"
-          checked={selectedFilters[filterColumn]?.has(option)}
-          onChange={() => {
-            setSelectedFilters(prev => {
-              const updated = new Set(prev[filterColumn]);
-              if (updated.has(option)) {
-                updated.delete(option);
-              } else {
-                updated.add(option);
-              }
-              return { ...prev, [filterColumn]: updated };
-            });
-          }}
-        />
-        <span>{String(option)}</span>
-      </label>
-    ))}
-</div>
-
-
-    <button
-      onClick={() => {
-        setTableData(prev => {
-          const updated = [...prev];
-          const original = originalRowsMap[currentTableIndex];
-          updated[currentTableIndex].rows = original.filter(row =>
-            selectedFilters[filterColumn]?.has(row[filterColumn])
-          );
-          return updated;
-        });
-        setIsModified(true);
-        setShowFilterDialog(false);
-      }}
-      className="mt-4 w-full py-2 rounded-md bg-[#008080] text-white text-sm font-semibold hover:bg-teal-700"
-    >
-      Apply Filter
-    </button>
+    
+    {/* Scrollable values area */}
+    <div className="space-y-0.5 overflow-y-auto flex-grow" style={{ maxHeight: '110px' }}>
+      {filterOptions
+        .filter(option =>
+          String(option).toLowerCase().includes(filterSearch.toLowerCase())
+        )
+        .map((option, idx) => (
+          <label key={idx} className="flex items-center space-x-1 text-xs text-gray-700">
+            <input
+              type="checkbox"
+              checked={selectedFilters[filterColumn]?.has(option)}
+              onChange={() => {
+                setSelectedFilters(prev => {
+                  const updated = new Set(prev[filterColumn]);
+                  if (updated.has(option)) {
+                    updated.delete(option);
+                  } else {
+                    updated.add(option);
+                  }
+                  return { ...prev, [filterColumn]: updated };
+                });
+              }}
+              className="h-2 w-2"
+            />
+            <span className="truncate text-[10px]">{String(option)}</span>
+          </label>
+        ))}
+    </div>
+    
+    {/* Fixed buttons at bottom, side by side */}
+    <div className="mt-1 flex justify-between space-x-1">
+      <button
+        onClick={() => setShowFilterDialog(false)}
+        className="py-0.5 px-1 rounded-md bg-gray-200 text-gray-700 text-[10px] font-medium hover:bg-gray-300 flex-1"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={() => {
+          setTableData(prev => {
+            const updated = [...prev];
+            const original = originalRowsMap[currentTableIndex];
+            updated[currentTableIndex].rows = original.filter(row =>
+              selectedFilters[filterColumn]?.has(row[filterColumn])
+            );
+            return updated;
+          });
+          setIsModified(true);
+          setShowFilterDialog(false);
+        }}
+        className="py-0.5 px-1 rounded-md bg-[#008080] text-white text-[10px] font-medium hover:bg-teal-700 flex-1"
+      >
+        Apply
+      </button>
+    </div>
   </div>
 )}
 
