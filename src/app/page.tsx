@@ -55,7 +55,7 @@ export default function Home() {
     setConversationId(`conv_${Date.now()}`);
     
     // Load saved artifacts from localStorage
-    const stored = localStorage.getItem('savedArtifacts');
+    const stored = typeof window !== 'undefined' ? localStorage.getItem('savedArtifacts') : null;
     if (stored) {
       setSavedArtifacts(JSON.parse(stored));
     }
@@ -248,6 +248,7 @@ export default function Home() {
     useEffect(() => {
       if (isDragging) {
         const onMouseMove = (e: MouseEvent) => {
+          if (typeof window === 'undefined') return; // Guard against SSR
           const containerWidth = document.body.clientWidth;
           const widthPercentage = (e.clientX / containerWidth) * 100;
           setArtifactsPanelWidth(Math.max(20, Math.min(80, 100 - widthPercentage)));
