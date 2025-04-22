@@ -1,7 +1,7 @@
 'use client';
-//changes
+
 import { useState, useEffect, useRef } from 'react';
-import { X, Trash2 } from 'lucide-react'
+import { X, Trash2 } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import ResponsiveChatLayout from '../components/chat/ChatWindow';
 import ArtifactsPanel from '../components/layout/ArtifactsPanel';
@@ -9,7 +9,6 @@ import WelcomeCard from '../components/chat/WelcomeCard';
 import rawSidebar from '../components/layout/Sidebar.jsx';
 const Sidebar = rawSidebar as React.ComponentType<any>;
 import { Dialog } from '@headlessui/react';
-
 
 export interface Artifact {
   id: string;
@@ -20,86 +19,99 @@ export interface Artifact {
   date: string;
 }
 
-
-// Define the chat message type
 export interface ChatMessageType {
   text: string;
   file?: string | null;
   isUser: boolean;
   artifacts?: Artifact[];
-  id: string; // Add unique ID to each message
+  id: string;
 }
 
 export default function Home() {
-  // Lift the messages state up to the Home component
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isNewConversation, setIsNewConversation] = useState(true);
   const [artifacts, setArtifacts] = useState<Artifact[]>([]);
-  const [artifactsPanelWidth, setArtifactsPanelWidth] = useState(40); // percentage
+  const [artifactsPanelWidth, setArtifactsPanelWidth] = useState(40);
   const [isArtifactFullscreen, setIsArtifactFullscreen] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
-  const [lastMessageId, setLastMessageId] = useState<string>(''); // Track last message ID
-  const prevArtifactsLength = useRef(0); // Track previous artifacts length
+  const [lastMessageId, setLastMessageId] = useState<string>('');
+  const prevArtifactsLength = useRef(0);
   const [sidebarTab, setSidebarTab] = useState('recent');
-  const [conversationId, setConversationId] = useState(() => `conv_${Date.now()}`);
-const [refreshSidebarKey, setRefreshSidebarKey] = useState(0); // Used to trigger sidebar refresh
-const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
-const [savedArtifacts, setSavedArtifacts] = useState<Artifact[]>([]);
-const isReloading = useRef(false);
-const [pendingSelectedArtifact, setPendingSelectedArtifact] = useState<Artifact | null>(null);
-const [modalArtifact, setModalArtifact] = useState<Artifact | null>(null);
-const [showAllSavedDialog, setShowAllSavedDialog] = useState(false);
-const [searchQuery, setSearchQuery] = useState('');
+  // Use a function for initial state that doesn't depend on browser APIs
+  const [conversationId, setConversationId] = useState('');
+  const [refreshSidebarKey, setRefreshSidebarKey] = useState(0);
+  const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
+  const [savedArtifacts, setSavedArtifacts] = useState<Artifact[]>([]);
+  const isReloading = useRef(false);
+  const [pendingSelectedArtifact, setPendingSelectedArtifact] = useState<Artifact | null>(null);
+  const [modalArtifact, setModalArtifact] = useState<Artifact | null>(null);
+  const [showAllSavedDialog, setShowAllSavedDialog] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-const loadConversation = (id: string) => {
-  isReloading.current = true;
-  const stored = JSON.parse(localStorage.getItem('conversations') || '{}');
-  const convo = stored[id];
-  if (convo) {
-    const messages: ChatMessageType[] = convo.messages || [];
-
-    const allArtifacts: Artifact[] = [];
-    messages.forEach((msg) => {
-      if (msg.artifacts && msg.artifacts.length > 0) {
-        allArtifacts.push(...msg.artifacts);
-      }
-    });
-
-    setMessages(messages);
-    setArtifacts(allArtifacts);
-    setSelectedArtifact(null); 
-    setArtifactsPanelWidth(0); 
-        setConversationId(id);
-    localStorage.setItem('activeConversationId', id);
-    setIsNewConversation(false);
-    prevArtifactsLength.current = allArtifacts.length;
-    setLastMessageId(prev => prev || `loaded_${id}`);
-    if (pendingSelectedArtifact) {
-      setTimeout(() => {
-        setSelectedArtifact(pendingSelectedArtifact);
-        setPendingSelectedArtifact(null);
-      }, 50); 
+  // Initialize state that depends on browser APIs
+  useEffect(() => {
+    // Only run on client side
+    setConversationId(`conv_${Date.now()}`);
+    
+    // Load saved artifacts from localStorage
+    const stored = localStorage.getItem('savedArtifacts');
+    if (stored) {
+      setSavedArtifacts(JSON.parse(stored));
     }
-  }
-  setTimeout(() => {
-    isReloading.current = false;
-  }, 500);
-};
-useEffect(() => {
-  const stored = JSON.parse(localStorage.getItem('savedArtifacts') || '[]');
-  setSavedArtifacts(stored);
-}, []);
+  }, []);
 
-useEffect(() => {
-  localStorage.setItem('savedArtifacts', JSON.stringify(savedArtifacts));
-}, [savedArtifacts]);
+  const loadConversation = (id: string) => {
+    if (typeof window === 'undefined') return; // Guard against SSR
+    
+    isReloading.current = true;
+    const stored = JSON.parse(localStorage.getItem('conversations') || '{}');
+    const convo = stored[id];
+    if (convo) {
+      const messages: ChatMessageType[] = convo.messages || [];
 
+      const allArtifacts: Artifact[] = [];
+      messages.forEach((msg) => {
+        if (msg.artifacts && msg.artifacts.length > 0) {
+          allArtifacts.push(...msg.artifacts);
+        }
+      });
+
+      setMessages(messages);
+      setArtifacts(allArtifacts);
+      setSelectedArtifact(null); 
+      setArtifactsPanelWidth(0); 
+      setConversationId(id);
+      localStorage.setItem('activeConversationId', id);
+      setIsNewConversation(false);
+      prevArtifactsLength.current = allArtifacts.length;
+      setLastMessageId(prev => prev || `loaded_${id}`);
+      if (pendingSelectedArtifact) {
+        setTimeout(() => {
+          setSelectedArtifact(pendingSelectedArtifact);
+          setPendingSelectedArtifact(null);
+        }, 50); 
+      }
+    }
+    setTimeout(() => {
+      isReloading.current = false;
+    }, 500);
+  };
+
+  // Update localStorage only on client side
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('savedArtifacts', JSON.stringify(savedArtifacts));
+    }
+  }, [savedArtifacts]);
 
   const addArtifact = (artifact: Artifact) => {
     setArtifacts(prev => [...prev, artifact]);
   };
+
   const saveConversationToLocalStorage = (id: string, messages: ChatMessageType[], artifacts: Artifact[]) => {
+    if (typeof window === 'undefined') return; // Guard against SSR
+    
     const allConversations = JSON.parse(localStorage.getItem('conversations') || '{}');
     allConversations[id] = {
       messages,
@@ -108,6 +120,7 @@ useEffect(() => {
     };
     localStorage.setItem('conversations', JSON.stringify(allConversations));
   };
+
   const startNewConversation = () => {
     const isEmpty =
       messages.length === 0 ||
@@ -122,20 +135,18 @@ useEffect(() => {
   
       const newId = `conv_${Date.now()}`;
       setConversationId(newId);
-      localStorage.setItem('activeConversationId', newId);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('activeConversationId', newId);
+      }
     }
   };
   
-  
-  // Function to handle sending messages
   const handleSendMessage = async ({ text, file }: { text: string, file: string | null }) => {
     if (isNewConversation) {
       setIsNewConversation(false);
     }
-    // Generate unique message ID
-    const userMessageId = `user_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
     
-    // Add user message
+    const userMessageId = `user_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
     const userMessage: ChatMessageType = { 
       text, 
       file, 
@@ -145,8 +156,6 @@ useEffect(() => {
     
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
-    
-    // Remember current artifacts count before response
     prevArtifactsLength.current = artifacts.length;
     
     try {
@@ -183,7 +192,6 @@ useEffect(() => {
     } catch (error) {
       console.error('Error sending message:', error);
       
-      // Generate unique ID for error message
       const errorMessageId = `error_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
       
       setMessages(prev => [...prev, {
@@ -192,7 +200,6 @@ useEffect(() => {
         id: errorMessageId
       }]);
       
-      // Update last message ID
       setLastMessageId(errorMessageId);
       
     } finally {
@@ -200,20 +207,18 @@ useEffect(() => {
     }
   };
 
-  // Function to toggle sidebar
   const toggleSidebar = () => {
     setShowSidebar(prev => !prev);
   };
 
-  // Check if artifacts exist
   const hasArtifacts = artifacts.length > 0;
 
-  // Create sidebar button component with navbar-like styling
   interface SidebarButtonProps {
     onClick: () => void;
     Icon: React.ElementType;
     position: 'left' | 'right';
   }
+
   const handleArtifactSelect = (artifact: Artifact) => {
     console.log('Selected artifact:', artifact);
     setSelectedArtifact(artifact);
@@ -227,8 +232,6 @@ useEffect(() => {
     }
   };
   
-  
-  
   const SidebarButton = ({ onClick, Icon, position }: SidebarButtonProps) => (
     <button 
       onClick={onClick}
@@ -237,6 +240,46 @@ useEffect(() => {
       <Icon className="h-5 w-5 text-[#008080] group-hover:text-white" />
     </button>
   );
+
+  // Create resizable divider component
+  const DividerComponent = () => {
+    const [isDragging, setIsDragging] = useState(false);
+
+    useEffect(() => {
+      if (isDragging) {
+        const onMouseMove = (e: MouseEvent) => {
+          const containerWidth = document.body.clientWidth;
+          const widthPercentage = (e.clientX / containerWidth) * 100;
+          setArtifactsPanelWidth(Math.max(20, Math.min(80, 100 - widthPercentage)));
+        };
+
+        const onMouseUp = () => {
+          setIsDragging(false);
+        };
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+
+        return () => {
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+        };
+      }
+    }, [isDragging]);
+
+    return (
+      <div
+        className="relative"
+        onMouseDown={() => setIsDragging(true)}
+      >
+        <div className="group relative w-1 h-full cursor-ew-resize bg-transparent">
+          <div
+            className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[6px] rounded-md h-full bg-white/60 backdrop-blur-md shadow-sm border border-gray-300 group-hover:bg-[#008080] group-hover:shadow-md transition-all duration-200"
+          />
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="flex flex-col h-screen max-h-screen overflow-hidden">
@@ -249,267 +292,236 @@ useEffect(() => {
           filter: "opacity(0.1)",
         }}
       />
-<Sidebar
-  isOpen={showSidebar}
-  onClose={() => setShowSidebar(false)}
-  activeTab={sidebarTab}
-  setActiveTab={setSidebarTab}
-  onLoadConversation={loadConversation}
-  refreshKey={refreshSidebarKey}
-  onStartNewChat={startNewConversation}
-  savedArtifacts={savedArtifacts}
-  setModalArtifact={setModalArtifact}
-/>
-<Navbar
-  onToggleSidebar={toggleSidebar}
-  sidebarOpen={showSidebar}
-  onStartNewChat={startNewConversation}
-/>
+      
+      <Sidebar
+        isOpen={showSidebar}
+        onClose={() => setShowSidebar(false)}
+        activeTab={sidebarTab}
+        setActiveTab={setSidebarTab}
+        onLoadConversation={loadConversation}
+        refreshKey={refreshSidebarKey}
+        onStartNewChat={startNewConversation}
+        savedArtifacts={savedArtifacts}
+        setModalArtifact={setModalArtifact}
+      />
+      
+      <Navbar
+        onToggleSidebar={toggleSidebar}
+        sidebarOpen={showSidebar}
+        onStartNewChat={startNewConversation}
+      />
+      
       <div className="flex flex-1 overflow-hidden pt-1">
         {/* Conditional layout based on artifact presence */}
         {isArtifactFullscreen ? (
           // Fullscreen artifact view
           <div className="flex-1 overflow-hidden">
             <ArtifactsPanel
-  artifacts={artifacts}
-  toggleFullscreen={() => setIsArtifactFullscreen(!isArtifactFullscreen)}
-  messageId={lastMessageId}
-  prevArtifactsCount={prevArtifactsLength.current}
-  selectedArtifact={selectedArtifact}
-  setSelectedArtifact={setSelectedArtifact}
-  savedArtifacts={savedArtifacts}
-  setSavedArtifacts={setSavedArtifacts}
-/>
+              artifacts={artifacts}
+              toggleFullscreen={() => setIsArtifactFullscreen(!isArtifactFullscreen)}
+              messageId={lastMessageId}
+              prevArtifactsCount={prevArtifactsLength.current}
+              selectedArtifact={selectedArtifact}
+              setSelectedArtifact={setSelectedArtifact}
+              savedArtifacts={savedArtifacts}
+              setSavedArtifacts={setSavedArtifacts}
+            />
           </div>
-) : hasArtifacts || selectedArtifact ? (  <div className="flex flex-1 overflow-hidden">
+        ) : hasArtifacts || selectedArtifact ? (  
+          <div className="flex flex-1 overflow-hidden">
             <div
               className="flex-1 overflow-hidden relative"
               style={{ width: `${100 - artifactsPanelWidth}%` }}
             >
               <ResponsiveChatLayout 
-  messages={messages}
-  setMessages={setMessages}
-  isLoading={isLoading}
-  onSendMessage={handleSendMessage}
-  isCentered={!hasArtifacts && !selectedArtifact}
-    sidebarOpen={showSidebar}
-  setSidebarOpen={setShowSidebar}
-  setSelectedArtifact={handleArtifactSelect}
-/>
-
+                messages={messages}
+                setMessages={setMessages}
+                isLoading={isLoading}
+                onSendMessage={handleSendMessage}
+                isCentered={!hasArtifacts && !selectedArtifact}
+                sidebarOpen={showSidebar}
+                setSidebarOpen={setShowSidebar}
+                setSelectedArtifact={handleArtifactSelect}
+              />
             </div>
-            <div
-              className="relative"
-              onMouseDown={(e) => {
-                const startX = e.clientX;
-                const startWidth = artifactsPanelWidth;
-                const onMouseMove = (moveEvent: MouseEvent) => {
-                  const deltaX = moveEvent.clientX - startX;
-                  const containerWidth = document.body.clientWidth;
-                  const newWidth = startWidth - (deltaX / containerWidth * 100);
-                  setArtifactsPanelWidth(Math.max(20, Math.min(80, newWidth)));
-                };
-                const onMouseUp = () => {
-                  document.removeEventListener('mousemove', onMouseMove);
-                  document.removeEventListener('mouseup', onMouseUp);
-                };
-                document.addEventListener('mousemove', onMouseMove);
-                document.addEventListener('mouseup', onMouseUp);
-              }}
-            >
-              <div className="group relative w-1 h-full cursor-ew-resize bg-transparent">
-                <div
-                  className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[6px] rounded-md h-full bg-white/60 backdrop-blur-md shadow-sm border border-gray-300 group-hover:bg-[#008080] group-hover:shadow-md transition-all duration-200"
-                >
-                </div>
-              </div>
-            </div>
+            
+            <DividerComponent />
+            
             <div
               style={{ width: `${artifactsPanelWidth}%` }}
               className="bg-white overflow-hidden shadow-md"
             >
-            <ArtifactsPanel
-  artifacts={artifacts}
-  toggleFullscreen={() => setIsArtifactFullscreen(!isArtifactFullscreen)}
-  messageId={lastMessageId}
-  prevArtifactsCount={prevArtifactsLength.current}
-  selectedArtifact={selectedArtifact}
-  setSelectedArtifact={setSelectedArtifact}
-  savedArtifacts={savedArtifacts}
-  setSavedArtifacts={setSavedArtifacts}
-/>
-
+              <ArtifactsPanel
+                artifacts={artifacts}
+                toggleFullscreen={() => setIsArtifactFullscreen(!isArtifactFullscreen)}
+                messageId={lastMessageId}
+                prevArtifactsCount={prevArtifactsLength.current}
+                selectedArtifact={selectedArtifact}
+                setSelectedArtifact={setSelectedArtifact}
+                savedArtifacts={savedArtifacts}
+                setSavedArtifacts={setSavedArtifacts}
+              />
             </div>
           </div>
         ) : (
           // Centered chat view with no artifacts
           <div className="flex justify-center w-full relative">
-    {/* Left sidebar button */}
-    
-    <div className="w-full max-w-3xl">
-    {isNewConversation ? (
-  <>
-  <div className="mt-48"> 
-  <div className="mb-1">
-    <WelcomeCard
-      onSendMessage={handleSendMessage}
-      savedArtifacts={savedArtifacts}
-      setModalArtifact={setModalArtifact}
-    />
-  </div>
-  {savedArtifacts.length > 0 && (
-  <div className="w-full mt-6 px-4 flex justify-center">
-    <div className="w-full max-w-[600px]">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-          Recently Saved
-        </h3>
-        <button
-          onClick={() => setShowAllSavedDialog(true)}
-          className="text-xs font-medium text-[#008080] bg-[#e6f9f9] px-3 py-1.5 rounded-full shadow-sm hover:bg-[#d2f3f3] transition"
-        >
-          See All
-        </button>
-      </div>
+            <div className="w-full max-w-3xl">
+              {isNewConversation ? (
+                <>
+                  <div className="mt-48"> 
+                    <div className="mb-1">
+                      <WelcomeCard
+                        onSendMessage={handleSendMessage}
+                        savedArtifacts={savedArtifacts}
+                        setModalArtifact={setModalArtifact}
+                      />
+                    </div>
+                    {savedArtifacts.length > 0 && (
+                      <div className="w-full mt-6 px-4 flex justify-center">
+                        <div className="w-full max-w-[600px]">
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                              Recently Saved
+                            </h3>
+                            <button
+                              onClick={() => setShowAllSavedDialog(true)}
+                              className="text-xs font-medium text-[#008080] bg-[#e6f9f9] px-3 py-1.5 rounded-full shadow-sm hover:bg-[#d2f3f3] transition"
+                            >
+                              See All
+                            </button>
+                          </div>
 
-      <div className="flex flex-wrap justify-center gap-4">
-        {savedArtifacts.slice(0, 3).map((artifact) => (
-          <button
-            key={artifact.id}
-            onClick={() => setModalArtifact(artifact)}
-            className="flex flex-col w-[180px] p-4 bg-white rounded-xl border border-gray-200 shadow hover:shadow-md transition group text-left"
-          >
-            <div className="text-[#008080] font-semibold text-sm truncate group-hover:underline">
-              {artifact.title}
+                          <div className="flex flex-wrap justify-center gap-4">
+                            {savedArtifacts.slice(0, 3).map((artifact) => (
+                              <button
+                                key={artifact.id}
+                                onClick={() => setModalArtifact(artifact)}
+                                className="flex flex-col w-[180px] p-4 bg-white rounded-xl border border-gray-200 shadow hover:shadow-md transition group text-left"
+                              >
+                                <div className="text-[#008080] font-semibold text-sm truncate group-hover:underline">
+                                  {artifact.title}
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  {artifact.type} • {artifact.date}
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <ResponsiveChatLayout 
+                  messages={messages}
+                  setMessages={setMessages}
+                  isLoading={isLoading}
+                  onSendMessage={handleSendMessage}
+                  isCentered={!hasArtifacts && !selectedArtifact}
+                  sidebarOpen={showSidebar}
+                  setSidebarOpen={setShowSidebar}
+                  setSelectedArtifact={handleArtifactSelect}
+                />
+              )}
             </div>
-            <div className="text-xs text-gray-500 mt-1">
-              {artifact.type} • {artifact.date}
-            </div>
-          </button>
-        ))}
-      </div>
-    </div>
-  </div>
-)}
-
-
-
-</div>
-
-</>
-) : (
-  <ResponsiveChatLayout 
-    messages={messages}
-    setMessages={setMessages}
-    isLoading={isLoading}
-    onSendMessage={handleSendMessage}
-    isCentered={!hasArtifacts && !selectedArtifact}
-    sidebarOpen={showSidebar}
-    setSidebarOpen={setShowSidebar}
-    setSelectedArtifact={handleArtifactSelect}
-  />
-)}
-
-    </div>
-    
-  </div>
+          </div>
         )}
       </div>
+      
       <Dialog open={!!modalArtifact} onClose={() => setModalArtifact(null)} className="relative z-[500]">
-  <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" aria-hidden="true" />
-  <div className="fixed inset-0 flex items-center justify-center p-4 z-[500]">
-    <Dialog.Panel className="w-full max-w-5xl h-[80vh] overflow-hidden rounded-xl bg-white shadow-xl p-4 relative">
-      <button
-        onClick={() => setModalArtifact(null)}
-        className="absolute top-4 right-4 text-[#008080] hover:text-white bg-white border border-[#008080] hover:bg-[#008080] p-1.5 rounded-full transition"
-      >
-        <span className="text-sm font-bold">X</span>
-      </button>
-      {modalArtifact && (
-        <ArtifactsPanel
-          artifacts={[modalArtifact]}
-          toggleFullscreen={() => {}}
-          selectedArtifact={modalArtifact}
-          setSelectedArtifact={() => {}}
-          savedArtifacts={savedArtifacts}
-          setSavedArtifacts={setSavedArtifacts}
-        />
-      )}
-    </Dialog.Panel>
-  </div>
-</Dialog>
-<Dialog open={showAllSavedDialog} onClose={() => setShowAllSavedDialog(false)} className="relative z-[400]">
-  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" aria-hidden="true" />
-  <div className="fixed inset-0 flex items-center justify-center p-4 z-[400]">
-  <Dialog.Panel className="w-full max-w-xl max-h-[80vh] overflow-y-auto bg-white rounded-2xl shadow-2xl p-6 relative space-y-5 border border-gray-100">
-  {/* Header */}
-  <div className="flex items-center justify-between mb-2">
-    <h2 className="text-base font-semibold text-[#008080]">All Saved Artifacts</h2>
-    <button
-      onClick={() => setShowAllSavedDialog(false)}
-      className="p-2 rounded-full bg-white border border-[#008080] hover:bg-[#008080] group shadow-sm transition"
-      title="Close"
-    >
-      <X className="h-4 w-4 text-[#008080] group-hover:text-white" />
-    </button>
-  </div>
-
-  {/* Search Input */}
-  <input
-    type="text"
-    placeholder="Search by title..."
-    value={searchQuery}
-    onChange={(e) => setSearchQuery(e.target.value)}
-    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
-  />
-
-  {/* List */}
-  <div className="space-y-3">
-    {savedArtifacts
-      .filter((artifact) =>
-        artifact.title.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-      .map((artifact) => (
-        <div
-          key={artifact.id}
-          className="flex items-center justify-between px-4 py-3 border border-gray-200 rounded-lg bg-[#f9fafa] hover:shadow-sm transition"
-        >
-          {/* Info */}
-          <button
-            onClick={() => {
-              setModalArtifact(artifact);
-              setShowAllSavedDialog(false);
-            }}
-            className="flex-1 text-left"
-          >
-            <div className="font-medium text-sm text-[#008080] truncate">
-              {artifact.title}
-            </div>
-            <div className="text-xs text-gray-500">{artifact.type} • {artifact.date}</div>
-          </button>
-
-          {/* Delete Button */}
-          <button
-            onClick={() =>
-              setSavedArtifacts((prev) =>
-                prev.filter((a) => a.id !== artifact.id)
-              )
-            }
-            className="p-2 rounded-full bg-white border border-[#008080] hover:bg-[#008080] group shadow-sm transition ml-2"
-            title="Delete"
-          >
-            <Trash2 className="h-4 w-4 text-[#008080] group-hover:text-white" />
-          </button>
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" aria-hidden="true" />
+        <div className="fixed inset-0 flex items-center justify-center p-4 z-[500]">
+          <Dialog.Panel className="w-full max-w-5xl h-[80vh] overflow-hidden rounded-xl bg-white shadow-xl p-4 relative">
+            <button
+              onClick={() => setModalArtifact(null)}
+              className="absolute top-4 right-4 text-[#008080] hover:text-white bg-white border border-[#008080] hover:bg-[#008080] p-1.5 rounded-full transition"
+            >
+              <span className="text-sm font-bold">X</span>
+            </button>
+            {modalArtifact && (
+              <ArtifactsPanel
+                artifacts={[modalArtifact]}
+                toggleFullscreen={() => {}}
+                selectedArtifact={modalArtifact}
+                setSelectedArtifact={() => {}}
+                savedArtifacts={savedArtifacts}
+                setSavedArtifacts={setSavedArtifacts}
+              />
+            )}
+          </Dialog.Panel>
         </div>
-      ))}
-  </div>
-</Dialog.Panel>
+      </Dialog>
+      
+      <Dialog open={showAllSavedDialog} onClose={() => setShowAllSavedDialog(false)} className="relative z-[400]">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" aria-hidden="true" />
+        <div className="fixed inset-0 flex items-center justify-center p-4 z-[400]">
+          <Dialog.Panel className="w-full max-w-xl max-h-[80vh] overflow-y-auto bg-white rounded-2xl shadow-2xl p-6 relative space-y-5 border border-gray-100">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-base font-semibold text-[#008080]">All Saved Artifacts</h2>
+              <button
+                onClick={() => setShowAllSavedDialog(false)}
+                className="p-2 rounded-full bg-white border border-[#008080] hover:bg-[#008080] group shadow-sm transition"
+                title="Close"
+              >
+                <X className="h-4 w-4 text-[#008080] group-hover:text-white" />
+              </button>
+            </div>
 
-  </div>
-</Dialog>
+            {/* Search Input */}
+            <input
+              type="text"
+              placeholder="Search by title..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+            />
 
+            {/* List */}
+            <div className="space-y-3">
+              {savedArtifacts
+                .filter((artifact) =>
+                  artifact.title.toLowerCase().includes(searchQuery.toLowerCase())
+                )
+                .map((artifact) => (
+                  <div
+                    key={artifact.id}
+                    className="flex items-center justify-between px-4 py-3 border border-gray-200 rounded-lg bg-[#f9fafa] hover:shadow-sm transition"
+                  >
+                    {/* Info */}
+                    <button
+                      onClick={() => {
+                        setModalArtifact(artifact);
+                        setShowAllSavedDialog(false);
+                      }}
+                      className="flex-1 text-left"
+                    >
+                      <div className="font-medium text-sm text-[#008080] truncate">
+                        {artifact.title}
+                      </div>
+                      <div className="text-xs text-gray-500">{artifact.type} • {artifact.date}</div>
+                    </button>
 
-
+                    {/* Delete Button */}
+                    <button
+                      onClick={() =>
+                        setSavedArtifacts((prev) =>
+                          prev.filter((a) => a.id !== artifact.id)
+                        )
+                      }
+                      className="p-2 rounded-full bg-white border border-[#008080] hover:bg-[#008080] group shadow-sm transition ml-2"
+                      title="Delete"
+                    >
+                      <Trash2 className="h-4 w-4 text-[#008080] group-hover:text-white" />
+                    </button>
+                  </div>
+                ))}
+            </div>
+          </Dialog.Panel>
+        </div>
+      </Dialog>
     </div>
   );
 }
