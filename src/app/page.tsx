@@ -9,6 +9,7 @@ import WelcomeCard from '../components/chat/WelcomeCard';
 import rawSidebar from '../components/layout/Sidebar.jsx';
 const Sidebar = rawSidebar as React.ComponentType<any>;
 import { Dialog } from '@headlessui/react';
+import ArtifactViewer from '../components/ArtifactViewer'
 
 export interface Artifact {
   id: string;
@@ -442,15 +443,11 @@ export default function Home() {
               <span className="text-sm font-bold">X</span>
             </button>
             {modalArtifact && (
-              <ArtifactsPanel
-                artifacts={[modalArtifact]}
-                toggleFullscreen={() => {}}
-                selectedArtifact={modalArtifact}
-                setSelectedArtifact={() => {}}
-                savedArtifacts={savedArtifacts}
-                setSavedArtifacts={setSavedArtifacts}
-              />
-            )}
+  <ArtifactViewer
+    artifact={modalArtifact}
+    onClose={() => setModalArtifact(null)}
+  />
+)}
           </Dialog.Panel>
         </div>
       </Dialog>

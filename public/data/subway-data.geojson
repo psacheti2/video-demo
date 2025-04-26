@@ -1,0 +1,6351 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0905",
+        "zip_code": "11421",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.6892028",
+        "property_number": "96-23",
+        "postcode": "11421",
+        "bbl": "4089930037",
+        "property_street_address_or": "96 -27 ATLANTIC AVENUE",
+        "longitude": "-73.8462673",
+        "property_street": "atlantic Ave",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "003000",
+        "bin": "4186609",
+        "unit": null,
+        "community_board": "409",
+        "nbhd": "Woodhaven",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "32",
+        "borough_block_lot": "4089930037",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8462673,
+          40.6892028
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BX0904",
+        "zip_code": "10462",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-17T00:00:00.000",
+        "borough_1": "BRONX",
+        "latitude": "40.834087",
+        "property_number": "1384",
+        "postcode": "10462",
+        "bbl": "2039291001",
+        "property_street_address_or": "11 HUGH J GRANT CIRCLE S1-3",
+        "longitude": "-73.861403",
+        "property_street": "Metropolitan Avenue",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "021602",
+        "bin": "2096601",
+        "unit": "S1-3",
+        "community_board": "209",
+        "nbhd": "Parkchester",
+        "borough": "BRONX",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "18",
+        "borough_block_lot": "2039291001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.861403,
+          40.834087
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0501",
+        "zip_code": "10001",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-11T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7477687",
+        "property_number": "207",
+        "postcode": "10001",
+        "bbl": "1007780034",
+        "property_street_address_or": "207 WEST 28 STREET",
+        "longitude": "-73.9936842",
+        "property_street": "28th",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "009500",
+        "bin": "1014261",
+        "unit": null,
+        "community_board": "105",
+        "nbhd": "Midtown South-Flatiron-Union Square",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "03",
+        "borough_block_lot": "1007780034",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9936842,
+          40.7477687
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN1002",
+        "zip_code": "10037",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-30T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.8166321",
+        "property_number": "100",
+        "postcode": "10037",
+        "bbl": "1020070036",
+        "property_street_address_or": "561 LENOX AVENUE",
+        "longitude": "-73.9395583",
+        "property_street": "West 139 St",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "023000",
+        "bin": "1060035",
+        "unit": null,
+        "community_board": "110",
+        "nbhd": "Harlem (North)",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "09",
+        "borough_block_lot": "1020070036",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9395583,
+          40.8166321
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BK0201",
+        "zip_code": "11201",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-11T00:00:00.000",
+        "borough_1": "BROOKLYN",
+        "latitude": "40.6912075",
+        "property_number": "99",
+        "postcode": "11201",
+        "bbl": "3002740011",
+        "property_street_address_or": "99 ATLANTIC AVENUE",
+        "longitude": "-73.9969277",
+        "property_street": "ATLANTIC AVENUE",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "000700",
+        "bin": "3341559",
+        "unit": null,
+        "community_board": "302",
+        "nbhd": "Brooklyn Heights",
+        "borough": "BROOKLYN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "33",
+        "borough_block_lot": "3002740011",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9969277,
+          40.6912075
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0102",
+        "zip_code": "10013",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.716772",
+        "property_number": "130",
+        "postcode": "10013",
+        "bbl": "1001440032",
+        "property_street_address_or": "130 WEST BROADWAY",
+        "longitude": "-74.0084701",
+        "property_street": "West Broadway",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "003300",
+        "bin": "1001571",
+        "unit": null,
+        "community_board": "101",
+        "nbhd": "Tribeca-Civic Center",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "01",
+        "borough_block_lot": "1001440032",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.0084701,
+          40.716772
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0801",
+        "zip_code": "10021",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.77197",
+        "property_number": "204",
+        "postcode": "10021",
+        "bbl": "1014300144",
+        "property_street_address_or": "204 EAST 76 STREET",
+        "longitude": "-73.9583871",
+        "property_street": "East 76 Street",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "013400",
+        "bin": "1044064",
+        "unit": null,
+        "community_board": "108",
+        "nbhd": "Upper East Side-Lenox Hill-Roosevelt Island",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "05",
+        "borough_block_lot": "1014300144",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9583871,
+          40.77197
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN1307",
+        "zip_code": "11422",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2025-02-05T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.6650442",
+        "property_number": "241-02",
+        "postcode": "11422",
+        "bbl": "4135630023",
+        "property_street_address_or": "241 -02 140 AVENUE",
+        "longitude": "-73.737537",
+        "property_street": "sunrise whyway",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "065401",
+        "bin": "4288300",
+        "unit": null,
+        "community_board": "413",
+        "nbhd": "Rosedale",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "31",
+        "borough_block_lot": "4135630023",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.737537,
+          40.6650442
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0105",
+        "zip_code": "11101",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-30T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7541835",
+        "property_number": "39-50",
+        "postcode": "11101",
+        "bbl": "4003940042",
+        "property_street_address_or": "39 -44 24 STREET",
+        "longitude": "-73.9387451",
+        "property_street": "24 Street",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "003302",
+        "bin": "4004757",
+        "unit": null,
+        "community_board": "401",
+        "nbhd": "Queensbridge-Ravenswood-Dutch Kills",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "26",
+        "borough_block_lot": "4003940042",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9387451,
+          40.7541835
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0303",
+        "zip_code": "10003",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-08T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7284616",
+        "property_number": "127",
+        "postcode": "10003",
+        "bbl": "1004630031",
+        "property_street_address_or": "127 2 AVENUE",
+        "longitude": "-73.9881694",
+        "property_street": "Second Avenue",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "003800",
+        "bin": "1006679",
+        "unit": null,
+        "community_board": "103",
+        "nbhd": "East Village",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "02",
+        "borough_block_lot": "1004630031",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9881694,
+          40.7284616
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0905",
+        "zip_code": "11421",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.6892028",
+        "property_number": "96-21",
+        "postcode": "11421",
+        "bbl": "4089930037",
+        "property_street_address_or": "96 -27 ATLANTIC AVENUE",
+        "longitude": "-73.8462673",
+        "property_street": "atlantic Ave",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "003000",
+        "bin": "4186609",
+        "unit": null,
+        "community_board": "409",
+        "nbhd": "Woodhaven",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "32",
+        "borough_block_lot": "4089930037",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8462673,
+          40.6892028
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BK0601",
+        "zip_code": "11231",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "BROOKLYN",
+        "latitude": "40.682136",
+        "property_number": "347",
+        "postcode": "11231",
+        "bbl": "3004350008",
+        "property_street_address_or": "347 COURT STREET",
+        "longitude": "-73.9957095",
+        "property_street": "court",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "007500",
+        "bin": "3007222",
+        "unit": null,
+        "community_board": "306",
+        "nbhd": "Carroll Gardens-Cobble Hill-Gowanus-Red Hook",
+        "borough": "BROOKLYN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "39",
+        "borough_block_lot": "3004350008",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9957095,
+          40.682136
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN1102",
+        "zip_code": "10029",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7950546",
+        "property_number": "505",
+        "postcode": "10029",
+        "bbl": "1017150007",
+        "property_street_address_or": "505 EAST 116 STREET",
+        "longitude": "-73.9324233",
+        "property_street": "East 116th Street, Unit 201",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "017800",
+        "bin": "1053159",
+        "unit": null,
+        "community_board": "111",
+        "nbhd": "East Harlem (North)",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "08",
+        "borough_block_lot": "1017150007",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9324233,
+          40.7950546
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN1001",
+        "zip_code": "10026",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-16T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.801191",
+        "property_number": "301",
+        "postcode": "10026",
+        "bbl": "1018461001",
+        "property_street_address_or": "301 CATHEDRAL PARKWAY 1A",
+        "longitude": "-73.958506",
+        "property_street": "Cathedral Pkway",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "019702",
+        "bin": "1083511",
+        "unit": "1A",
+        "community_board": "110",
+        "nbhd": "Harlem (South)",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "09",
+        "borough_block_lot": "1018461001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.958506,
+          40.801191
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0501",
+        "zip_code": "10001",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-30T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7501645",
+        "property_number": "130",
+        "postcode": "10001",
+        "bbl": "1008090062",
+        "property_street_address_or": "130 WEST 34 STREET",
+        "longitude": "-73.9893746",
+        "property_street": "West 34th Street",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "010100",
+        "bin": "1015205",
+        "unit": null,
+        "community_board": "105",
+        "nbhd": "Midtown South-Flatiron-Union Square",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "03",
+        "borough_block_lot": "1008090062",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9893746,
+          40.7501645
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BX0402",
+        "zip_code": "10452",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-22T00:00:00.000",
+        "borough_1": "BRONX",
+        "latitude": "40.8411918",
+        "property_number": "1340",
+        "postcode": "10452",
+        "bbl": "2025310013",
+        "property_street_address_or": "1340 MERRIAM AVENUE",
+        "longitude": "-73.9254591",
+        "property_street": "MERRIAM AVENUE",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "020100",
+        "bin": "2003531",
+        "unit": null,
+        "community_board": "204",
+        "nbhd": "Highbridge",
+        "borough": "BRONX",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "16",
+        "borough_block_lot": "2025310013",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9254591,
+          40.8411918
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BX0502",
+        "zip_code": "10453",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-10T00:00:00.000",
+        "borough_1": "BRONX",
+        "latitude": "40.8494621",
+        "property_number": "11-Sep",
+        "postcode": "10453",
+        "bbl": "2028520001",
+        "property_street_address_or": "1876 JEROME AVENUE",
+        "longitude": "-73.910659",
+        "property_street": "Mount Hope Place",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "023301",
+        "bin": "2008231",
+        "unit": null,
+        "community_board": "205",
+        "nbhd": "Mount Hope",
+        "borough": "BRONX",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "14",
+        "borough_block_lot": "2028520001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.910659,
+          40.8494621
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0402",
+        "zip_code": "10036",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.760332",
+        "property_number": "500",
+        "postcode": "10036",
+        "bbl": "1010711002",
+        "property_street_address_or": "500 WEST 43 STREET COMM",
+        "longitude": "-73.995076",
+        "property_street": "WEST 43 STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "012901",
+        "bin": "1076215",
+        "unit": "COMM",
+        "community_board": "104",
+        "nbhd": "Hell's Kitchen",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "03",
+        "borough_block_lot": "1010711002",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.995076,
+          40.760332
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0301",
+        "zip_code": "11370",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7641357",
+        "property_number": "75-20",
+        "postcode": "11370",
+        "bbl": "4010270050",
+        "property_street_address_or": "75 -20 ASTORIA BOULEVARD S",
+        "longitude": "-73.8932437",
+        "property_street": "Astoria Blvd",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "030904",
+        "bin": "4022646",
+        "unit": null,
+        "community_board": "403",
+        "nbhd": "Jackson Heights",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "22",
+        "borough_block_lot": "4010270050",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8932437,
+          40.7641357
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0401",
+        "zip_code": "10011",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7459242",
+        "property_number": "508",
+        "postcode": "10011",
+        "bbl": "1006910039",
+        "property_street_address_or": "508 WEST 20 STREET",
+        "longitude": "-74.0063662",
+        "property_street": "WEST 20TH STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "009901",
+        "bin": "1080294",
+        "unit": null,
+        "community_board": "104",
+        "nbhd": "Chelsea-Hudson Yards",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "03",
+        "borough_block_lot": "1006910039",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.0063662,
+          40.7459242
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0802",
+        "zip_code": "10021",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7707881",
+        "property_number": "150",
+        "postcode": "10021",
+        "bbl": "1014070051",
+        "property_street_address_or": "1017 LEXINGTON AVENUE",
+        "longitude": "-73.961518",
+        "property_street": "East 73rd Street",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "012800",
+        "bin": "1042858",
+        "unit": null,
+        "community_board": "108",
+        "nbhd": "Upper East Side-Carnegie Hill",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "04",
+        "borough_block_lot": "1014070051",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.961518,
+          40.7707881
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BK0702",
+        "zip_code": "11232",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "BROOKLYN",
+        "latitude": "40.6592748",
+        "property_number": "850",
+        "postcode": "11232",
+        "bbl": "3006710001",
+        "property_street_address_or": "850 3 AVENUE",
+        "longitude": "-74.004426",
+        "property_street": "3 AVENUE",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "001802",
+        "bin": "3009889",
+        "unit": null,
+        "community_board": "307",
+        "nbhd": "Sunset Park (West)",
+        "borough": "BROOKLYN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "38",
+        "borough_block_lot": "3006710001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.004426,
+          40.6592748
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BK0901",
+        "zip_code": "11213",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-06T00:00:00.000",
+        "borough_1": "BROOKLYN",
+        "latitude": "40.6649803",
+        "property_number": "776",
+        "postcode": "11213",
+        "bbl": "3014190039",
+        "property_street_address_or": "776 CROWN STREET",
+        "longitude": "-73.9318234",
+        "property_street": "CROWN STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "035500",
+        "bin": "3038278",
+        "unit": null,
+        "community_board": "309",
+        "nbhd": "Crown Heights (South)",
+        "borough": "BROOKLYN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "35",
+        "borough_block_lot": "3014190039",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9318234,
+          40.6649803
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BK1704",
+        "zip_code": "11212",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "BROOKLYN",
+        "latitude": "40.6615188",
+        "property_number": "255",
+        "postcode": "11212",
+        "bbl": "3035650002",
+        "property_street_address_or": "255 EAST 98 STREET",
+        "longitude": "-73.9186926",
+        "property_street": "EAST 98 STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "089200",
+        "bin": "3349208",
+        "unit": null,
+        "community_board": "316",
+        "nbhd": "East Flatbush-Remsen Village",
+        "borough": "BROOKLYN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "41",
+        "borough_block_lot": "3035650002",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9186926,
+          40.6615188
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BX0303",
+        "zip_code": "10460",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "BRONX",
+        "latitude": "40.8365384",
+        "property_number": "1671",
+        "postcode": "10460",
+        "bbl": "2029400072",
+        "property_street_address_or": "819 EAST 173 STREET",
+        "longitude": "-73.8898208",
+        "property_street": "Boston Rd",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "015500",
+        "bin": "2009884",
+        "unit": null,
+        "community_board": "203",
+        "nbhd": "Crotona Park East",
+        "borough": "BRONX",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "15",
+        "borough_block_lot": "2029400072",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8898208,
+          40.8365384
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0303",
+        "zip_code": "10003",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-29T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7252063",
+        "property_number": "61",
+        "postcode": "10003",
+        "bbl": "1004450031",
+        "property_street_address_or": "61 1 AVENUE",
+        "longitude": "-73.9874015",
+        "property_street": "1 Avenue",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "003800",
+        "bin": "1006177",
+        "unit": null,
+        "community_board": "103",
+        "nbhd": "East Village",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "02",
+        "borough_block_lot": "1004450031",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9874015,
+          40.7252063
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0302",
+        "zip_code": "10002",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-12T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7179488",
+        "property_number": "174",
+        "postcode": "10002",
+        "bbl": "1003480072",
+        "property_street_address_or": "174 DELANCEY STREET",
+        "longitude": "-73.9850328",
+        "property_street": "DELANCEY ST",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "001402",
+        "bin": "1076937",
+        "unit": null,
+        "community_board": "103",
+        "nbhd": "Lower East Side",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "01",
+        "borough_block_lot": "1003480072",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9850328,
+          40.7179488
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BX0802",
+        "zip_code": "10463",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-30T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.873106",
+        "property_number": "40",
+        "postcode": "10463",
+        "bbl": "1022150700",
+        "property_street_address_or": "40 WEST 225 STREET",
+        "longitude": "-73.9085301",
+        "property_street": "WEST 225 STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "030900",
+        "bin": "1086533",
+        "unit": null,
+        "community_board": "207",
+        "nbhd": "Kingsbridge-Marble Hill",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "10",
+        "borough_block_lot": "1022150700",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9085301,
+          40.873106
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN1102",
+        "zip_code": "10029",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7950546",
+        "property_number": "505",
+        "postcode": "10029",
+        "bbl": "1017150007",
+        "property_street_address_or": "505 EAST 116 STREET",
+        "longitude": "-73.9324233",
+        "property_street": "East 116th Street, Unit 101",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "017800",
+        "bin": "1053159",
+        "unit": null,
+        "community_board": "111",
+        "nbhd": "East Harlem (North)",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "08",
+        "borough_block_lot": "1017150007",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9324233,
+          40.7950546
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0702",
+        "zip_code": "11357",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7926029",
+        "property_number": "10",
+        "postcode": "11357",
+        "bbl": "4045390066",
+        "property_street_address_or": "10 -28 154 STREET",
+        "longitude": "-73.8076639",
+        "property_street": "154 STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "098700",
+        "bin": "4438063",
+        "unit": null,
+        "community_board": "407",
+        "nbhd": "Whitestone-Beechhurst",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "19",
+        "borough_block_lot": "4045390066",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8076639,
+          40.7926029
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0202",
+        "zip_code": "11104",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7398183",
+        "property_number": "43",
+        "postcode": "11104",
+        "bbl": "4001730001",
+        "property_street_address_or": "43 -01 43 STREET",
+        "longitude": "-73.9218989",
+        "property_street": "43 STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "018502",
+        "bin": "4002100",
+        "unit": null,
+        "community_board": "402",
+        "nbhd": "Sunnyside",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "26",
+        "borough_block_lot": "4001730001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9218989,
+          40.7398183
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN1202",
+        "zip_code": "10033",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-01T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.849786",
+        "property_number": "4250",
+        "postcode": "10033",
+        "bbl": "1021630053",
+        "property_street_address_or": "4250 BROADWAY",
+        "longitude": "-73.9355052",
+        "property_street": "Broadway",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "027100",
+        "bin": "1081879",
+        "unit": null,
+        "community_board": "112",
+        "nbhd": "Washington Heights (North)",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "10",
+        "borough_block_lot": "1021630053",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9355052,
+          40.849786
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0301",
+        "zip_code": "11370",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7641357",
+        "property_number": "75-20",
+        "postcode": "11370",
+        "bbl": "4010270050",
+        "property_street_address_or": "75 -20 ASTORIA BOULEVARD S",
+        "longitude": "-73.8932437",
+        "property_street": "Astoria Blvd",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "030904",
+        "bin": "4022646",
+        "unit": null,
+        "community_board": "403",
+        "nbhd": "Jackson Heights",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "22",
+        "borough_block_lot": "4010270050",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8932437,
+          40.7641357
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BK0602",
+        "zip_code": "11217",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-15T00:00:00.000",
+        "borough_1": "BROOKLYN",
+        "latitude": "40.680575",
+        "property_number": "82-5th ave store on left",
+        "postcode": "11217",
+        "bbl": "3009340043",
+        "property_street_address_or": "82 5 AVENUE",
+        "longitude": "-73.9778773",
+        "property_street": null,
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "012901",
+        "bin": "3018668",
+        "unit": null,
+        "community_board": "306",
+        "nbhd": "Park Slope",
+        "borough": "BROOKLYN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "39",
+        "borough_block_lot": "3009340043",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9778773,
+          40.680575
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0402",
+        "zip_code": "10036",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7602517",
+        "property_number": "411",
+        "postcode": "10036",
+        "bbl": "1010540024",
+        "property_street_address_or": "411 WEST 44 STREET",
+        "longitude": "-73.9923366",
+        "property_street": "West 44 st",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "012102",
+        "bin": "1026412",
+        "unit": null,
+        "community_board": "104",
+        "nbhd": "Hell's Kitchen",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "03",
+        "borough_block_lot": "1010540024",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9923366,
+          40.7602517
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BX0803",
+        "zip_code": "10463",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "BRONX",
+        "latitude": "40.8869845",
+        "property_number": "3706",
+        "postcode": "10463",
+        "bbl": "2057720001",
+        "property_street_address_or": "3704 RIVERDALE AVENUE",
+        "longitude": "-73.9067895",
+        "property_street": "RIVERDALE AVENUE",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "029500",
+        "bin": "2083997",
+        "unit": null,
+        "community_board": "208",
+        "nbhd": "Riverdale-Spuyten Duyvil",
+        "borough": "BRONX",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "11",
+        "borough_block_lot": "2057720001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9067895,
+          40.8869845
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN1305",
+        "zip_code": "11413",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-17T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.6788065",
+        "property_number": "134",
+        "postcode": "11413",
+        "bbl": "4130130033",
+        "property_street_address_or": "134 -47 SPRINGFIELD BLVD",
+        "longitude": "-73.753678",
+        "property_street": "SPRINGFIELD BLVD",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "035800",
+        "bin": "4279970",
+        "unit": null,
+        "community_board": "413",
+        "nbhd": "Laurelton",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "31",
+        "borough_block_lot": "4130130033",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.753678,
+          40.6788065
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0302",
+        "zip_code": "10002",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-01T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7181333",
+        "property_number": "248",
+        "postcode": "10002",
+        "bbl": "1004090027",
+        "property_street_address_or": "248 BROOME STREET",
+        "longitude": "-73.9896106",
+        "property_street": "BROOME STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "001800",
+        "bin": "1005294",
+        "unit": null,
+        "community_board": "103",
+        "nbhd": "Lower East Side",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "01",
+        "borough_block_lot": "1004090027",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9896106,
+          40.7181333
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0707",
+        "zip_code": "11354",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.761812",
+        "property_number": "142-28",
+        "postcode": "11354",
+        "bbl": "4050201201",
+        "property_street_address_or": "142 -28 38 AVENUE 1-A",
+        "longitude": "-73.826365",
+        "property_street": "38 Avenue",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "086500",
+        "bin": "4540143",
+        "unit": "1-A",
+        "community_board": "407",
+        "nbhd": "Flushing-Willets Point",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "20",
+        "borough_block_lot": "4050201201",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.826365,
+          40.761812
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BK1601",
+        "zip_code": "11233",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-30T00:00:00.000",
+        "borough_1": "BROOKLYN",
+        "latitude": "40.6821051",
+        "property_number": "44",
+        "postcode": "11233",
+        "bbl": "3015160039",
+        "property_street_address_or": "44 ROCKAWAY AVENUE",
+        "longitude": "-73.9118567",
+        "property_street": "ROCKAWAY AVENUE",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "037100",
+        "bin": "3041163",
+        "unit": null,
+        "community_board": "316",
+        "nbhd": "Ocean Hill",
+        "borough": "BROOKLYN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "41",
+        "borough_block_lot": "3015160039",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9118567,
+          40.6821051
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0104",
+        "zip_code": "11103",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-30T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7590896",
+        "property_number": "31-89",
+        "postcode": "11103",
+        "bbl": "4006780007",
+        "property_street_address_or": "31 -87 STEINWAY STREET",
+        "longitude": "-73.9186565",
+        "property_street": "Steinway",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "015500",
+        "bin": "4011097",
+        "unit": null,
+        "community_board": "401",
+        "nbhd": "Astoria (East)-Woodside (North)",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "22",
+        "borough_block_lot": "4006780007",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9186565,
+          40.7590896
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0401",
+        "zip_code": "10011",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7385327",
+        "property_number": "101",
+        "postcode": "10011",
+        "bbl": "1007910036",
+        "property_street_address_or": "555 AVENUE OF THE AMER",
+        "longitude": "-73.9964997",
+        "property_street": "15th Street",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "008100",
+        "bin": "1014560",
+        "unit": null,
+        "community_board": "104",
+        "nbhd": "Chelsea-Hudson Yards",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "03",
+        "borough_block_lot": "1007910036",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9964997,
+          40.7385327
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0303",
+        "zip_code": "10003",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7291451",
+        "property_number": "27",
+        "postcode": "10003",
+        "bbl": "1004640046",
+        "property_street_address_or": "27 ST MARKS PLACE",
+        "longitude": "-73.9883497",
+        "property_street": "St Marks Pl",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "003800",
+        "bin": "1006752",
+        "unit": null,
+        "community_board": "103",
+        "nbhd": "East Village",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "02",
+        "borough_block_lot": "1004640046",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9883497,
+          40.7291451
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN1202",
+        "zip_code": "11433",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.6947466",
+        "property_number": "109-02",
+        "postcode": "11433",
+        "bbl": "4121520036",
+        "property_street_address_or": "109 -02 GUY R BREWER BLVD",
+        "longitude": "-73.7902651",
+        "property_street": "guy brewer blv",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "026000",
+        "bin": "4263366",
+        "unit": null,
+        "community_board": "412",
+        "nbhd": "South Jamaica",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "28",
+        "borough_block_lot": "4121520036",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.7902651,
+          40.6947466
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN1307",
+        "zip_code": "11422",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2025-01-31T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.6650442",
+        "property_number": "241-02",
+        "postcode": "11422",
+        "bbl": "4135630023",
+        "property_street_address_or": "241 -02 140 AVENUE",
+        "longitude": "-73.737537",
+        "property_street": "140 ave",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "065401",
+        "bin": "4288300",
+        "unit": null,
+        "community_board": "413",
+        "nbhd": "Rosedale",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "31",
+        "borough_block_lot": "4135630023",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.737537,
+          40.6650442
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0101",
+        "zip_code": "10005",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7051314",
+        "property_number": "76",
+        "postcode": "10005",
+        "bbl": "1000280012",
+        "property_street_address_or": "76 BEAVER STREET",
+        "longitude": "-74.0088509",
+        "property_street": "Beaver Street",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "000700",
+        "bin": "1000833",
+        "unit": null,
+        "community_board": "101",
+        "nbhd": "Financial District-Battery Park City",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "01",
+        "borough_block_lot": "1000280012",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.0088509,
+          40.7051314
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0707",
+        "zip_code": "11354",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7599453",
+        "property_number": "39",
+        "postcode": "11354",
+        "bbl": "4049800004",
+        "property_street_address_or": "39 -09 MAIN STREET",
+        "longitude": "-73.8299687",
+        "property_street": "MAIN STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "087100",
+        "bin": "4112489",
+        "unit": null,
+        "community_board": "407",
+        "nbhd": "Flushing-Willets Point",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "20",
+        "borough_block_lot": "4049800004",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8299687,
+          40.7599453
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0704",
+        "zip_code": "11354",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-05T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7650182",
+        "property_number": "144",
+        "postcode": "11354",
+        "bbl": "4050030001",
+        "property_street_address_or": "144 -01 NORTHERN BOULEVARD",
+        "longitude": "-73.8230607",
+        "property_street": "NORTHERN BOULEVARD",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "116301",
+        "bin": "4113181",
+        "unit": null,
+        "community_board": "407",
+        "nbhd": "Murray Hill-Broadway Flushing",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "20",
+        "borough_block_lot": "4050030001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8230607,
+          40.7650182
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0903",
+        "zip_code": "10031",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-30T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.8299785",
+        "property_number": "3643",
+        "postcode": "10031",
+        "bbl": "1020970027",
+        "property_street_address_or": "3643 BROADWAY",
+        "longitude": "-73.9484607",
+        "property_street": "BROADWAY",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "023300",
+        "bin": "1062449",
+        "unit": null,
+        "community_board": "109",
+        "nbhd": "Hamilton Heights-Sugar Hill",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "07",
+        "borough_block_lot": "1020970027",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9484607,
+          40.8299785
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BK1101",
+        "zip_code": "11214",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "BROOKLYN",
+        "latitude": "40.6058256",
+        "property_number": "1978",
+        "postcode": "11214",
+        "bbl": "3063330037",
+        "property_street_address_or": "8402 20 AVENUE",
+        "longitude": "-73.9973926",
+        "property_street": "84st",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "028400",
+        "bin": "3165354",
+        "unit": null,
+        "community_board": "311",
+        "nbhd": "Bensonhurst",
+        "borough": "BROOKLYN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "38",
+        "borough_block_lot": "3063330037",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9973926,
+          40.6058256
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0401",
+        "zip_code": "10011",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-24T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7441566",
+        "property_number": "225",
+        "postcode": "10011",
+        "bbl": "1007990001",
+        "property_street_address_or": "225 7 AVENUE",
+        "longitude": "-73.995276",
+        "property_street": "7 AVENUE",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "009100",
+        "bin": "1014940",
+        "unit": null,
+        "community_board": "104",
+        "nbhd": "Chelsea-Hudson Yards",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "03",
+        "borough_block_lot": "1007990001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.995276,
+          40.7441566
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0801",
+        "zip_code": "11367",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-26T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7291655",
+        "property_number": "71-16",
+        "postcode": "11367",
+        "bbl": "4066980001",
+        "property_street_address_or": "71 -02 KISSENA BOULEVARD",
+        "longitude": "-73.8156187",
+        "property_street": "KISSENA BLVD",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "077906",
+        "bin": "4144882",
+        "unit": null,
+        "community_board": "408",
+        "nbhd": "Kew Gardens Hills",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "24",
+        "borough_block_lot": "4066980001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8156187,
+          40.7291655
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BK0902",
+        "zip_code": "11225",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "BROOKLYN",
+        "latitude": "40.6583155",
+        "property_number": "617",
+        "postcode": "11225",
+        "bbl": "3050370003",
+        "property_street_address_or": "617 FLATBUSH AVENUE",
+        "longitude": "-73.960134",
+        "property_street": "Flatbush",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "079801",
+        "bin": "3115282",
+        "unit": null,
+        "community_board": "309",
+        "nbhd": "Prospect Lefferts Gardens-Wingate",
+        "borough": "BROOKLYN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "40",
+        "borough_block_lot": "3050370003",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.960134,
+          40.6583155
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BK0101",
+        "zip_code": "11222",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "BROOKLYN",
+        "latitude": "40.7235",
+        "property_number": "614",
+        "postcode": "11222",
+        "bbl": "3026800050",
+        "property_street_address_or": "614 MANHATTAN AVENUE",
+        "longitude": "-73.9503216",
+        "property_street": "MANHATTAN AVENUE",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "056900",
+        "bin": "3066764",
+        "unit": null,
+        "community_board": "301",
+        "nbhd": "Greenpoint",
+        "borough": "BROOKLYN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "33",
+        "borough_block_lot": "3026800050",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9503216,
+          40.7235
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0704",
+        "zip_code": "11354",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-30T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7629699",
+        "property_number": "40-25",
+        "postcode": "11354",
+        "bbl": "4050340014",
+        "property_street_address_or": "40 -25 150 STREET",
+        "longitude": "-73.813879",
+        "property_street": "150th Street",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "116700",
+        "bin": "4443442",
+        "unit": null,
+        "community_board": "407",
+        "nbhd": "Murray Hill-Broadway Flushing",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "20",
+        "borough_block_lot": "4050340014",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.813879,
+          40.7629699
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN1102",
+        "zip_code": "10035",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7955998",
+        "property_number": "520",
+        "postcode": "10035",
+        "bbl": "1017160008",
+        "property_street_address_or": "520 EAST 117 STREET",
+        "longitude": "-73.9307686",
+        "property_street": "East 117th Street, Unit 202",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "017800",
+        "bin": "1088112",
+        "unit": null,
+        "community_board": "111",
+        "nbhd": "East Harlem (North)",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "08",
+        "borough_block_lot": "1017160008",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9307686,
+          40.7955998
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0502",
+        "zip_code": "10018",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-30T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.751712",
+        "property_number": "57",
+        "postcode": "10018",
+        "bbl": "1008401001",
+        "property_street_address_or": "57 WEST 38 STREET",
+        "longitude": "-73.984491",
+        "property_street": "WEST 38 STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "008400",
+        "bin": "1016020",
+        "unit": null,
+        "community_board": "105",
+        "nbhd": "Midtown-Times Square",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "04",
+        "borough_block_lot": "1008401001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.984491,
+          40.751712
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0105",
+        "zip_code": "11101",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-30T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7541835",
+        "property_number": "39-48",
+        "postcode": "11101",
+        "bbl": "4003940042",
+        "property_street_address_or": "39 -44 24 STREET",
+        "longitude": "-73.9387451",
+        "property_street": "24 Street",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "003302",
+        "bin": "4004757",
+        "unit": null,
+        "community_board": "401",
+        "nbhd": "Queensbridge-Ravenswood-Dutch Kills",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "26",
+        "borough_block_lot": "4003940042",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9387451,
+          40.7541835
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0101",
+        "zip_code": "10006",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-30T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7080871",
+        "property_number": "2",
+        "postcode": "10006",
+        "bbl": "1000510001",
+        "property_street_address_or": "101 GREENWICH STREET",
+        "longitude": "-74.0131688",
+        "property_street": "Rector Street (Suite 107)",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "001300",
+        "bin": "1001031",
+        "unit": null,
+        "community_board": "101",
+        "nbhd": "Financial District-Battery Park City",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "01",
+        "borough_block_lot": "1000510001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.0131688,
+          40.7080871
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN1102",
+        "zip_code": "10029",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7950546",
+        "property_number": "505",
+        "postcode": "10029",
+        "bbl": "1017150007",
+        "property_street_address_or": "505 EAST 116 STREET",
+        "longitude": "-73.9324233",
+        "property_street": "East 116th Street, Unit 102",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "017800",
+        "bin": "1053159",
+        "unit": null,
+        "community_board": "111",
+        "nbhd": "East Harlem (North)",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "08",
+        "borough_block_lot": "1017150007",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9324233,
+          40.7950546
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BK0102",
+        "zip_code": "11249",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-23T00:00:00.000",
+        "borough_1": "BROOKLYN",
+        "latitude": "40.71587",
+        "property_number": "10",
+        "postcode": "11249",
+        "bbl": "3024141001",
+        "property_street_address_or": "266 KENT AVENUE C1",
+        "longitude": "-73.966257",
+        "property_street": "Grand Street",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "055100",
+        "bin": "3425049",
+        "unit": "C1",
+        "community_board": "301",
+        "nbhd": "Williamsburg",
+        "borough": "BROOKLYN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "33",
+        "borough_block_lot": "3024141001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.966257,
+          40.71587
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0303",
+        "zip_code": "10009",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-24T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7276369",
+        "property_number": "181",
+        "postcode": "10009",
+        "bbl": "1003940004",
+        "property_street_address_or": "181 AVENUE B",
+        "longitude": "-73.9790811",
+        "property_street": "AVENUE B",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "002800",
+        "bin": "1004905",
+        "unit": null,
+        "community_board": "103",
+        "nbhd": "East Village",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "02",
+        "borough_block_lot": "1003940004",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9790811,
+          40.7276369
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BK0101",
+        "zip_code": "11222",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "BROOKLYN",
+        "latitude": "40.7245323",
+        "property_number": "654",
+        "postcode": "11222",
+        "bbl": "3026470044",
+        "property_street_address_or": "654 MANHATTAN AVENUE",
+        "longitude": "-73.9509125",
+        "property_street": "MANHATTAN AVENUE",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "056900",
+        "bin": "3066109",
+        "unit": null,
+        "community_board": "301",
+        "nbhd": "Greenpoint",
+        "borough": "BROOKLYN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "33",
+        "borough_block_lot": "3026470044",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9509125,
+          40.7245323
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0502",
+        "zip_code": "10022",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-10T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7611577",
+        "property_number": "693",
+        "postcode": "10022",
+        "bbl": "1012900003",
+        "property_street_address_or": "693 5 AVENUE",
+        "longitude": "-73.9748544",
+        "property_street": "5 Avenue",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "010200",
+        "bin": "1035742",
+        "unit": null,
+        "community_board": "105",
+        "nbhd": "Midtown-Times Square",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "04",
+        "borough_block_lot": "1012900003",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9748544,
+          40.7611577
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "SI0305",
+        "zip_code": "10309",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "STATEN ISLAND",
+        "latitude": "40.5310216",
+        "property_number": "185",
+        "postcode": "10309",
+        "bbl": "5074520100",
+        "property_street_address_or": "185  - 205 BRICKTOWN WAY",
+        "longitude": "-74.2313916",
+        "property_street": "Bricktown Way- Suite D",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "022602",
+        "bin": "5164798",
+        "unit": null,
+        "community_board": "503",
+        "nbhd": "Tottenville-Charleston",
+        "borough": "STATEN ISLAND",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "51",
+        "borough_block_lot": "5074520100",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.2313916,
+          40.5310216
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0501",
+        "zip_code": "11378",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-01T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7250021",
+        "property_number": "66-43",
+        "postcode": "11378",
+        "bbl": "4027240059",
+        "property_street_address_or": "66 -43 GRAND AVENUE",
+        "longitude": "-73.8974734",
+        "property_street": "Grand Avenue",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "051700",
+        "bin": "4435551",
+        "unit": null,
+        "community_board": "405",
+        "nbhd": "Maspeth",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "30",
+        "borough_block_lot": "4027240059",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8974734,
+          40.7250021
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0905",
+        "zip_code": "11421",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.6892028",
+        "property_number": "91-62",
+        "postcode": "11421",
+        "bbl": "4089930037",
+        "property_street_address_or": "96 -27 ATLANTIC AVENUE",
+        "longitude": "-73.8462673",
+        "property_street": "97 st",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "003000",
+        "bin": "4186609",
+        "unit": null,
+        "community_board": "409",
+        "nbhd": "Woodhaven",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "32",
+        "borough_block_lot": "4089930037",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8462673,
+          40.6892028
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0502",
+        "zip_code": "10001",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-28T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7514849",
+        "property_number": "211",
+        "postcode": "10001",
+        "bbl": "1007840034",
+        "property_street_address_or": "211 WEST 34 STREET",
+        "longitude": "-73.9910635",
+        "property_street": "WEST 34 STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "010900",
+        "bin": "1014406",
+        "unit": null,
+        "community_board": "105",
+        "nbhd": "Midtown-Times Square",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "03",
+        "borough_block_lot": "1007840034",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9910635,
+          40.7514849
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN1102",
+        "zip_code": "10035",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-30T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7990419",
+        "property_number": "2326",
+        "postcode": "10035",
+        "bbl": "1017960003",
+        "property_street_address_or": "2326 2 AVENUE",
+        "longitude": "-73.9359263",
+        "property_street": "2 AVENUE",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "019400",
+        "bin": "1054734",
+        "unit": null,
+        "community_board": "111",
+        "nbhd": "East Harlem (North)",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "08",
+        "borough_block_lot": "1017960003",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9359263,
+          40.7990419
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN1201",
+        "zip_code": "10032",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-23T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.8358172",
+        "property_number": "3821",
+        "postcode": "10032",
+        "bbl": "1021370001",
+        "property_street_address_or": "3821 BROADWAY",
+        "longitude": "-73.9441377",
+        "property_street": "BROADWAY",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "024500",
+        "bin": "1063349",
+        "unit": null,
+        "community_board": "112",
+        "nbhd": "Washington Heights (South)",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "07",
+        "borough_block_lot": "1021370001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9441377,
+          40.8358172
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0803",
+        "zip_code": "10028",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-30T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7776251",
+        "property_number": "214",
+        "postcode": "10028",
+        "bbl": "1015300041",
+        "property_street_address_or": "214 EAST 85 STREET",
+        "longitude": "-73.9538594",
+        "property_street": "East 85 Street",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "014601",
+        "bin": "1048752",
+        "unit": null,
+        "community_board": "108",
+        "nbhd": "Upper East Side-Yorkville",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "05",
+        "borough_block_lot": "1015300041",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9538594,
+          40.7776251
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BX0803",
+        "zip_code": "10463",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "BRONX",
+        "latitude": "40.8868134",
+        "property_number": "545",
+        "postcode": "10463",
+        "bbl": "2057980077",
+        "property_street_address_or": "545 WEST 236 STREET",
+        "longitude": "-73.9090935",
+        "property_street": "W 236th Street",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "029500",
+        "bin": "2084188",
+        "unit": null,
+        "community_board": "208",
+        "nbhd": "Riverdale-Spuyten Duyvil",
+        "borough": "BRONX",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "11",
+        "borough_block_lot": "2057980077",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9090935,
+          40.8868134
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0301",
+        "zip_code": "10013",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-18T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.714604",
+        "property_number": "32",
+        "postcode": "10013",
+        "bbl": "1001640002",
+        "property_street_address_or": "32 MULBERRY STREET",
+        "longitude": "-73.9993868",
+        "property_street": "MULBERRY STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "002902",
+        "bin": "1001806",
+        "unit": null,
+        "community_board": "103",
+        "nbhd": "Chinatown-Two Bridges",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "01",
+        "borough_block_lot": "1001640002",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9993868,
+          40.714604
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BK0102",
+        "zip_code": "11249",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "BROOKLYN",
+        "latitude": "40.715403",
+        "property_number": "324",
+        "postcode": "11249",
+        "bbl": "3023901001",
+        "property_street_address_or": "326 WYTHE AVENUE CU",
+        "longitude": "-73.964898",
+        "property_street": "Wythe Ave",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "055100",
+        "bin": "3330366",
+        "unit": "CU",
+        "community_board": "301",
+        "nbhd": "Williamsburg",
+        "borough": "BROOKLYN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "33",
+        "borough_block_lot": "3023901001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.964898,
+          40.715403
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BK0102",
+        "zip_code": "11249",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "BROOKLYN",
+        "latitude": "40.71461",
+        "property_number": "300",
+        "postcode": "11249",
+        "bbl": "3024141202",
+        "property_street_address_or": "292 KENT AVENUE COM 2",
+        "longitude": "-73.966824",
+        "property_street": "Kent Avenue",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "055100",
+        "bin": "3335796",
+        "unit": "COM 2",
+        "community_board": "301",
+        "nbhd": "Williamsburg",
+        "borough": "BROOKLYN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "33",
+        "borough_block_lot": "3024141202",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.966824,
+          40.71461
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0402",
+        "zip_code": "10019",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-16T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7675031",
+        "property_number": "824",
+        "postcode": "10019",
+        "bbl": "1010640062",
+        "property_street_address_or": "824 10 AVENUE",
+        "longitude": "-73.9893285",
+        "property_street": "10th Avenue",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "013900",
+        "bin": "1026808",
+        "unit": null,
+        "community_board": "104",
+        "nbhd": "Hell's Kitchen",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "03",
+        "borough_block_lot": "1010640062",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9893285,
+          40.7675031
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BX0502",
+        "zip_code": "10457",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-30T00:00:00.000",
+        "borough_1": "BRONX",
+        "latitude": "40.8474921",
+        "property_number": "1877",
+        "postcode": "10457",
+        "bbl": "2028920118",
+        "property_street_address_or": "1877 WEBSTER AVENUE",
+        "longitude": "-73.9014665",
+        "property_street": "WEBSTER AVENUE",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "023100",
+        "bin": "2009390",
+        "unit": null,
+        "community_board": "205",
+        "nbhd": "Mount Hope",
+        "borough": "BRONX",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "15",
+        "borough_block_lot": "2028920118",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9014665,
+          40.8474921
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BX0701",
+        "zip_code": "10468",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-30T00:00:00.000",
+        "borough_1": "BRONX",
+        "latitude": "40.862524",
+        "property_number": "128A",
+        "postcode": "10468",
+        "bbl": "2032250114",
+        "property_street_address_or": "128 WEST FORDHAM ROAD",
+        "longitude": "-73.9070154",
+        "property_street": "WEST FORDHAM ROAD",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "025500",
+        "bin": "2014948",
+        "unit": null,
+        "community_board": "207",
+        "nbhd": "University Heights (North)-Fordham",
+        "borough": "BRONX",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "14",
+        "borough_block_lot": "2032250114",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9070154,
+          40.862524
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0302",
+        "zip_code": "10002",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7181635",
+        "property_number": "250",
+        "postcode": "10002",
+        "bbl": "1004090029",
+        "property_street_address_or": "250 BROOME STREET",
+        "longitude": "-73.9897116",
+        "property_street": "Broome St",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "001800",
+        "bin": "1005295",
+        "unit": null,
+        "community_board": "103",
+        "nbhd": "Lower East Side",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "01",
+        "borough_block_lot": "1004090029",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9897116,
+          40.7181635
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0801",
+        "zip_code": "10075",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-26T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7713632",
+        "property_number": "448",
+        "postcode": "10075",
+        "bbl": "1014730129",
+        "property_street_address_or": "448 EAST 79 STREET",
+        "longitude": "-73.9510116",
+        "property_street": "East 79 Street",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "013203",
+        "bin": "1046040",
+        "unit": null,
+        "community_board": "108",
+        "nbhd": "Upper East Side-Lenox Hill-Roosevelt Island",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "05",
+        "borough_block_lot": "1014730129",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9510116,
+          40.7713632
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0201",
+        "zip_code": "10013",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-30T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7248444",
+        "property_number": "250",
+        "postcode": "10013",
+        "bbl": "1005780047",
+        "property_street_address_or": "250 HUDSON STREET",
+        "longitude": "-74.0073383",
+        "property_street": "HUDSON STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "003700",
+        "bin": "1009723",
+        "unit": null,
+        "community_board": "102",
+        "nbhd": "SoHo-Little Italy-Hudson Square",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "01",
+        "borough_block_lot": "1005780047",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.0073383,
+          40.7248444
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0701",
+        "zip_code": "10023",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-04T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7755664",
+        "property_number": "145",
+        "postcode": "10023",
+        "bbl": "1011390001",
+        "property_street_address_or": "145 WEST 67 STREET",
+        "longitude": "-73.9833409",
+        "property_street": "W. 67th",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "015302",
+        "bin": "1028849",
+        "unit": null,
+        "community_board": "107",
+        "nbhd": "Upper West Side-Lincoln Square",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "06",
+        "borough_block_lot": "1011390001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9833409,
+          40.7755664
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BK0202",
+        "zip_code": "11201",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "BROOKLYN",
+        "latitude": "40.6932872",
+        "property_number": "100",
+        "postcode": "11201",
+        "bbl": "3001480007",
+        "property_street_address_or": "100 MYRTLE AVENUE",
+        "longitude": "-73.9857271",
+        "property_street": "MYRTLE AVENUE",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "001100",
+        "bin": "3255603",
+        "unit": null,
+        "community_board": "302",
+        "nbhd": "Downtown Brooklyn-DUMBO-Boerum Hill",
+        "borough": "BROOKLYN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "33",
+        "borough_block_lot": "3001480007",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9857271,
+          40.6932872
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0602",
+        "zip_code": "10010",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-15T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7392456",
+        "property_number": "281",
+        "postcode": "10010",
+        "bbl": "1008770089",
+        "property_street_address_or": "281 PARK AVENUE SOUTH",
+        "longitude": "-73.9867168",
+        "property_street": "Park Avenue South",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "006800",
+        "bin": "1018009",
+        "unit": null,
+        "community_board": "105",
+        "nbhd": "Gramercy",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "02",
+        "borough_block_lot": "1008770089",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9867168,
+          40.7392456
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0502",
+        "zip_code": "10019",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-16T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7631025",
+        "property_number": "1675",
+        "postcode": "10019",
+        "bbl": "1010240015",
+        "property_street_address_or": "1675 BROADWAY",
+        "longitude": "-73.9835462",
+        "property_street": "Broadway",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "013100",
+        "bin": "1076199",
+        "unit": null,
+        "community_board": "105",
+        "nbhd": "Midtown-Times Square",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "03",
+        "borough_block_lot": "1010240015",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9835462,
+          40.7631025
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0202",
+        "zip_code": "11377",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7410744",
+        "property_number": "47-05 44th Street",
+        "postcode": "11377",
+        "bbl": "4001710027",
+        "property_street_address_or": "44 -08 47 AVENUE",
+        "longitude": "-73.920537",
+        "property_street": null,
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "018502",
+        "bin": "4002077",
+        "unit": null,
+        "community_board": "402",
+        "nbhd": "Sunnyside",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "26",
+        "borough_block_lot": "4001710027",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.920537,
+          40.7410744
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0502",
+        "zip_code": "10022",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7611928",
+        "property_number": "58",
+        "postcode": "10022",
+        "bbl": "1012910047",
+        "property_street_address_or": "58 EAST 56 STREET",
+        "longitude": "-73.9724431",
+        "property_street": "EAST 56 STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "010200",
+        "bin": "1035774",
+        "unit": null,
+        "community_board": "105",
+        "nbhd": "Midtown-Times Square",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "04",
+        "borough_block_lot": "1012910047",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9724431,
+          40.7611928
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BK0902",
+        "zip_code": "11225",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-01T00:00:00.000",
+        "borough_1": "BROOKLYN",
+        "latitude": "40.6569405",
+        "property_number": "2121",
+        "postcode": "11225",
+        "bbl": "3050260241",
+        "property_street_address_or": "2121 WESTBURY COURT",
+        "longitude": "-73.9605961",
+        "property_street": "WESTBURY COURT",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "079802",
+        "bin": "3114643",
+        "unit": null,
+        "community_board": "309",
+        "nbhd": "Prospect Lefferts Gardens-Wingate",
+        "borough": "BROOKLYN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "40",
+        "borough_block_lot": "3050260241",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9605961,
+          40.6569405
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0101",
+        "zip_code": "10006",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.709402",
+        "property_number": "1",
+        "postcode": "10006",
+        "bbl": "1000621001",
+        "property_street_address_or": "1 LIBERTY PLAZA 1",
+        "longitude": "-74.011073",
+        "property_street": "LIBERTY PLAZA",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "001300",
+        "bin": "1001068",
+        "unit": "1",
+        "community_board": "101",
+        "nbhd": "Financial District-Battery Park City",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "01",
+        "borough_block_lot": "1000621001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.011073,
+          40.709402
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0903",
+        "zip_code": "10031",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.829624",
+        "property_number": "3640",
+        "postcode": "10031",
+        "bbl": "1020820001",
+        "property_street_address_or": "3640 BROADWAY",
+        "longitude": "-73.9476154",
+        "property_street": "Broadway",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "023700",
+        "bin": "1062137",
+        "unit": null,
+        "community_board": "109",
+        "nbhd": "Hamilton Heights-Sugar Hill",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "07",
+        "borough_block_lot": "1020820001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9476154,
+          40.829624
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0303",
+        "zip_code": "10009",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7273879",
+        "property_number": "430",
+        "postcode": "10009",
+        "bbl": "1004360024",
+        "property_street_address_or": "430 EAST 9 STREET",
+        "longitude": "-73.9835514",
+        "property_street": "EAST 9 STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "003200",
+        "bin": "1005876",
+        "unit": null,
+        "community_board": "103",
+        "nbhd": "East Village",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "02",
+        "borough_block_lot": "1004360024",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9835514,
+          40.7273879
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0203",
+        "zip_code": "10014",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7306249",
+        "property_number": "435",
+        "postcode": "10014",
+        "bbl": "1006020068",
+        "property_street_address_or": "435 HUDSON STREET",
+        "longitude": "-74.0071765",
+        "property_street": "HUDSON STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "006900",
+        "bin": "1010402",
+        "unit": null,
+        "community_board": "102",
+        "nbhd": "West Village",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "03",
+        "borough_block_lot": "1006020068",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.0071765,
+          40.7306249
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN1102",
+        "zip_code": "10035",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7956746",
+        "property_number": "509",
+        "postcode": "10035",
+        "bbl": "1017160005",
+        "property_street_address_or": "509 EAST 117 STREET",
+        "longitude": "-73.9319496",
+        "property_street": "East 117th Street",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "017800",
+        "bin": "1089810",
+        "unit": null,
+        "community_board": "111",
+        "nbhd": "East Harlem (North)",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "08",
+        "borough_block_lot": "1017160005",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9319496,
+          40.7956746
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0502",
+        "zip_code": "10018",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-30T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7524011",
+        "property_number": "1024",
+        "postcode": "10018",
+        "bbl": "1008400003",
+        "property_street_address_or": "1024 AVENUE OF THE AMER",
+        "longitude": "-73.9855087",
+        "property_street": "6th Avenue",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "008400",
+        "bin": "1015988",
+        "unit": null,
+        "community_board": "105",
+        "nbhd": "Midtown-Times Square",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "04",
+        "borough_block_lot": "1008400003",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9855087,
+          40.7524011
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0903",
+        "zip_code": "10031",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-15T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.8306041",
+        "property_number": "601",
+        "postcode": "10031",
+        "bbl": "1020980029",
+        "property_street_address_or": "3661 BROADWAY",
+        "longitude": "-73.9480049",
+        "property_street": "West 151st Street ST#4",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "023700",
+        "bin": "1062456",
+        "unit": null,
+        "community_board": "109",
+        "nbhd": "Hamilton Heights-Sugar Hill",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "07",
+        "borough_block_lot": "1020980029",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9480049,
+          40.8306041
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0202",
+        "zip_code": "10012",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-26T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.729508",
+        "property_number": "231",
+        "postcode": "10012",
+        "bbl": "1005390022",
+        "property_street_address_or": "231 THOMPSON STREET",
+        "longitude": "-73.9990222",
+        "property_street": "THOMPSON STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "006500",
+        "bin": "1066874",
+        "unit": null,
+        "community_board": "102",
+        "nbhd": "Greenwich Village",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "02",
+        "borough_block_lot": "1005390022",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9990222,
+          40.729508
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0604",
+        "zip_code": "10017",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-13T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.753138",
+        "property_number": "451",
+        "postcode": "10017",
+        "bbl": "1012991002",
+        "property_street_address_or": "451 LEXINGTON AVENUE R2",
+        "longitude": "-73.974803",
+        "property_street": "Lexington Avenue",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "009200",
+        "bin": "1091658",
+        "unit": "R2",
+        "community_board": "106",
+        "nbhd": "East Midtown-Turtle Bay",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "04",
+        "borough_block_lot": "1012991002",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.974803,
+          40.753138
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0502",
+        "zip_code": "10022",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-10T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7611577",
+        "property_number": "693",
+        "postcode": "10022",
+        "bbl": "1012900003",
+        "property_street_address_or": "693 5 AVENUE",
+        "longitude": "-73.9748544",
+        "property_street": "5 Avenue",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "010200",
+        "bin": "1035742",
+        "unit": null,
+        "community_board": "105",
+        "nbhd": "Midtown-Times Square",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "04",
+        "borough_block_lot": "1012900003",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9748544,
+          40.7611577
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0901",
+        "zip_code": "11415",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-27T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7131955",
+        "property_number": "120-34",
+        "postcode": "11415",
+        "bbl": "4033580013",
+        "property_street_address_or": "120 -34 QUEENS BOULEVARD",
+        "longitude": "-73.8292186",
+        "property_street": "QUEENS BOULEVARD",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "021601",
+        "bin": "4080151",
+        "unit": null,
+        "community_board": "409",
+        "nbhd": "Kew Gardens",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "29",
+        "borough_block_lot": "4033580013",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8292186,
+          40.7131955
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0401",
+        "zip_code": "10001",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-30T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.752391",
+        "property_number": "435",
+        "postcode": "10001",
+        "bbl": "1007291203",
+        "property_street_address_or": "435 WEST 31ST STREET RU",
+        "longitude": "-73.998744",
+        "property_street": "WEST 31ST STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "010300",
+        "bin": "1089664",
+        "unit": "RU",
+        "community_board": "104",
+        "nbhd": "Chelsea-Hudson Yards",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "03",
+        "borough_block_lot": "1007291203",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.998744,
+          40.752391
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0303",
+        "zip_code": "10003",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7291451",
+        "property_number": "27",
+        "postcode": "10003",
+        "bbl": "1004640046",
+        "property_street_address_or": "27 ST MARKS PLACE",
+        "longitude": "-73.9883497",
+        "property_street": "St Marks Pl",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "003800",
+        "bin": "1006752",
+        "unit": null,
+        "community_board": "103",
+        "nbhd": "East Village",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "02",
+        "borough_block_lot": "1004640046",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9883497,
+          40.7291451
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BX0202",
+        "zip_code": "10459",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-08T00:00:00.000",
+        "borough_1": "BRONX",
+        "latitude": "40.8225329",
+        "property_number": "941",
+        "postcode": "10459",
+        "bbl": "2027040001",
+        "property_street_address_or": "976 INTERVALE AVENUE",
+        "longitude": "-73.896586",
+        "property_street": "WESTCHESTER AVENUE",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "012901",
+        "bin": "2005464",
+        "unit": null,
+        "community_board": "202",
+        "nbhd": "Longwood",
+        "borough": "BRONX",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "17",
+        "borough_block_lot": "2027040001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.896586,
+          40.8225329
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0905",
+        "zip_code": "11421",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.6892028",
+        "property_number": "96-27",
+        "postcode": "11421",
+        "bbl": "4089930037",
+        "property_street_address_or": "96 -27 ATLANTIC AVENUE",
+        "longitude": "-73.8462673",
+        "property_street": "atlantic Ave",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "003000",
+        "bin": "4186609",
+        "unit": null,
+        "community_board": "409",
+        "nbhd": "Woodhaven",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "32",
+        "borough_block_lot": "4089930037",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8462673,
+          40.6892028
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0602",
+        "zip_code": "11374",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7274528",
+        "property_number": "99-02",
+        "postcode": "11374",
+        "bbl": "4021180001",
+        "property_street_address_or": "99 -01 QUEENS BOULEVARD",
+        "longitude": "-73.8538712",
+        "property_street": "Queens Blvd",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "071304",
+        "bin": "4050967",
+        "unit": null,
+        "community_board": "406",
+        "nbhd": "Forest Hills",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "29",
+        "borough_block_lot": "4021180001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8538712,
+          40.7274528
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "SI0106",
+        "zip_code": "10310",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "STATEN ISLAND",
+        "latitude": "40.6297716",
+        "property_number": "46",
+        "postcode": "10310",
+        "bbl": "5002360069",
+        "property_street_address_or": "46 GREENLEAF AVENUE",
+        "longitude": "-74.1276926",
+        "property_street": "GREENLEAF AVENUE",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "014100",
+        "bin": "5106717",
+        "unit": null,
+        "community_board": "501",
+        "nbhd": "Port Richmond",
+        "borough": "STATEN ISLAND",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "49",
+        "borough_block_lot": "5002360069",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.1276926,
+          40.6297716
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0501",
+        "zip_code": "10001",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-05T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.748787",
+        "property_number": "241",
+        "postcode": "10001",
+        "bbl": "1007790013",
+        "property_street_address_or": "241 WEST 29 STREET",
+        "longitude": "-73.9945467",
+        "property_street": "WEST 29 STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "009500",
+        "bin": "1014282",
+        "unit": null,
+        "community_board": "105",
+        "nbhd": "Midtown South-Flatiron-Union Square",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "03",
+        "borough_block_lot": "1007790013",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9945467,
+          40.748787
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BX0401",
+        "zip_code": "10451",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-15T00:00:00.000",
+        "borough_1": "BRONX",
+        "latitude": "40.8228571",
+        "property_number": "651",
+        "postcode": "10451",
+        "bbl": "2023570040",
+        "property_street_address_or": "651 RIVER AVENUE",
+        "longitude": "-73.9298515",
+        "property_street": "RIVER AVENUE",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "006301",
+        "bin": "2118670",
+        "unit": null,
+        "community_board": "204",
+        "nbhd": "Concourse-Concourse Village",
+        "borough": "BRONX",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "08",
+        "borough_block_lot": "2023570040",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9298515,
+          40.8228571
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BK1401",
+        "zip_code": "11226",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "BROOKLYN",
+        "latitude": "40.6404367",
+        "property_number": "2318",
+        "postcode": "11226",
+        "bbl": "3052100002",
+        "property_street_address_or": "2318 AVENUE D",
+        "longitude": "-73.9545849",
+        "property_street": "Avenue D",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "079001",
+        "bin": "3120322",
+        "unit": null,
+        "community_board": "314",
+        "nbhd": "Flatbush",
+        "borough": "BROOKLYN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "45",
+        "borough_block_lot": "3052100002",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9545849,
+          40.6404367
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BX0904",
+        "zip_code": "10462",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "BRONX",
+        "latitude": "40.834087",
+        "property_number": "1384",
+        "postcode": "10462",
+        "bbl": "2039291001",
+        "property_street_address_or": "11 HUGH J GRANT CIRCLE S1-3",
+        "longitude": "-73.861403",
+        "property_street": "Me",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "021602",
+        "bin": "2096601",
+        "unit": "S1-3",
+        "community_board": "209",
+        "nbhd": "Parkchester",
+        "borough": "BRONX",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "18",
+        "borough_block_lot": "2039291001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.861403,
+          40.834087
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN1201",
+        "zip_code": "10032",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.8402195",
+        "property_number": "520",
+        "postcode": "10032",
+        "bbl": "1021230084",
+        "property_street_address_or": "520 WEST 168 STREET",
+        "longitude": "-73.9382069",
+        "property_street": "WEST 168 STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "025100",
+        "bin": "1062975",
+        "unit": null,
+        "community_board": "112",
+        "nbhd": "Washington Heights (South)",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "10",
+        "borough_block_lot": "1021230084",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9382069,
+          40.8402195
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0602",
+        "zip_code": "11374",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7274528",
+        "property_number": "99-21",
+        "postcode": "11374",
+        "bbl": "4021180001",
+        "property_street_address_or": "99 -01 QUEENS BOULEVARD",
+        "longitude": "-73.8538712",
+        "property_street": "QUEENS BLVD",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "071304",
+        "bin": "4050967",
+        "unit": null,
+        "community_board": "406",
+        "nbhd": "Forest Hills",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "29",
+        "borough_block_lot": "4021180001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8538712,
+          40.7274528
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN1305",
+        "zip_code": "11413",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.6753405",
+        "property_number": "231-20",
+        "postcode": "11413",
+        "bbl": "4131580035",
+        "property_street_address_or": "231 -12 231 STREET",
+        "longitude": "-73.7390215",
+        "property_street": "Merrick Blvd",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "063200",
+        "bin": "4282638",
+        "unit": null,
+        "community_board": "413",
+        "nbhd": "Laurelton",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "31",
+        "borough_block_lot": "4131580035",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.7390215,
+          40.6753405
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0201",
+        "zip_code": "10013",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-20T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7191026",
+        "property_number": "265-267",
+        "postcode": "10013",
+        "bbl": "1002090028",
+        "property_street_address_or": "261 CANAL STREET",
+        "longitude": "-74.0007143",
+        "property_street": "Canal",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "004500",
+        "bin": "1002692",
+        "unit": null,
+        "community_board": "102",
+        "nbhd": "SoHo-Little Italy-Hudson Square",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "01",
+        "borough_block_lot": "1002090028",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.0007143,
+          40.7191026
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0202",
+        "zip_code": "11377",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-30T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7388878",
+        "property_number": "47-16",
+        "postcode": "11377",
+        "bbl": "4022910027",
+        "property_street_address_or": "48 -02 48 STREET",
+        "longitude": "-73.9179486",
+        "property_street": "48 Avenue",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "023501",
+        "bin": "4053065",
+        "unit": null,
+        "community_board": "402",
+        "nbhd": "Sunnyside",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "26",
+        "borough_block_lot": "4022910027",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9179486,
+          40.7388878
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0203",
+        "zip_code": "10014",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7324943",
+        "property_number": "17",
+        "postcode": "10014",
+        "bbl": "1005900063",
+        "property_street_address_or": "17 BARROW STREET",
+        "longitude": "-74.0025979",
+        "property_street": "BARROW STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "006700",
+        "bin": "1080172",
+        "unit": null,
+        "community_board": "102",
+        "nbhd": "West Village",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "03",
+        "borough_block_lot": "1005900063",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.0025979,
+          40.7324943
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0502",
+        "zip_code": "10019",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-04T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7629079",
+        "property_number": "253",
+        "postcode": "10019",
+        "bbl": "1010230104",
+        "property_street_address_or": "253 WEST 51 STREET",
+        "longitude": "-73.9850949",
+        "property_street": "WEST 51 STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "013100",
+        "bin": "1082805",
+        "unit": null,
+        "community_board": "105",
+        "nbhd": "Midtown-Times Square",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "03",
+        "borough_block_lot": "1010230104",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9850949,
+          40.7629079
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0502",
+        "zip_code": "10036",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7580437",
+        "property_number": "75",
+        "postcode": "10036",
+        "bbl": "1012630105",
+        "property_street_address_or": "75 WEST 47 STREET",
+        "longitude": "-73.9813673",
+        "property_street": "WEST 47 STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "009600",
+        "bin": "1034504",
+        "unit": null,
+        "community_board": "105",
+        "nbhd": "Midtown-Times Square",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "04",
+        "borough_block_lot": "1012630105",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9813673,
+          40.7580437
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0101",
+        "zip_code": "10007",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7100088",
+        "property_number": "173",
+        "postcode": "10007",
+        "bbl": "1000630021",
+        "property_street_address_or": "173 BROADWAY",
+        "longitude": "-74.0101861",
+        "property_street": "Broadway",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "001300",
+        "bin": "1001079",
+        "unit": null,
+        "community_board": "101",
+        "nbhd": "Financial District-Battery Park City",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "01",
+        "borough_block_lot": "1000630021",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.0101861,
+          40.7100088
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN1001",
+        "zip_code": "10026",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.802511",
+        "property_number": "100",
+        "postcode": "10026",
+        "bbl": "1018250001",
+        "property_street_address_or": "100 ST NICHOLAS AVENUE",
+        "longitude": "-73.9523035",
+        "property_street": "St. Nicholas Avenue",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "021800",
+        "bin": "1055040",
+        "unit": null,
+        "community_board": "110",
+        "nbhd": "Harlem (South)",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "09",
+        "borough_block_lot": "1018250001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9523035,
+          40.802511
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BX1201",
+        "zip_code": "10467",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-01T00:00:00.000",
+        "borough_1": "BRONX",
+        "latitude": "40.8799354",
+        "property_number": "3638",
+        "postcode": "10467",
+        "bbl": "2046620030",
+        "property_street_address_or": "3622 WHITE PLAINS ROAD",
+        "longitude": "-73.8645258",
+        "property_street": "White Plains Rd",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "038000",
+        "bin": "2057854",
+        "unit": null,
+        "community_board": "212",
+        "nbhd": "Williamsbridge-Olinville",
+        "borough": "BRONX",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "12",
+        "borough_block_lot": "2046620030",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8645258,
+          40.8799354
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BK0901",
+        "zip_code": "11225",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-13T00:00:00.000",
+        "borough_1": "BROOKLYN",
+        "latitude": "40.6685912",
+        "property_number": "860",
+        "postcode": "11225",
+        "bbl": "3012750045",
+        "property_street_address_or": "860 NOSTRAND AVENUE",
+        "longitude": "-73.9509249",
+        "property_street": "Nostrand Avenue",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "032100",
+        "bin": "3033212",
+        "unit": null,
+        "community_board": "309",
+        "nbhd": "Crown Heights (South)",
+        "borough": "BROOKLYN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "35",
+        "borough_block_lot": "3012750045",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9509249,
+          40.6685912
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BK0902",
+        "zip_code": "11203",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "BROOKLYN",
+        "latitude": "40.6622814",
+        "property_number": "824",
+        "postcode": "11203",
+        "bbl": "3048060077",
+        "property_street_address_or": "824 EAST NEW YORK AVENUE",
+        "longitude": "-73.9353476",
+        "property_street": "EAST NEW YORK AVENUE",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "087600",
+        "bin": "3107130",
+        "unit": null,
+        "community_board": "309",
+        "nbhd": "Prospect Lefferts Gardens-Wingate",
+        "borough": "BROOKLYN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "41",
+        "borough_block_lot": "3048060077",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9353476,
+          40.6622814
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0903",
+        "zip_code": "10031",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-01T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.8255656",
+        "property_number": "741",
+        "postcode": "10031",
+        "bbl": "1020620131",
+        "property_street_address_or": "741 ST NICHOLAS AVENUE",
+        "longitude": "-73.9438933",
+        "property_street": "ST NICHOLAS AVENUE",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "023100",
+        "bin": "1061479",
+        "unit": null,
+        "community_board": "109",
+        "nbhd": "Hamilton Heights-Sugar Hill",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "09",
+        "borough_block_lot": "1020620131",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9438933,
+          40.8255656
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0202",
+        "zip_code": "10012",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-16T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7297907",
+        "property_number": "120",
+        "postcode": "10012",
+        "bbl": "1005400009",
+        "property_street_address_or": "120 MAC DOUGAL STREET",
+        "longitude": "-74.00035",
+        "property_street": "MacDougal st",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "006500",
+        "bin": "1008696",
+        "unit": null,
+        "community_board": "102",
+        "nbhd": "Greenwich Village",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "02",
+        "borough_block_lot": "1005400009",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.00035,
+          40.7297907
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0602",
+        "zip_code": "10010",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-25T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7373405",
+        "property_number": "250",
+        "postcode": "10010",
+        "bbl": "1008760033",
+        "property_street_address_or": "250 3 AVENUE",
+        "longitude": "-73.9845882",
+        "property_street": "3rd Ave",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "005000",
+        "bin": "1017961",
+        "unit": null,
+        "community_board": "106",
+        "nbhd": "Gramercy",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "02",
+        "borough_block_lot": "1008760033",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9845882,
+          40.7373405
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0502",
+        "zip_code": "10018",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7525383",
+        "property_number": "1026",
+        "postcode": "10018",
+        "bbl": "1008400004",
+        "property_street_address_or": "1026 AVENUE OF THE AMER",
+        "longitude": "-73.9853463",
+        "property_street": "6th Avenue store #103",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "008400",
+        "bin": "1080738",
+        "unit": null,
+        "community_board": "105",
+        "nbhd": "Midtown-Times Square",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "04",
+        "borough_block_lot": "1008400004",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9853463,
+          40.7525383
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN1202",
+        "zip_code": "10033",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.849786",
+        "property_number": "4250",
+        "postcode": "10033",
+        "bbl": "1021630053",
+        "property_street_address_or": "4250 BROADWAY",
+        "longitude": "-73.9355052",
+        "property_street": "Broadway",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "027100",
+        "bin": "1081879",
+        "unit": null,
+        "community_board": "112",
+        "nbhd": "Washington Heights (North)",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "10",
+        "borough_block_lot": "1021630053",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9355052,
+          40.849786
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BX1201",
+        "zip_code": "10466",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-07T00:00:00.000",
+        "borough_1": "BRONX",
+        "latitude": "40.8900374",
+        "property_number": "4050",
+        "postcode": "10466",
+        "bbl": "2048420038",
+        "property_street_address_or": "4050 WHITE PLAINS ROAD",
+        "longitude": "-73.8588811",
+        "property_street": "White Plains Road",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "040600",
+        "bin": "2063560",
+        "unit": null,
+        "community_board": "212",
+        "nbhd": "Williamsbridge-Olinville",
+        "borough": "BRONX",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "11",
+        "borough_block_lot": "2048420038",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8588811,
+          40.8900374
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0201",
+        "zip_code": "10013",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7202335",
+        "property_number": "446",
+        "postcode": "10013",
+        "bbl": "1002320006",
+        "property_street_address_or": "446 BROADWAY",
+        "longitude": "-74.0007395",
+        "property_street": "BROADWAY",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "004500",
+        "bin": "1003029",
+        "unit": null,
+        "community_board": "102",
+        "nbhd": "SoHo-Little Italy-Hudson Square",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "01",
+        "borough_block_lot": "1002320006",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.0007395,
+          40.7202335
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0502",
+        "zip_code": "10018",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-30T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7525383",
+        "property_number": "1026",
+        "postcode": "10018",
+        "bbl": "1008400004",
+        "property_street_address_or": "1026 AVENUE OF THE AMER",
+        "longitude": "-73.9853463",
+        "property_street": "6th Avenue Store #102",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "008400",
+        "bin": "1080738",
+        "unit": null,
+        "community_board": "105",
+        "nbhd": "Midtown-Times Square",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "04",
+        "borough_block_lot": "1008400004",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9853463,
+          40.7525383
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0102",
+        "zip_code": "10013",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.719646",
+        "property_number": "52",
+        "postcode": "10013",
+        "bbl": "1001941701",
+        "property_street_address_or": "52 LISPENARD STREET TH1",
+        "longitude": "-74.003128",
+        "property_street": "LISPENARD STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "003300",
+        "bin": "1002303",
+        "unit": "TH1",
+        "community_board": "101",
+        "nbhd": "Tribeca-Civic Center",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "01",
+        "borough_block_lot": "1001941701",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.003128,
+          40.719646
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BX0902",
+        "zip_code": "10473",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "BRONX",
+        "latitude": "40.81395",
+        "property_number": "412",
+        "postcode": "10473",
+        "bbl": "2034990010",
+        "property_street_address_or": "412 SOUNDVIEW AVENUE",
+        "longitude": "-73.8578069",
+        "property_street": "Soundview Avenue",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "000400",
+        "bin": "2094802",
+        "unit": null,
+        "community_board": "209",
+        "nbhd": "Soundview-Clason Point",
+        "borough": "BRONX",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "18",
+        "borough_block_lot": "2034990010",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8578069,
+          40.81395
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN1202",
+        "zip_code": "10040",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.8542515",
+        "property_number": "600",
+        "postcode": "10040",
+        "bbl": "1021680046",
+        "property_street_address_or": "1571 ST NICHOLAS AVENUE",
+        "longitude": "-73.9305413",
+        "property_street": "West 189th Street ST#4",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "027900",
+        "bin": "1064011",
+        "unit": null,
+        "community_board": "112",
+        "nbhd": "Washington Heights (North)",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "10",
+        "borough_block_lot": "1021680046",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9305413,
+          40.8542515
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0501",
+        "zip_code": "10001",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-30T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7455148",
+        "property_number": "12",
+        "postcode": "10001",
+        "bbl": "1008300052",
+        "property_street_address_or": "12 WEST 29 STREET",
+        "longitude": "-73.9879173",
+        "property_street": "WEST 29 STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "007600",
+        "bin": "1015737",
+        "unit": null,
+        "community_board": "105",
+        "nbhd": "Midtown South-Flatiron-Union Square",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "03",
+        "borough_block_lot": "1008300052",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9879173,
+          40.7455148
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0203",
+        "zip_code": "10014",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7306249",
+        "property_number": "435",
+        "postcode": "10014",
+        "bbl": "1006020068",
+        "property_street_address_or": "435 HUDSON STREET",
+        "longitude": "-74.0071765",
+        "property_street": "HUDSON STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "006900",
+        "bin": "1010402",
+        "unit": null,
+        "community_board": "102",
+        "nbhd": "West Village",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "03",
+        "borough_block_lot": "1006020068",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.0071765,
+          40.7306249
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0604",
+        "zip_code": "10022",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7538107",
+        "property_number": "897",
+        "postcode": "10022",
+        "bbl": "1013420027",
+        "property_street_address_or": "360 EAST 50 STREET",
+        "longitude": "-73.9665664",
+        "property_street": "First Ave",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "009800",
+        "bin": "1039469",
+        "unit": null,
+        "community_board": "106",
+        "nbhd": "East Midtown-Turtle Bay",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "04",
+        "borough_block_lot": "1013420027",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9665664,
+          40.7538107
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0502",
+        "zip_code": "10018",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-20T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.754422",
+        "property_number": "214",
+        "postcode": "10018",
+        "bbl": "1007881001",
+        "property_street_address_or": "214 WEST 39 STREET RET1",
+        "longitude": "-73.989049",
+        "property_street": "WEST 39 STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "011300",
+        "bin": "1080568",
+        "unit": "RET1",
+        "community_board": "105",
+        "nbhd": "Midtown-Times Square",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "03",
+        "borough_block_lot": "1007881001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.989049,
+          40.754422
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BK0401",
+        "zip_code": "11237",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "BROOKLYN",
+        "latitude": "40.7080659",
+        "property_number": "321",
+        "postcode": "11237",
+        "bbl": "3031900037",
+        "property_street_address_or": "321 STARR STREET",
+        "longitude": "-73.9205186",
+        "property_street": "Starr Street",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "044700",
+        "bin": "3072636",
+        "unit": null,
+        "community_board": "304",
+        "nbhd": "Bushwick (West)",
+        "borough": "BROOKLYN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "34",
+        "borough_block_lot": "3031900037",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9205186,
+          40.7080659
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0905",
+        "zip_code": "11421",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.6892028",
+        "property_number": "96-25",
+        "postcode": "11421",
+        "bbl": "4089930037",
+        "property_street_address_or": "96 -27 ATLANTIC AVENUE",
+        "longitude": "-73.8462673",
+        "property_street": "atlantic Ave",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "003000",
+        "bin": "4186609",
+        "unit": null,
+        "community_board": "409",
+        "nbhd": "Woodhaven",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "32",
+        "borough_block_lot": "4089930037",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8462673,
+          40.6892028
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0303",
+        "zip_code": "10003",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7291451",
+        "property_number": "27",
+        "postcode": "10003",
+        "bbl": "1004640046",
+        "property_street_address_or": "27 ST MARKS PLACE",
+        "longitude": "-73.9883497",
+        "property_street": "St Marks Pl",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "003800",
+        "bin": "1006752",
+        "unit": null,
+        "community_board": "103",
+        "nbhd": "East Village",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "02",
+        "borough_block_lot": "1004640046",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9883497,
+          40.7291451
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0701",
+        "zip_code": "11356",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7805835",
+        "property_number": "20",
+        "postcode": "11356",
+        "bbl": "4041730060",
+        "property_street_address_or": "20 -40 129 STREET",
+        "longitude": "-73.8398927",
+        "property_street": "129 STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "091900",
+        "bin": "4445023",
+        "unit": null,
+        "community_board": "407",
+        "nbhd": "College Point",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "19",
+        "borough_block_lot": "4041730060",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8398927,
+          40.7805835
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0202",
+        "zip_code": "10003",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-19T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7302764",
+        "property_number": "11",
+        "postcode": "10003",
+        "bbl": "1005480040",
+        "property_street_address_or": "11 WAVERLY PLACE",
+        "longitude": "-73.9940394",
+        "property_street": "WAVERLY PLACE",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "005900",
+        "bin": "1008838",
+        "unit": null,
+        "community_board": "102",
+        "nbhd": "Greenwich Village",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "02",
+        "borough_block_lot": "1005480040",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9940394,
+          40.7302764
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "SI0305",
+        "zip_code": "10309",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "STATEN ISLAND",
+        "latitude": "40.5272707",
+        "property_number": "2955",
+        "postcode": "10309",
+        "bbl": "5075110150",
+        "property_street_address_or": "2925 VETERANS ROAD WEST",
+        "longitude": "-74.2307311",
+        "property_street": "Veterans",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "022602",
+        "bin": "5150129",
+        "unit": null,
+        "community_board": "503",
+        "nbhd": "Tottenville-Charleston",
+        "borough": "STATEN ISLAND",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "51",
+        "borough_block_lot": "5075110150",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.2307311,
+          40.5272707
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0301",
+        "zip_code": "11370",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7641357",
+        "property_number": "75-20",
+        "postcode": "11370",
+        "bbl": "4010270050",
+        "property_street_address_or": "75 -20 ASTORIA BOULEVARD S",
+        "longitude": "-73.8932437",
+        "property_street": "Astoria Blvd",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "030904",
+        "bin": "4022646",
+        "unit": null,
+        "community_board": "403",
+        "nbhd": "Jackson Heights",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "22",
+        "borough_block_lot": "4010270050",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8932437,
+          40.7641357
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0707",
+        "zip_code": "11354",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-30T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7611249",
+        "property_number": "37",
+        "postcode": "11354",
+        "bbl": "4049740036",
+        "property_street_address_or": "37 -08 MAIN STREET",
+        "longitude": "-73.8313915",
+        "property_street": "MAIN STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "087100",
+        "bin": "4112291",
+        "unit": null,
+        "community_board": "407",
+        "nbhd": "Flushing-Willets Point",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "20",
+        "borough_block_lot": "4049740036",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8313915,
+          40.7611249
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BK0202",
+        "zip_code": "11217",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "BROOKLYN",
+        "latitude": "40.6866005",
+        "property_number": "72",
+        "postcode": "11217",
+        "bbl": "3001780040",
+        "property_street_address_or": "68 NEVINS STREET",
+        "longitude": "-73.9824617",
+        "property_street": "Nevins",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "004100",
+        "bin": "3000722",
+        "unit": null,
+        "community_board": "302",
+        "nbhd": "Downtown Brooklyn-DUMBO-Boerum Hill",
+        "borough": "BROOKLYN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "33",
+        "borough_block_lot": "3001780040",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9824617,
+          40.6866005
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0707",
+        "zip_code": "11354",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.761812",
+        "property_number": "142-28",
+        "postcode": "11354",
+        "bbl": "4050201201",
+        "property_street_address_or": "142 -28 38 AVENUE 1-A",
+        "longitude": "-73.826365",
+        "property_street": "38 Avenue",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "086500",
+        "bin": "4540143",
+        "unit": "1-A",
+        "community_board": "407",
+        "nbhd": "Flushing-Willets Point",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "20",
+        "borough_block_lot": "4050201201",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.826365,
+          40.761812
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0401",
+        "zip_code": "10001",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-07T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.752391",
+        "property_number": "435",
+        "postcode": "10001",
+        "bbl": "1007291203",
+        "property_street_address_or": "435 WEST 31ST STREET RU",
+        "longitude": "-73.998744",
+        "property_street": "WEST 31ST STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "010300",
+        "bin": "1089664",
+        "unit": "RU",
+        "community_board": "104",
+        "nbhd": "Chelsea-Hudson Yards",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "03",
+        "borough_block_lot": "1007291203",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.998744,
+          40.752391
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0702",
+        "zip_code": "10025",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-26T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7926217",
+        "property_number": "720",
+        "postcode": "10025",
+        "bbl": "1012260029",
+        "property_street_address_or": "720 COLUMBUS AVENUE",
+        "longitude": "-73.9681757",
+        "property_street": "COLUMBUS AVENUE",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "018100",
+        "bin": "1082743",
+        "unit": null,
+        "community_board": "107",
+        "nbhd": "Upper West Side (Central)",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "07",
+        "borough_block_lot": "1012260029",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9681757,
+          40.7926217
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0903",
+        "zip_code": "10031",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-28T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.8242301",
+        "property_number": "601",
+        "postcode": "10031",
+        "bbl": "1020880091",
+        "property_street_address_or": "3461 BROADWAY",
+        "longitude": "-73.9525372",
+        "property_street": "West 141st Street ST#1",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "022500",
+        "bin": "1062330",
+        "unit": null,
+        "community_board": "109",
+        "nbhd": "Hamilton Heights-Sugar Hill",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "07",
+        "borough_block_lot": "1020880091",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9525372,
+          40.8242301
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BX0802",
+        "zip_code": "10463",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-30T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.874295",
+        "property_number": "90",
+        "postcode": "10463",
+        "bbl": "1022151101",
+        "property_street_address_or": "90 WEST 225 STREET 1",
+        "longitude": "-73.909281",
+        "property_street": "WEST 225 STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "030900",
+        "bin": "1064698",
+        "unit": "1",
+        "community_board": "207",
+        "nbhd": "Kingsbridge-Marble Hill",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "10",
+        "borough_block_lot": "1022151101",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.909281,
+          40.874295
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0301",
+        "zip_code": "10002",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-03T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7129813",
+        "property_number": "221",
+        "postcode": "10002",
+        "bbl": "1002710044",
+        "property_street_address_or": "221 MADISON STREET",
+        "longitude": "-73.9888647",
+        "property_street": "MADISON STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "000600",
+        "bin": "1003232",
+        "unit": null,
+        "community_board": "103",
+        "nbhd": "Chinatown-Two Bridges",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "01",
+        "borough_block_lot": "1002710044",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9888647,
+          40.7129813
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BK1002",
+        "zip_code": "11228",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-30T00:00:00.000",
+        "borough_1": "BROOKLYN",
+        "latitude": "40.6274784",
+        "property_number": "881",
+        "postcode": "11228",
+        "bbl": "3059010051",
+        "property_street_address_or": "7122 FT HAMILTON PARKWAY",
+        "longitude": "-74.0144426",
+        "property_street": "72nd St",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "013200",
+        "bin": "3146995",
+        "unit": null,
+        "community_board": "310",
+        "nbhd": "Dyker Heights",
+        "borough": "BROOKLYN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "38",
+        "borough_block_lot": "3059010051",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.0144426,
+          40.6274784
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BX0101",
+        "zip_code": "10455",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-11T00:00:00.000",
+        "borough_1": "BRONX",
+        "latitude": "40.8149044",
+        "property_number": "448",
+        "postcode": "10455",
+        "bbl": "2022930053",
+        "property_street_address_or": "448 EAST 149 STREET",
+        "longitude": "-73.9156331",
+        "property_street": "EAST 149TH STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "004300",
+        "bin": "2000538",
+        "unit": null,
+        "community_board": "201",
+        "nbhd": "Mott Haven-Port Morris",
+        "borough": "BRONX",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "17",
+        "borough_block_lot": "2022930053",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9156331,
+          40.8149044
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0202",
+        "zip_code": "10003",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7336936",
+        "property_number": "86 University Place",
+        "postcode": "10003",
+        "bbl": "1005690025",
+        "property_street_address_or": "86 UNIVERSITY PLACE",
+        "longitude": "-73.9933644",
+        "property_street": "86 University Place",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "006100",
+        "bin": "1009284",
+        "unit": null,
+        "community_board": "102",
+        "nbhd": "Greenwich Village",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "02",
+        "borough_block_lot": "1005690025",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9933644,
+          40.7336936
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0402",
+        "zip_code": "10019",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-19T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7675491",
+        "property_number": "315",
+        "postcode": "10019",
+        "bbl": "1010480020",
+        "property_street_address_or": "315 WEST 57 STREET",
+        "longitude": "-73.9836859",
+        "property_street": "WEST 57 STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "013900",
+        "bin": "1082493",
+        "unit": null,
+        "community_board": "104",
+        "nbhd": "Hell's Kitchen",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "06",
+        "borough_block_lot": "1010480020",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9836859,
+          40.7675491
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0801",
+        "zip_code": "10022",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2025-03-30T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7613609",
+        "property_number": "238",
+        "postcode": "10022",
+        "bbl": "1014140032",
+        "property_street_address_or": "238 EAST 60 STREET",
+        "longitude": "-73.9647794",
+        "property_street": "EAST 60 STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "011000",
+        "bin": "1043350",
+        "unit": null,
+        "community_board": "108",
+        "nbhd": "Upper East Side-Lenox Hill-Roosevelt Island",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "05",
+        "borough_block_lot": "1014140032",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9647794,
+          40.7613609
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN1202",
+        "zip_code": "10033",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-01T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.8523173",
+        "property_number": "600",
+        "postcode": "10033",
+        "bbl": "1021660044",
+        "property_street_address_or": "1509 ST NICHOLAS AVENUE",
+        "longitude": "-73.9319422",
+        "property_street": "West 186th Street ST#5",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "027100",
+        "bin": "1063969",
+        "unit": null,
+        "community_board": "112",
+        "nbhd": "Washington Heights (North)",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "10",
+        "borough_block_lot": "1021660044",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9319422,
+          40.8523173
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BX0904",
+        "zip_code": "10462",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "BRONX",
+        "latitude": "40.834087",
+        "property_number": "1384",
+        "postcode": "10462",
+        "bbl": "2039291001",
+        "property_street_address_or": "11 HUGH J GRANT CIRCLE S1-3",
+        "longitude": "-73.861403",
+        "property_street": "Metropolitan Avenue",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "021602",
+        "bin": "2096601",
+        "unit": "S1-3",
+        "community_board": "209",
+        "nbhd": "Parkchester",
+        "borough": "BRONX",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "18",
+        "borough_block_lot": "2039291001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.861403,
+          40.834087
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0603",
+        "zip_code": "10016",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-07T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7418819",
+        "property_number": "530",
+        "postcode": "10016",
+        "bbl": "1009350005",
+        "property_street_address_or": "530 2 AVENUE",
+        "longitude": "-73.9776368",
+        "property_street": "Second Avenue",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "007001",
+        "bin": "1020615",
+        "unit": null,
+        "community_board": "106",
+        "nbhd": "Murray Hill-Kips Bay",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "04",
+        "borough_block_lot": "1009350005",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9776368,
+          40.7418819
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "BK0602",
+        "zip_code": "11217",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-16T00:00:00.000",
+        "borough_1": "BROOKLYN",
+        "latitude": "40.6813651",
+        "property_number": "447",
+        "postcode": "11217",
+        "bbl": "3009310019",
+        "property_street_address_or": "202 FLATBUSH AVENUE",
+        "longitude": "-73.9759661",
+        "property_street": "Bergen Street",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "012902",
+        "bin": "3337416",
+        "unit": null,
+        "community_board": "306",
+        "nbhd": "Park Slope",
+        "borough": "BROOKLYN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "39",
+        "borough_block_lot": "3009310019",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9759661,
+          40.6813651
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0302",
+        "zip_code": "10002",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-10-31T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7218224",
+        "property_number": "187",
+        "postcode": "10002",
+        "bbl": "1004260034",
+        "property_street_address_or": "187 CHRYSTIE STREET",
+        "longitude": "-73.9923085",
+        "property_street": "CHRYSTIE STREET",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "003601",
+        "bin": "1005722",
+        "unit": null,
+        "community_board": "103",
+        "nbhd": "Lower East Side",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "01",
+        "borough_block_lot": "1004260034",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9923085,
+          40.7218224
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0202",
+        "zip_code": "11104",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-13T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7404718",
+        "property_number": "42-18",
+        "postcode": "11104",
+        "bbl": "4001750012",
+        "property_street_address_or": "42 -14 GREENPOINT AVENUE",
+        "longitude": "-73.9223961",
+        "property_street": "Greenpoint Ave",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "018502",
+        "bin": "4002133",
+        "unit": null,
+        "community_board": "402",
+        "nbhd": "Sunnyside",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "26",
+        "borough_block_lot": "4001750012",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9223961,
+          40.7404718
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0201",
+        "zip_code": "11101",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-30T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7421911",
+        "property_number": "21-02",
+        "postcode": "11101",
+        "bbl": "4000710001",
+        "property_street_address_or": "21 -02 49 AVENUE",
+        "longitude": "-73.9489111",
+        "property_street": "49 Avenue",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "000104",
+        "bin": "4000539",
+        "unit": null,
+        "community_board": "402",
+        "nbhd": "Long Island City-Hunters Point",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "26",
+        "borough_block_lot": "4000710001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9489111,
+          40.7421911
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN0301",
+        "zip_code": "11370",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7641357",
+        "property_number": "75-20",
+        "postcode": "11370",
+        "bbl": "4010270050",
+        "property_street_address_or": "75 -20 ASTORIA BOULEVARD S",
+        "longitude": "-73.8932437",
+        "property_street": "Astoria Blvd",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "030904",
+        "bin": "4022646",
+        "unit": null,
+        "community_board": "403",
+        "nbhd": "Jackson Heights",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "22",
+        "borough_block_lot": "4010270050",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8932437,
+          40.7641357
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "MN0502",
+        "zip_code": "10018",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-11-30T00:00:00.000",
+        "borough_1": "MANHATTAN",
+        "latitude": "40.7535737",
+        "property_number": "520",
+        "postcode": "10018",
+        "bbl": "1007860001",
+        "property_street_address_or": "520 8 AVENUE",
+        "longitude": "-73.9918826",
+        "property_street": "8th Avenue",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "010900",
+        "bin": "1083626",
+        "unit": null,
+        "community_board": "105",
+        "nbhd": "Midtown-Times Square",
+        "borough": "MANHATTAN",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "03",
+        "borough_block_lot": "1007860001",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9918826,
+          40.7535737
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nta": "QN1103",
+        "zip_code": "11362",
+        "vacant_6_30_or_date_sold": null,
+        "expir_dt_of_most_recent_lease": "2024-12-31T00:00:00.000",
+        "borough_1": "QUEENS",
+        "latitude": "40.7699496",
+        "property_number": "252",
+        "postcode": "11362",
+        "bbl": "4081290071",
+        "property_street_address_or": "252 -01 NORTHERN BOULEVARD",
+        "longitude": "-73.7364593",
+        "property_street": "NORTHERN BOULEVARD",
+        "vacant_on_12_31": "Y",
+        "primary_business_activity": null,
+        "construction_reported": null,
+        "census_tract": "147900",
+        "bin": "4438361",
+        "unit": null,
+        "community_board": "411",
+        "nbhd": "Douglaston-Little Neck",
+        "borough": "QUEENS",
+        "reporting_year": "2024",
+        "filing_due_date": "2025-02-15T00:00:00.000",
+        "council_district": "19",
+        "borough_block_lot": "4081290071",
+        "sold_date": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.7364593,
+          40.7699496
+        ]
+      }
+    }
+  ]
+}

@@ -152,5 +152,66 @@ export const chatResponses = {
         priority: "high"
       }
     }]
-  }
-};
+  },
+  "I want to open a Coffee Shop within a 3 mile radius of Times Square. Can you help me identify the best locations?": {
+    text: "Key insights:\n\n1) The Hell's Kitchen area shows high potential with strong foot traffic but fewer existing coffee shops per capita\n2) Parts of Chelsea display favorable revenue patterns with strong weekend customer retention\n3) Areas near major subway stations in Midtown East show high weekday commuter patterns\n\nTimes Square adjacent locations experience approximately 12% drop in foot traffic during summer months, when Broadway shows have fewer performances.\n\nWould you like me to narrow down specific neighborhoods for deeper analysis?",
+    timing: [2000, 2000, 1000, 1000, 1000, 1500], // Timing for each line
+  artifacts: [{
+    type: "map",
+    title: "NYC Coffee Shop Location Analysis",
+    component: "CoffeeShopMap",
+    data: {
+      layers: ["coffee_shops", "foot_traffic", "demographics", "radius"],
+      center: [-73.9866, 40.7589], // Times Square coordinates
+      radius: 3 // miles
+    }
+  }]
+},
+"Add rental prices and subway stops": {
+  text: "I've added subway stations and rental price data to your map. Looking at this enhanced view, I can see several interesting patterns:\n\n1) Areas with lower rental prices ($75-200/sqft) in the western part of Hell's Kitchen show strong potential, especially near the 50th St subway stations where foot traffic remains high\n\n2) The corridor between Herald Square and Bryant Park has excellent subway connectivity (6 different lines) with moderate rental prices ($200-800/sqft) and steady foot traffic\n\n3) Several available storefronts near Union Square offer a compelling balance of high foot traffic, multiple subway lines, and mid-range rental costs\n\nWould you like me to analyze specific neighborhoods in more detail?",
+  timing: [2000, 2000, 1000, 1000, 1000, 1500], // Timing for each line
+  artifacts: [{
+    type: "map",
+    title: "NYC Coffee Shop Location Analysis with Transit & Rentals",
+    component: "AdditionalLayersMap",
+    data: {
+      layers: ["coffee_shops", "foot_traffic", "subway_stations", "storefronts", "radius"],
+      center: [-73.9866, 40.7589], // Times Square coordinates
+      radius: 3 // miles
+    }
+  }]
+},
+"Let's compare the ROI for these locations. My budget is about $200,000 for initial setup.": {
+  text: "I've analyzed the projected ROI and break-even timelines for the potential coffee shop locations. Based on your $200,000 initial budget, here are my key findings:\n\n1) Hell's Kitchen shows the strongest ROI at 28%, breaking even in just under 13 months\n\n2) Union Square follows closely with a 26% ROI and breaks even around month 13-14\n\n3) Chelsea and Herald Square show moderate returns (24% and 22% respectively) with break-even points at approximately 14-15 months\n\n4) Midtown East has the lowest ROI at 19% and would take nearly 18 months to break even\n\nLooking at the monthly profit projections, Hell's Kitchen consistently shows the highest cash flow after break-even. Would you like me to provide a more detailed financial analysis for your preferred location?",
+  timing: [2000, 1500, 1500, 1500, 1500, 2000], // Timing for each line
+  artifacts: [{
+    type: "chart",
+    title: "Coffee Shop ROI Analysis",
+    component: "CoffeeShopROIAnalysis",
+    data: {
+      locations: ["Hell's Kitchen", "Chelsea", "Midtown East", "Herald Square", "Union Square"],
+      initialInvestment: 200000
+    }
+  }]
+},
+"How can I differentiate my cafe from the competition?": {
+  text: "To stand out in NYC's competitive coffee market, consider these differentiation strategies:\n\n1) Neighborhood-Specific Identity: In Hell's Kitchen, embrace the theatrical heritage with Broadway-themed drinks and performance spaces for local artists\n\n2) Sustainability Focus: NYC consumers increasingly value eco-friendly practices - consider compostable packaging, visible recycling stations, and partnerships with local sustainable food suppliers\n\n3) Technology Integration: Implement seamless mobile ordering, contactless payment, and loyalty programs that track preferences and offer personalized recommendations\n\n4) Flexible Space Design: Create adaptable areas that transform from focused work environments during weekdays to community gathering spaces for events in evenings and weekends\n\n5) Elevated Coffee Program: Invest in direct-trade relationships with farmers, in-house roasting, or unique brewing methods not commonly found in the area\n\nWould you like more details on implementing any of these strategies in your coffee shop business plan?",
+  timing: [2000, 1500, 1500, 1500, 1500, 1500, 2000], // Timing for each line
+  artifacts: [] // No artifacts for this text-only question
+},
+"For the top 3 areas we identified, create a report that I can share with my team and potential investors.": {
+  text: "I've created a comprehensive report analyzing the top 3 locations for your new coffee shop venture. The report includes market analysis, competitive landscape, financial projections, and neighborhood profiles. Each location is evaluated against key metrics including foot traffic patterns, nearby amenities, and target demographics. The Executive Summary highlights Hell's Kitchen as the prime recommendation based on optimal ROI potential and favorable market conditions.",
+  timing: [3000], // Single paragraph timing
+  artifacts: [{
+    type: "report",
+    title: "NYC Coffee Shop Investment Analysis: Location Assessment & ROI Projections",
+    component: "CoffeeShopReport",
+    data: {
+      sections: ["Executive Summary", "Introduction", "Research Methodology", "Location Comparison", 
+                "Hell's Kitchen Detailed Profile", "Union Square Detailed Profile", "Chelsea Detailed Profile",
+                "Financial Projections", "Implementation Timeline", "Conclusion & Recommendations"],
+      priority: "high"
+    }
+  }]
+}
+};``

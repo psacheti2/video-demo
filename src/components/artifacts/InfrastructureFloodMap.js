@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 
 // Create a dynamic import for the map component with no SSR
 const MapComponent = dynamic(
-  () => import('./MapComponent'),  
+  () => import('./InfrastructureFloodMapComponent'),  
   { 
     ssr: false,  // This is crucial - prevents server-side rendering
     loading: () => <div className="h-full w-full flex items-center justify-center bg-gray-100">

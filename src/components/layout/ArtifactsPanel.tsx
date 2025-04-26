@@ -14,7 +14,10 @@ import ExtractComponent from '../artifacts/SevenExtract'
 import FourReport from '../artifacts/FourReport'
 import FourMap from '../artifacts/FourMap'
 import PdfViewer from '../artifacts/PdfViewerComponent'
-
+import CoffeeShopMap from '../artifacts/CoffeeShopMap';
+import AdditionalLayersMap from '../artifacts/AdditionalLayersMap';
+import CoffeeShopROIAnalysis from '../artifacts/ROIAnalysisDashboard';
+import CoffeeShopReport from '../artifacts/CoffeeShopReport';
 
 interface ArtifactData {
   id: string;
@@ -46,35 +49,35 @@ export default function ArtifactsPanel({
   prevArtifactsCount = 0,
   selectedArtifact,
   setSelectedArtifact,
-  savedArtifacts = [], 
-  setSavedArtifacts = () => {} 
+  savedArtifacts = [],
+  setSavedArtifacts = () => { }
 }: ArtifactsPanelProps) {
   const controlledArtifact = selectedArtifact;
-  const setControlledArtifact = setSelectedArtifact || (() => {});
-    const prevMessageId = useRef(messageId);
+  const setControlledArtifact = setSelectedArtifact || (() => { });
+  const prevMessageId = useRef(messageId);
   const prevArtifactsLength = useRef(artifacts.length);
 
 
   const InfrastructureFloodMapWithProps = ({ data }: { data: any }) => {
     const component = useMemo(() => (
       <InfrastructureFloodMap
-  {...data}
-  savedMaps={savedArtifacts}
-  setSavedArtifacts={setSavedArtifacts}
-  title={controlledArtifact?.title}
-  onBack={() => {
-    if (isFullscreen) {
-      toggleFullscreen();               // ⬅️ exit fullscreen first
-      setTimeout(() => {
-        setControlledArtifact(null);    // ⬅️ then open gallery
-      }, 300);
-    } else {
-      setControlledArtifact(null);      // ⬅️ regular back just opens gallery
-    }
-  }}
-/>
-    
-    ), [data.id, controlledArtifact?.title, isFullscreen, setControlledArtifact]);    
+        {...data}
+        savedMaps={savedArtifacts}
+        setSavedArtifacts={setSavedArtifacts}
+        title={controlledArtifact?.title}
+        onBack={() => {
+          if (isFullscreen) {
+            toggleFullscreen();               // ⬅️ exit fullscreen first
+            setTimeout(() => {
+              setControlledArtifact(null);    // ⬅️ then open gallery
+            }, 300);
+          } else {
+            setControlledArtifact(null);      // ⬅️ regular back just opens gallery
+          }
+        }}
+      />
+
+    ), [data.id, controlledArtifact?.title, isFullscreen, setControlledArtifact]);
     return component;
   };
 
@@ -96,7 +99,7 @@ export default function ArtifactsPanel({
         }
       }}
     />
-  );  
+  );
   const IndexDashboardComponentWithProps = ({ data }: { data: any }) => <IndexDashboard {...data} />;
   const ReportComponentVancouverWithProps = ({ data }: { data: any }) => <ReportComponentVancouver {...data} />;
   const IndexMapComponentWithProps = ({ data }: { data: any }) => <InfrastructureIndexMap {...data} />;
@@ -104,9 +107,26 @@ export default function ArtifactsPanel({
   const SevenExtractComponentWithProps = ({ data }: { data: any }) => <PdfViewer {...data} />;
   const FourMapComponentWithProps = ({ data }: { data: any }) => (
     <FourMap {...data} savedMaps={savedArtifacts} setSavedArtifacts={setSavedArtifacts} />
-  );  
+  );
   const PdfViewerComponentWithProps = ({ data }: { data: any }) => <PdfViewer {...data} />;
-
+  const AdditionalLayersMapWithProps = ({ data }: { data: any }) => (
+    <AdditionalLayersMap
+      {...data}
+      savedMaps={savedArtifacts}
+      setSavedArtifacts={setSavedArtifacts}
+      title={controlledArtifact?.title}
+      onBack={() => {
+        if (isFullscreen) {
+          toggleFullscreen();
+          setTimeout(() => {
+            setControlledArtifact(null);
+          }, 300);
+        } else {
+          setControlledArtifact(null);
+        }
+      }}
+    />
+  );
   // This effect detects when a new message arrives (messageId changes)
   useEffect(() => {
     // Only react to new user messages, not conversation reloads
@@ -114,12 +134,12 @@ export default function ArtifactsPanel({
       if (artifacts.length > prevArtifactsCount) {
         setControlledArtifact?.(artifacts[artifacts.length - 1]);
       }
-  
+
       prevMessageId.current = messageId;
       prevArtifactsLength.current = artifacts.length;
     }
   }, [messageId, artifacts, prevArtifactsCount]);
-  
+
 
   const renderArtifactComponent = (artifact: ArtifactData) => {
     // You need to implement this function based on your actual components
@@ -130,21 +150,66 @@ export default function ArtifactsPanel({
       case 'ChartComponent':
         return <ChartComponentWithProps data={artifact.data} />;
       case 'BudgetDashboard':
-       return <BudgetDashboardComponentWithProps data={artifact.data} />;
+        return <BudgetDashboardComponentWithProps data={artifact.data} />;
       case 'IndexDashboard':
-        return <IndexDashboardComponentWithProps data={artifact.data} />; 
+        return <IndexDashboardComponentWithProps data={artifact.data} />;
       case 'ReportComponentVancouver':
-        return <ReportComponentVancouverWithProps data={artifact.data} />; 
+        return <ReportComponentVancouverWithProps data={artifact.data} />;
       case 'ReportComponent':
         return <ReportComponentWithProps data={artifact.data} />;
       case 'RiskComponent':
         return <IndexMapComponentWithProps data={artifact.data} />;
-      case 'HousingMapComponent' :
+      case 'HousingMapComponent':
         return <HousingMapComponentWithProps data={artifact.data} />;
-      case 'SevenExtract' :
+      case 'SevenExtract':
         return <SevenExtractComponentWithProps data={artifact.data} />;
-      case 'FourMap' :
-          return <FourMapComponentWithProps data={artifact.data} />;     
+      case 'FourMap':
+        return <FourMapComponentWithProps data={artifact.data} />;
+      case 'CoffeeShopMap':
+        return <CoffeeShopMap {...artifact.data} savedMaps={savedArtifacts} setSavedArtifacts={setSavedArtifacts} title={controlledArtifact?.title} onBack={() => {
+          if (isFullscreen) {
+            toggleFullscreen();
+            setTimeout(() => {
+              setControlledArtifact(null);
+            }, 300);
+          } else {
+            setControlledArtifact(null);
+          }
+        }} />;
+        case 'CoffeeShopROIAnalysis':
+  return <CoffeeShopROIAnalysis 
+    {...artifact.data} 
+    savedMaps={savedArtifacts} 
+    setSavedArtifacts={setSavedArtifacts} 
+    title={controlledArtifact?.title} 
+    onBack={() => {
+      if (isFullscreen) {
+        toggleFullscreen();
+        setTimeout(() => {
+          setControlledArtifact(null);
+        }, 300);
+      } else {
+        setControlledArtifact(null);
+      }
+    }} 
+  />;
+  case 'CoffeeShopReport':
+  return <CoffeeShopReport 
+    {...artifact.data} 
+    title={controlledArtifact?.title} 
+    onBack={() => {
+      if (isFullscreen) {
+        toggleFullscreen();
+        setTimeout(() => {
+          setControlledArtifact(null);
+        }, 300);
+      } else {
+        setControlledArtifact(null);
+      }
+    }} 
+  />;
+      case 'AdditionalLayersMap':
+        return <AdditionalLayersMapWithProps data={artifact.data} />;
       default:
         return <div>Artifact component: {artifact.component}</div>;
     }
@@ -157,13 +222,13 @@ export default function ArtifactsPanel({
 
   return (
     <div className="flex flex-col h-full overflow-hidden relative">
-<div 
-  className="sticky top-0 z-10 flex items-center justify-between py-4 px-3 bg-white border-t border-b border-gray-300" 
->
-         {controlledArtifact ? (
+      <div
+        className="sticky top-0 z-10 flex items-center justify-between py-4 px-3 bg-white border-t border-b border-gray-300"
+      >
+        {controlledArtifact ? (
           <div className="flex items-center gap-2">
             <button
-              onClick={() =>setControlledArtifact?.(null)}
+              onClick={() => setControlledArtifact?.(null)}
               className="p-1 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors"
               aria-label="Back to List"
             >
@@ -174,8 +239,8 @@ export default function ArtifactsPanel({
         ) : (
           <h2 className="text-sm font-semibold text-[#2C3E50]">Artifacts ({artifacts.length})</h2>
         )}
-        
-        
+
+
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -190,7 +255,7 @@ export default function ArtifactsPanel({
                 key={index}
                 className="border border-[#008080] rounded-lg p-4 cursor-pointer bg-white text-[#008080] hover:bg-[#008080] hover:text-white transition-colors duration-200 group"
                 onClick={() => setControlledArtifact?.(artifact)}
-                >
+              >
                 <div className="flex items-center justify-between">
                   <h3 className="font-medium">{artifact.title}</h3>
                   <span className="bg-gray-100 px-2 py-1 rounded text-xs uppercase text-gray-600 group-hover:text-[#008080]">
