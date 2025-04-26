@@ -2544,25 +2544,26 @@ const fetchFootTraffic = async () => {
 
                 {showDrawTools && (
                     <div
-                        className="absolute z-[9999] w-[260px] bg-white border border-gray-200 rounded-xl shadow-xl p-4 transition-all animate-fade-in"
+                        className="absolute z-[9999] w-[150px] bg-white border border-gray-200 rounded-xl shadow-lg p-2 transition-all animate-fade-in"
                         style={{
                             top: isFullscreen ? '80px' : '280px',
                             left: isFullscreen ? '100px' : '60px',
                         }}
                     >
                         <div className="flex justify-between items-center mb-3">
-                            <h3 className="text-base font-semibold text-gray-800">Drawing Tools</h3>
-                            <button onClick={() => setShowDrawTools(false)}>
+                        <h3 className="text-xs font-semibold text-gray-800">Drawing Tools</h3>
+                        <button onClick={() => setShowDrawTools(false)}>
                                 <X size={16} className="text-gray-500 hover:text-gray-700" />
                             </button>
                         </div>
-                        <div className="grid gap-2">
+                        <div className="grid gap-1">
 
 
                             <button
+                            
                                 onClick={() => setShowGeocoder(!showGeocoder)}
                                 title="Search Location"
-                                className="p-2 rounded-full border"
+                                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
                                 style={{
                                     color: COLORS.coral,
                                     border: `1px solid ${COLORS.coral}`,
@@ -2577,10 +2578,9 @@ const fetchFootTraffic = async () => {
                                     e.currentTarget.style.color = COLORS.coral;
                                 }}
                             >
-                                <TbMapSearch size={16} />
-                            </button>
+Search                            </button>
                             <button
-                                className="w-full px-3 py-2 rounded-md border text-sm font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
                                 onClick={() => {
                                     if (!map) return;
                                     setShowDrawTools(false);
@@ -2702,10 +2702,9 @@ const fetchFootTraffic = async () => {
                                 }}
 
                             >
-                                <PiPolygon size={16} />
-                            </button>
+Polygon                            </button>
                             <button
-                                className="w-full px-3 py-2 rounded-md border text-sm font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
                                 onClick={() => {
                                     if (!map) return;
                                     setShowDrawTools(false);
@@ -2734,10 +2733,9 @@ const fetchFootTraffic = async () => {
                                     });
                                 }}
                             >
-                                <FaRegCircle size={16} />
-                            </button>
+Circle                            </button>
                             <button
-                                className="w-full px-3 py-2 rounded-md border text-sm font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
                                 onClick={() => {
                                     if (!map) return;
                                     setShowDrawTools(false);
@@ -2787,11 +2785,10 @@ const fetchFootTraffic = async () => {
                                     });
                                 }}
                             >
-                                <GiPathDistance size={16} />
-                            </button>
+Measure                            </button>
 
                             <button
-                                className="w-full px-3 py-2 rounded-md border text-sm font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
                                 onClick={() => {
                                     if (!map) return;
                                     setShowDrawTools(false);
@@ -2938,10 +2935,9 @@ const fetchFootTraffic = async () => {
                                     });
                                 }}
                             >
-                                <LiaShareAltSolid size={16} />
-                            </button>
+Area                            </button>
                             <button
-                                className="w-full px-3 py-2 rounded-md border text-sm font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
                                 onClick={() => {
                                     if (!map || !map.drawnItems) return;
                                     setShowDrawTools(false);
@@ -2985,11 +2981,10 @@ const fetchFootTraffic = async () => {
                                     });
                                 }}
                             >
-                                <LuMove3D size={16} />
-                            </button>
+Edit                            </button>
 
                             <button
-                                className="w-full px-3 py-2 rounded-md border text-sm font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
                                 onClick={() => {
                                     if (!map) return;
                                     setShowDrawTools(false);
@@ -3020,8 +3015,7 @@ const fetchFootTraffic = async () => {
                                     });
                                 }}
                             >
-                                <MdDraw size={16} />
-                            </button>
+Freehand                            </button>
                         </div>
                     </div>
                 )}
