@@ -1,4 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
+import html2canvas from 'html2canvas';
+import domtoimage from 'dom-to-image';
 import { ChevronLeft, ChevronRight, Maximize2, Download, Edit2, Save, Menu, Minimize2, Info, X } from "lucide-react";
 import '../../app/globals.css';
 import VancouverFloodInfraMap from './InfrastructureFloodMap';
@@ -24,6 +26,7 @@ const [notificationMessage, setNotificationMessage] = useState('');
 const [showEmailNotification, setShowEmailNotification] = useState(false);
 const addNotification = useNotificationStore((state) => state.addNotification);
 const [slideOut, setSlideOut] = useState(false);
+const chartRef = useRef(null);
 
   // Theme colors
   const COLORS = {
@@ -421,132 +424,800 @@ useEffect(() => {
     }
   };
   
-  
-  const handleDownload = () => {
+  // Updated handleDownload function to properly capture charts
+const handleDownload = () => {
     if (isEditing) {
       setIsEditing(false);
     }
     
-    // Dynamically import html2pdf
-    import('html2pdf.js').then(html2pdfModule => {
-      const html2pdf = html2pdfModule.default;
-      
-      // Create a simplified document structure for PDF
-      const tempContainer = document.createElement('div');
-      tempContainer.style.width = '100%';
-      tempContainer.style.padding = '20px';
-      tempContainer.style.boxSizing = 'border-box';
-      
-      // Add a title
-      const title = document.createElement('h1');
-      title.textContent = reportTitle;
-      title.style.fontSize = '24px';
-      title.style.fontWeight = 'bold';
-      title.style.marginBottom = '20px';
-      title.style.color = '#000';
-      tempContainer.appendChild(title);
-      
-      // Process each section
-      sections.forEach(section => {
-        // Create section header
-        const sectionHeader = document.createElement('h2');
-        sectionHeader.textContent = section.name;
-        sectionHeader.style.fontSize = '18px';
-        sectionHeader.style.fontWeight = 'bold';
-        sectionHeader.style.marginTop = '30px';
-        sectionHeader.style.marginBottom = '10px';
-        sectionHeader.style.color = '#000';
-        sectionHeader.style.pageBreakBefore = 'always';
-        tempContainer.appendChild(sectionHeader);
+    // Show notification
+    setNotificationMessage('Preparing your PDF...');
+    setShowEmailNotification(true);
+    
+    // First, we need to ensure the chart is fully rendered
+    setTimeout(() => {
+      // Dynamically import html2pdf
+      import('html2pdf.js').then(html2pdfModule => {
+        const html2pdf = html2pdfModule.default;
         
-        // Skip complex components, create placeholders
-        if (section.id === 'map') {
-          const mapPlaceholder = document.createElement('div');
-          mapPlaceholder.textContent = '[Infrastructure Map Visualization]';
-          mapPlaceholder.style.padding = '20px';
-          mapPlaceholder.style.border = '1px solid #000';
-          mapPlaceholder.style.textAlign = 'center';
-          tempContainer.appendChild(mapPlaceholder);
-        } else if (section.id === 'chart') {
-          const chartPlaceholder = document.createElement('div');
-          chartPlaceholder.textContent = '[Budget Prioritization Chart]';
-          chartPlaceholder.style.padding = '20px';
-          chartPlaceholder.style.border = '1px solid #000';
-          chartPlaceholder.style.textAlign = 'center';
-          tempContainer.appendChild(chartPlaceholder);
-        } else {
-          // For text content, create a simple div with the content
-          const contentDiv = document.createElement('div');
-          // Get the HTML content but strip out style attributes
-          const originalElement = document.getElementById(section.id) || document.getElementById(`fullscreen-${section.id}`);
-          if (originalElement) {
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = sectionContent[section.id] || '';
+        // Create a simplified document structure for PDF
+        const tempContainer = document.createElement('div');
+        tempContainer.style.width = '100%';
+        tempContainer.style.padding = '20px';
+        tempContainer.style.boxSizing = 'border-box';
+        tempContainer.style.fontFamily = 'Arial, sans-serif';
+        
+        // Add a title
+        const title = document.createElement('h1');
+        title.textContent = reportTitle;
+        title.style.fontSize = '24px';
+        title.style.fontWeight = 'bold';
+        title.style.marginBottom = '20px';
+        title.style.color = '#2C3E50'; // Primary color
+        tempContainer.appendChild(title);
+        
+        // Process each section - capture charts as images when possible
+        Promise.all(
+          sections.map(async (section) => {
+            const sectionContainer = document.createElement('div');
+            sectionContainer.style.marginBottom = '30px';
             
-            // Clean all elements to use basic styling
-            const allElements = tempDiv.querySelectorAll('*');
-            allElements.forEach(el => {
-              // Remove class and style attributes
-              el.removeAttribute('class');
-              el.removeAttribute('style');
+            if (section.id === 'chart') {
+              // Create heading for chart section
+              const heading = document.createElement('h2');
+              heading.textContent = 'ROI Analysis';
+              heading.style.fontSize = '20px';
+              heading.style.fontWeight = 'bold';
+              heading.style.marginBottom = '16px';
+              heading.style.color = '#008080';
+              sectionContainer.appendChild(heading);
               
-              // Use simple HTML semantic styling
-              if (el.tagName === 'H2') {
-                el.style.fontSize = '18px';
+              // Try to capture the chart as an image
+              try {
+                const chartElement = document.querySelector('.chart-container');
+                if (chartElement) {
+                  // Using html2canvas to convert the chart to an image
+                  const canvas = await html2canvas(chartElement, {
+                    scale: 2,
+                    logging: false,
+                    useCORS: true
+                  });
+                  
+                  const img = document.createElement('img');
+                  img.src = canvas.toDataURL('image/png');
+                  img.style.width = '100%';
+                  img.style.maxWidth = '100%';
+                  img.style.marginTop = '10px';
+                  img.style.marginBottom = '10px';
+                  sectionContainer.appendChild(img);
+                } else {
+                  // Fallback if chart container not found
+                  const chartPlaceholder = document.createElement('div');
+                  chartPlaceholder.textContent = '[ROI Analysis Chart - Interactive version available in online report]';
+                  chartPlaceholder.style.padding = '20px';
+                  chartPlaceholder.style.border = '1px solid #008080';
+                  chartPlaceholder.style.textAlign = 'center';
+                  chartPlaceholder.style.marginTop = '10px';
+                  chartPlaceholder.style.marginBottom = '10px';
+                  chartPlaceholder.style.color = '#34495E';
+                  sectionContainer.appendChild(chartPlaceholder);
+                }
+              } catch (error) {
+                console.error('Error capturing chart:', error);
+                // Fallback if chart capture fails
+                const chartPlaceholder = document.createElement('div');
+                chartPlaceholder.textContent = '[ROI Analysis Chart - Interactive version available in online report]';
+                chartPlaceholder.style.padding = '20px';
+                chartPlaceholder.style.border = '1px solid #008080';
+                chartPlaceholder.style.textAlign = 'center';
+                chartPlaceholder.style.marginTop = '10px';
+                chartPlaceholder.style.marginBottom = '10px';
+                chartPlaceholder.style.color = '#34495E';
+                sectionContainer.appendChild(chartPlaceholder);
+              }
+            } else if (section.id !== 'map') {
+              // For text content, create a simple div with the content
+              const contentDiv = document.createElement('div');
+              // Get the HTML content without modifying it
+              contentDiv.innerHTML = sectionContent[section.id] || '';
+              
+              // Remove class attributes but preserve styles
+              const allElements = contentDiv.querySelectorAll('*');
+              allElements.forEach(el => {
+                el.removeAttribute('class');
+                
+                // Add specific styling for tables if needed
+                if (el.tagName === 'TABLE') {
+                  el.style.width = '100%';
+                  el.style.borderCollapse = 'collapse';
+                  el.style.marginBottom = '15px';
+                  el.style.border = '1px solid #e5e7eb';
+                } else if (el.tagName === 'TH') {
+                  el.style.textAlign = 'left';
+                  el.style.padding = '8px';
+                  el.style.borderBottom = '2px solid #008080';
+                  el.style.color = '#2C3E50';
+                } else if (el.tagName === 'TD') {
+                  el.style.padding = '8px';
+                  el.style.borderBottom = '1px solid #e5e7eb';
+                  el.style.color = '#34495E';
+                } else if (el.tagName === 'H2') {
+                  el.style.fontSize = '20px';
+                  el.style.fontWeight = 'bold';
+                  el.style.marginBottom = '16px';
+                  el.style.color = '#008080';
+                }
+              });
+              
+              sectionContainer.appendChild(contentDiv);
+            }
+            
+            return sectionContainer;
+          })
+        ).then(sectionContainers => {
+          // Add all section containers to the temp container
+          sectionContainers.forEach(container => {
+            if (container.children.length > 0) {
+              tempContainer.appendChild(container);
+            }
+          });
+          
+          document.body.appendChild(tempContainer);
+          
+          // Set PDF generation options
+          const options = {
+            margin: [25, 25, 25, 25],
+            filename: `${reportTitle.replace(/\s+/g, '_')}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+          };
+          
+          // Use html2pdf to convert temp container to PDF
+          html2pdf()
+            .from(tempContainer)
+            .set(options)
+            .save()
+            .then(() => {
+              document.body.removeChild(tempContainer);
+              setNotificationMessage('PDF downloaded successfully!');
+              setShowEmailNotification(true);
+            })
+            .catch(error => {
+              console.error('Error generating PDF:', error);
+              document.body.removeChild(tempContainer);
+              setNotificationMessage('Error creating PDF. Please try again.');
+              setShowEmailNotification(true);
+            });
+        });
+      }).catch(error => {
+        console.error('Error loading html2pdf:', error);
+        setNotificationMessage('Error loading PDF generator. Please try again.');
+        setShowEmailNotification(true);
+      });
+    }, 500); // Give charts time to render fully
+  };
+  
+  // Make sure to add this import at the top of your file
+  // import html2canvas from 'html2canvas';
+  
+  // Alternative function that uses dom-to-image for better chart capture
+  // Updated handleDownloadWithDomToImage function to capture only the chart visualization
+const handleDownloadWithDomToImage = () => {
+    if (isEditing) {
+      setIsEditing(false);
+    }
+    
+    // Show notification
+    setNotificationMessage('Preparing your PDF...');
+    setShowEmailNotification(true);
+    
+    // First, ensure all charts are rendered
+    setTimeout(async () => {
+      try {
+        // Dynamically import required libraries
+        const [html2pdfModule, domtoimage] = await Promise.all([
+          import('html2pdf.js'),
+          import('dom-to-image')
+        ]);
+        
+        const html2pdf = html2pdfModule.default;
+        
+        // Create a document for PDF
+        const tempContainer = document.createElement('div');
+        tempContainer.style.width = '100%';
+        tempContainer.style.padding = '20px';
+        tempContainer.style.boxSizing = 'border-box';
+        tempContainer.style.fontFamily = 'Arial, sans-serif';
+        
+        // Add title
+        const title = document.createElement('h1');
+        title.textContent = reportTitle;
+        title.style.fontSize = '24px';
+        title.style.fontWeight = 'bold';
+        title.style.marginBottom = '20px';
+        title.style.color = '#2C3E50';
+        tempContainer.appendChild(title);
+        
+        // Process each section
+        for (const section of sections) {
+          const sectionContainer = document.createElement('div');
+          sectionContainer.style.marginBottom = '30px';
+          
+          if (section.id === 'chart') {
+            // Create heading for chart section
+            const heading = document.createElement('h2');
+            heading.textContent = 'ROI Analysis';
+            heading.style.fontSize = '20px';
+            heading.style.fontWeight = 'bold';
+            heading.style.marginBottom = '16px';
+            heading.style.color = '#008080';
+            sectionContainer.appendChild(heading);
+            
+            // Try to capture the chart as an image
+            try {
+              // Target only the specific chart visualization elements, not the entire container with controls
+              // This is more specific than '.chart-container'
+              const chartElement = document.querySelector('.recharts-responsive-container') || 
+                                  document.querySelector('.recharts-wrapper') ||
+                                  document.querySelector('.chart-container .recharts-surface');
+              
+              if (chartElement) {
+                // Add a background to ensure the chart is visible
+                const originalBg = chartElement.style.background;
+                chartElement.style.background = '#fff';
+                
+                // Using dom-to-image with higher quality settings
+                const dataUrl = await domtoimage.toPng(chartElement, {
+                  quality: 1.0,
+                  bgcolor: '#fff',
+                  // Higher scale for better resolution
+                  scale: 3,
+                  // Increase image dimensions
+                  width: chartElement.offsetWidth * 2,
+                  height: chartElement.offsetHeight * 2,
+                  style: {
+                    // Remove any UI elements that might be included
+                    '.recharts-legend-item': { display: 'none' },
+                    'button': { display: 'none' },
+                    '.control-panel': { display: 'none' }
+                  }
+                });
+                
+                // Restore original background
+                chartElement.style.background = originalBg;
+                
+                const img = document.createElement('img');
+                img.src = dataUrl;
+                img.style.width = '100%';
+                img.style.maxWidth = '100%';
+                img.style.marginTop = '10px';
+                img.style.marginBottom = '10px';
+                sectionContainer.appendChild(img);
+              } else {
+                // Try alternative approach - create a static chart image
+                const chartImageContainer = document.createElement('div');
+                chartImageContainer.style.width = '100%';
+                chartImageContainer.style.marginTop = '15px';
+                chartImageContainer.style.marginBottom = '15px';
+                chartImageContainer.style.textAlign = 'center';
+                
+                // Manually create a clean static chart representation
+                // This is a fallback if we can't capture the dynamic chart
+                const staticChartHTML = `
+                  <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    <h3 style="margin-bottom: 15px; color: #2C3E50; font-size: 16px; text-align: center;">ROI Comparison by Location</h3>
+                    <div style="display: flex; justify-content: space-around; margin-bottom: 20px;">
+                      <div style="text-align: center;">
+                        <div style="font-weight: bold; color: #3498DB;">Hell's Kitchen</div>
+                        <div style="font-size: 24px; margin: 5px 0;">28%</div>
+                      </div>
+                      <div style="text-align: center;">
+                        <div style="font-weight: bold; color: #27AE60;">Union Square</div>
+                        <div style="font-size: 24px; margin: 5px 0;">26%</div>
+                      </div>
+                      <div style="text-align: center;">
+                        <div style="font-weight: bold; color: #E67E22;">Chelsea</div>
+                        <div style="font-size: 24px; margin: 5px 0;">24%</div>
+                      </div>
+                    </div>
+                    <p style="text-align: center; font-size: 14px; color: #7F8C8D;">
+                      Hell's Kitchen shows the highest ROI at 28% with a break-even point of 12.8 months.
+                    </p>
+                  </div>
+                `;
+                
+                chartImageContainer.innerHTML = staticChartHTML;
+                sectionContainer.appendChild(chartImageContainer);
+              }
+            } catch (error) {
+              console.error('Error capturing chart:', error);
+              // Fallback if chart capture fails - create a simple static representation
+              const chartPlaceholder = document.createElement('div');
+              chartPlaceholder.style.padding = '20px';
+              chartPlaceholder.style.border = '1px solid #008080';
+              chartPlaceholder.style.borderRadius = '8px';
+              chartPlaceholder.style.textAlign = 'center';
+              chartPlaceholder.style.marginTop = '15px';
+              chartPlaceholder.style.marginBottom = '15px';
+              chartPlaceholder.style.color = '#34495E';
+              chartPlaceholder.style.backgroundColor = '#f9f9f9';
+              
+              const chartTitle = document.createElement('h3');
+              chartTitle.textContent = 'ROI Comparison by Location';
+              chartTitle.style.marginBottom = '10px';
+              chartTitle.style.color = '#2C3E50';
+              chartPlaceholder.appendChild(chartTitle);
+              
+              const chartContent = document.createElement('div');
+              chartContent.innerHTML = `
+                <div style="display: flex; justify-content: space-around; margin: 15px 0;">
+                  <div style="text-align: center;">
+                    <div style="font-weight: bold; color: #3498DB;">Hell's Kitchen</div>
+                    <div style="font-size: 24px; margin: 5px 0;">28%</div>
+                  </div>
+                  <div style="text-align: center;">
+                    <div style="font-weight: bold; color: #27AE60;">Union Square</div>
+                    <div style="font-size: 24px; margin: 5px 0;">26%</div>
+                  </div>
+                  <div style="text-align: center;">
+                    <div style="font-weight: bold; color: #E67E22;">Chelsea</div>
+                    <div style="font-size: 24px; margin: 5px 0;">24%</div>
+                  </div>
+                </div>
+                <div style="margin-top: 10px; font-style: italic; font-size: 14px;">
+                  Interactive version available in online report
+                </div>
+              `;
+              chartPlaceholder.appendChild(chartContent);
+              sectionContainer.appendChild(chartPlaceholder);
+            }
+          } else if (section.id !== 'map') {
+            // For text content
+            const contentDiv = document.createElement('div');
+            contentDiv.innerHTML = sectionContent[section.id] || '';
+            
+            // Process styling
+            const allElements = contentDiv.querySelectorAll('*');
+            allElements.forEach(el => {
+              el.removeAttribute('class');
+              
+              if (el.tagName === 'TABLE') {
+                el.style.width = '100%';
+                el.style.borderCollapse = 'collapse';
+                el.style.marginBottom = '15px';
+                el.style.border = '1px solid #e5e7eb';
+              } else if (el.tagName === 'TH') {
+                el.style.textAlign = 'left';
+                el.style.padding = '8px';
+                el.style.borderBottom = '2px solid #008080';
+                el.style.color = '#2C3E50';
+              } else if (el.tagName === 'TD') {
+                el.style.padding = '8px';
+                el.style.borderBottom = '1px solid #e5e7eb';
+                el.style.color = '#34495E';
+              } else if (el.tagName === 'H2') {
+                el.style.fontSize = '20px';
                 el.style.fontWeight = 'bold';
-                el.style.marginTop = '20px';
-                el.style.marginBottom = '10px';
-                el.style.color = '#000';
-              } else if (el.tagName === 'P') {
-                el.style.marginBottom = '10px';
-                el.style.color = '#000';
-              } else if (el.tagName === 'UL') {
-                el.style.paddingLeft = '20px';
-                el.style.marginBottom = '10px';
-              } else if (el.tagName === 'LI') {
-                el.style.marginBottom = '5px';
-                el.style.color = '#000';
-              } else if (el.tagName === 'A') {
-                el.style.color = '#000';
-                el.style.textDecoration = 'underline';
+                el.style.marginBottom = '16px';
+                el.style.color = '#008080';
               }
             });
             
-            contentDiv.innerHTML = tempDiv.innerHTML;
+            sectionContainer.appendChild(contentDiv);
           }
-          tempContainer.appendChild(contentDiv);
+          
+          if (sectionContainer.children.length > 0) {
+            tempContainer.appendChild(sectionContainer);
+          }
+        }
+        
+        document.body.appendChild(tempContainer);
+        
+        // Configure and generate PDF
+        const options = {
+          margin: [25, 25, 25, 25],
+          filename: `${reportTitle.replace(/\s+/g, '_')}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { 
+            scale: 2, 
+            useCORS: true,
+            logging: false
+          },
+          jsPDF: { 
+            unit: 'mm', 
+            format: 'a4', 
+            orientation: 'portrait',
+            compress: true
+          },
+          pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        };
+        
+        html2pdf()
+          .from(tempContainer)
+          .set(options)
+          .save()
+          .then(() => {
+            document.body.removeChild(tempContainer);
+            setNotificationMessage('PDF downloaded successfully!');
+            setShowEmailNotification(true);
+          })
+          .catch(error => {
+            console.error('Error generating PDF:', error);
+            document.body.removeChild(tempContainer);
+            setNotificationMessage('Error creating PDF. Please try again.');
+            setShowEmailNotification(true);
+          });
+      } catch (error) {
+        console.error('Error in PDF generation:', error);
+        setNotificationMessage('Error creating PDF. Please try again.');
+        setShowEmailNotification(true);
+      }
+    }, 2000); // Increased delay for chart rendering
+  };
+  
+  // Alternative approach - capture chart to canvas first
+  const handleDownloadWithCanvas = () => {
+    if (isEditing) {
+      setIsEditing(false);
+    }
+    
+    // Show notification
+    setNotificationMessage('Preparing your PDF...');
+    setShowEmailNotification(true);
+    
+    // First, ensure all charts are rendered
+    setTimeout(async () => {
+      try {
+        // Dynamically import required libraries
+        const html2pdfModule = await import('html2pdf.js');
+        const html2pdf = html2pdfModule.default;
+        
+        // Create a document for PDF
+        const tempContainer = document.createElement('div');
+        tempContainer.style.width = '100%';
+        tempContainer.style.padding = '20px';
+        tempContainer.style.boxSizing = 'border-box';
+        tempContainer.style.fontFamily = 'Arial, sans-serif';
+        
+        // Add title
+        const title = document.createElement('h1');
+        title.textContent = reportTitle;
+        title.style.fontSize = '24px';
+        title.style.fontWeight = 'bold';
+        title.style.marginBottom = '20px';
+        title.style.color = '#2C3E50';
+        tempContainer.appendChild(title);
+        
+        // Process each section
+        for (const section of sections) {
+          const sectionContainer = document.createElement('div');
+          sectionContainer.style.marginBottom = '30px';
+          
+          if (section.id === 'chart') {
+            // Create heading for chart section
+            const heading = document.createElement('h2');
+            heading.textContent = 'ROI Analysis';
+            heading.style.fontSize = '20px';
+            heading.style.fontWeight = 'bold';
+            heading.style.marginBottom = '16px';
+            heading.style.color = '#008080';
+            sectionContainer.appendChild(heading);
+            
+            // Try to manually create the chart image using canvas
+            try {
+              // Find ONLY the chart SVG element
+              const chartSvg = document.querySelector('.recharts-surface');
+              
+              if (chartSvg) {
+                // Create a canvas element
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Set canvas dimensions to be larger for better quality
+                canvas.width = chartSvg.width.baseVal.value * 2;
+                canvas.height = chartSvg.height.baseVal.value * 2;
+                
+                // Fill with white background
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Convert SVG to data URL
+                const svgData = new XMLSerializer().serializeToString(chartSvg);
+                const svg = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+                const url = URL.createObjectURL(svg);
+                
+                // Create image from SVG
+                const img = new Image();
+                img.onload = () => {
+                  // Draw image to canvas at 2x scale for better quality
+                  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                  URL.revokeObjectURL(url);
+                  
+                  // Create image element from canvas
+                  const chartImg = document.createElement('img');
+                  chartImg.src = canvas.toDataURL('image/png');
+                  chartImg.style.width = '100%';
+                  chartImg.style.maxWidth = '100%';
+                  chartImg.style.marginTop = '10px';
+                  chartImg.style.marginBottom = '10px';
+                  
+                  sectionContainer.appendChild(chartImg);
+                  
+                  // Continue with PDF creation
+                  tempContainer.appendChild(sectionContainer);
+                  continueWithPdf();
+                };
+                
+                img.src = url;
+                return; // Early return, will continue in onload handler
+              } else {
+                throw new Error('Chart SVG not found');
+              }
+            } catch (error) {
+              console.error('Error capturing chart with canvas:', error);
+              
+              // Fallback to static representation
+              const chartPlaceholder = document.createElement('div');
+              chartPlaceholder.innerHTML = `
+                <div style="padding: 20px; border: 1px solid #008080; border-radius: 8px; text-align: center; background-color: #f9f9f9; margin: 15px 0;">
+                  <h3 style="margin-bottom: 10px; color: #2C3E50;">ROI Comparison by Location</h3>
+                  <div style="display: flex; justify-content: space-around; margin: 15px 0;">
+                    <div style="text-align: center;">
+                      <div style="font-weight: bold; color: #3498DB;">Hell's Kitchen</div>
+                      <div style="font-size: 24px; margin: 5px 0;">28%</div>
+                    </div>
+                    <div style="text-align: center;">
+                      <div style="font-weight: bold; color: #27AE60;">Union Square</div>
+                      <div style="font-size: 24px; margin: 5px 0;">26%</div>
+                    </div>
+                    <div style="text-align: center;">
+                      <div style="font-weight: bold; color: #E67E22;">Chelsea</div>
+                      <div style="font-size: 24px; margin: 5px 0;">24%</div>
+                    </div>
+                  </div>
+                  <div style="margin-top: 10px; font-style: italic; font-size: 14px;">
+                    Interactive version available in online report
+                  </div>
+                </div>
+              `;
+              sectionContainer.appendChild(chartPlaceholder);
+            }
+          } else if (section.id !== 'map') {
+            // For text content (same as before)
+            const contentDiv = document.createElement('div');
+            contentDiv.innerHTML = sectionContent[section.id] || '';
+            
+            // Process styling
+            const allElements = contentDiv.querySelectorAll('*');
+            allElements.forEach(el => {
+              el.removeAttribute('class');
+              
+              if (el.tagName === 'TABLE') {
+                el.style.width = '100%';
+                el.style.borderCollapse = 'collapse';
+                el.style.marginBottom = '15px';
+                el.style.border = '1px solid #e5e7eb';
+              } else if (el.tagName === 'TH') {
+                el.style.textAlign = 'left';
+                el.style.padding = '8px';
+                el.style.borderBottom = '2px solid #008080';
+                el.style.color = '#2C3E50';
+              } else if (el.tagName === 'TD') {
+                el.style.padding = '8px';
+                el.style.borderBottom = '1px solid #e5e7eb';
+                el.style.color = '#34495E';
+              } else if (el.tagName === 'H2') {
+                el.style.fontSize = '20px';
+                el.style.fontWeight = 'bold';
+                el.style.marginBottom = '16px';
+                el.style.color = '#008080';
+              }
+            });
+            
+            sectionContainer.appendChild(contentDiv);
+          }
+          
+          if (sectionContainer.children.length > 0) {
+            tempContainer.appendChild(sectionContainer);
+          }
+        }
+        
+        // Define function to continue with PDF generation
+        const continueWithPdf = () => {
+          document.body.appendChild(tempContainer);
+          
+          // Configure and generate PDF
+          const options = {
+            margin: [25, 25, 25, 25],
+            filename: `${reportTitle.replace(/\s+/g, '_')}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+              scale: 2, 
+              useCORS: true,
+              logging: false
+            },
+            jsPDF: { 
+              unit: 'mm', 
+              format: 'a4', 
+              orientation: 'portrait',
+              compress: true
+            },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+          };
+          
+          html2pdf()
+            .from(tempContainer)
+            .set(options)
+            .save()
+            .then(() => {
+              document.body.removeChild(tempContainer);
+              setNotificationMessage('PDF downloaded successfully!');
+              setShowEmailNotification(true);
+            })
+            .catch(error => {
+              console.error('Error generating PDF:', error);
+              document.body.removeChild(tempContainer);
+              setNotificationMessage('Error creating PDF. Please try again.');
+              setShowEmailNotification(true);
+            });
+        };
+        
+        // If we didn't early return (meaning we're not doing the canvas approach), continue now
+        continueWithPdf();
+        
+      } catch (error) {
+        console.error('Error in PDF generation:', error);
+        setNotificationMessage('Error creating PDF. Please try again.');
+        setShowEmailNotification(true);
+      }
+    }, 2000); // Increased delay for chart rendering
+  };
+  
+const handleDownloadFallback = () => {
+    if (isEditing) {
+      setIsEditing(false);
+    }
+    
+    // Show notification
+    setNotificationMessage('Preparing your PDF...');
+    setShowEmailNotification(true);
+    
+    try {
+      // Create a plain HTML representation of the report
+      let reportContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>${reportTitle}</title>
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              line-height: 1.6; 
+              color: #333; 
+              margin: 40px; 
+            }
+            h1 { 
+              color: #2C3E50; 
+              font-size: 24px; 
+              margin-bottom: 20px; 
+            }
+            h2 { 
+              color: #008080; 
+              font-size: 20px; 
+              margin-top: 30px; 
+              margin-bottom: 16px; 
+            }
+            p { 
+              margin-bottom: 16px; 
+              color: #34495E; 
+            }
+            table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              margin-bottom: 20px; 
+            }
+            th { 
+              text-align: left; 
+              padding: 8px; 
+              border-bottom: 2px solid #008080; 
+              color: #2C3E50; 
+            }
+            td { 
+              padding: 8px; 
+              border-bottom: 1px solid #ddd; 
+              color: #34495E; 
+            }
+            .chart-placeholder {
+              padding: 20px;
+              border: 1px solid #008080;
+              text-align: center;
+              margin: 20px 0;
+              color: #34495E;
+            }
+            ul { 
+              margin-bottom: 16px; 
+              padding-left: 20px; 
+              color: #34495E; 
+            }
+            li { 
+              margin-bottom: 8px; 
+            }
+          </style>
+        </head>
+        <body>
+          <h1>${reportTitle}</h1>
+      `;
+      
+      // Add content for each section
+      sections.forEach(section => {
+        // Skip the map section for now as we can't easily render it
+        if (section.id !== 'map') {
+          if (section.id === 'chart') {
+            reportContent += `
+              <h2>ROI Analysis</h2>
+              <div class="chart-placeholder">[ROI Analysis Chart - Please see online version for interactive visualization]</div>
+            `;
+          } else {
+            // Use the HTML content directly (already has proper tags)
+            const content = sectionContent[section.id] || '';
+            
+            // Simple regex to remove class attributes
+            const cleanedContent = content.replace(/class="[^"]*"/g, '');
+            
+            reportContent += cleanedContent;
+          }
         }
       });
       
-      document.body.appendChild(tempContainer);
+      // Close HTML
+      reportContent += `
+        </body>
+        </html>
+      `;
       
-      // Set PDF generation options
-      const options = {
-        margin: [25, 25, 25, 25],
-        filename: `${reportTitle.replace(/\s+/g, '_')}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-      };
+      // Create a Blob from the HTML content
+      const blob = new Blob([reportContent], { type: 'text/html' });
       
-      // Use html2pdf to convert temp container to PDF
-      html2pdf()
-        .from(tempContainer)
-        .set(options)
-        .save()
-        .then(() => {
-          document.body.removeChild(tempContainer);
-        })
-        .catch(error => {
-          console.error('Error generating PDF:', error);
-          document.body.removeChild(tempContainer);
-        });
-    }).catch(error => {
-      console.error('Error loading html2pdf:', error);
-    });
+      // Create a temporary link to download the file
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `${reportTitle.replace(/\s+/g, '_')}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setNotificationMessage('Report downloaded as HTML. Please open in your browser and use print-to-PDF for best results.');
+      setShowEmailNotification(true);
+    } catch (error) {
+      console.error('Error creating report:', error);
+      setNotificationMessage('Error creating report. Please try again.');
+      setShowEmailNotification(true);
+    }
   };
-  // Regular panel content
+  
+  // Modified click handler that uses both methods
+  const handleDownloadButton = () => {
+    try {
+      // First try the PDF method
+      handleDownload();
+      
+      // Set a fallback timer - if PDF doesn't download in 5 seconds, try HTML method
+      setTimeout(() => {
+        const pdfNotification = document.querySelector('.text-\\[\\#008080\\]');
+        if (pdfNotification && pdfNotification.textContent.includes('Preparing your PDF')) {
+          // PDF is still preparing after 5 seconds, try fallback
+          handleDownloadFallback();
+        }
+      }, 5000);
+    } catch (error) {
+      console.error('Primary download method failed:', error);
+      // If primary method throws an error, use fallback immediately
+      handleDownloadFallback();
+    }
+  };
+
   const regularPanelContent = (
 <div className="flex flex-col h-full overflow-hidden bg-white relative z-10">
 <div className="flex flex-1 overflow-hidden">
@@ -930,8 +1601,8 @@ useEffect(() => {
         <VancouverFloodInfraMap onLayersReady={onLayersReady} />
       </div>
     ) : section.id === 'chart' ? (
-      <div className="w-full my-6">
-        <ROIAnalysisDashboard onLayersReady={onLayersReady} />
+<div className="w-full my-6 chart-container" ref={chartRef}>
+<ROIAnalysisDashboard onLayersReady={onLayersReady} />
       </div>
     ) : isEditing ? (
       <div 
@@ -1451,7 +2122,7 @@ return (
       </div>
 
       <button
-        onClick={handleReportDownload}
+        onClick={handleDownloadWithDomToImage}
         className="mt-6 w-full py-2 rounded-md text-sm font-semibold bg-[#008080] text-white hover:bg-teal-700"
       >
         Download Report

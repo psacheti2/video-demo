@@ -1185,20 +1185,20 @@ const AdditionalLayersMapComponent = ({ onLayersReady, onSaveMap, savedMaps = []
 
     const handleDownloadAll = () => {
         const downloadedFiles = [];
-
+    
         Object.entries(downloadSelections).forEach(([key, { filename, format }]) => {
             const fullName = `${filename}${format}`;
             downloadedFiles.push(fullName);
-
+    
             if (key === 'map') {
                 // Get the map container element
                 const mapElement = mapContainerRef.current;
-
+    
                 if (!mapElement) {
                     console.error("Map element not found");
                     return;
                 }
-
+    
                 if (format === '.pdf') {
                     // For PDF format
                     html2canvas(mapElement, {
@@ -1211,27 +1211,152 @@ const AdditionalLayersMapComponent = ({ onLayersReady, onSaveMap, savedMaps = []
                         try {
                             // Convert canvas to image
                             const imgData = canvas.toDataURL('image/jpeg', 1.0);
-
-                            // Initialize PDF
-                            const pdf = new jsPDF({
-                                orientation: 'landscape',
-                                unit: 'mm'
-                            });
-
-                            // Get canvas dimensions
-                            const imgWidth = 280; // mm
-                            const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-                            // Add image to PDF
-                            pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight);
-
-                            // Save PDF
-                            pdf.save(`${filename}.pdf`);
+    
+                            // Check if jsPDF is available
+                            if (typeof jsPDF === 'undefined') {
+                                // Load jsPDF if not available
+                                const script = document.createElement('script');
+                                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                                script.onload = () => {
+                                    const { jsPDF } = window.jspdf;
+                                    // Initialize PDF
+                                    const pdf = new jsPDF({
+                                        orientation: 'landscape',
+                                        unit: 'mm'
+                                    });
+    
+                                    // Get canvas dimensions
+                                    const imgWidth = 280; // mm
+                                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    
+                                    // Add image to PDF
+                                    pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight);
+    
+                                    // Save PDF
+                                    pdf.save(`${filename}.pdf`);
+                                };
+                                document.head.appendChild(script);
+                            } else {
+                                // jsPDF is already available
+                                const pdf = new jsPDF({
+                                    orientation: 'landscape',
+                                    unit: 'mm'
+                                });
+                                const imgWidth = 280; // mm
+                                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                                pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight);
+                                pdf.save(`${filename}.pdf`);
+                            }
                         } catch (err) {
                             console.error("Error creating PDF:", err);
                         }
                     }).catch(err => {
                         console.error("Error rendering canvas for PDF:", err);
+                    });
+                } else if (format === '.shp' || format === '.gdb' || format === '.csv') {
+                    // For GIS formats that need server-side processing
+                    // First show loading notification
+                    setNotificationMessage(`Processing ${format} export...`);
+                    setShowEmailNotification(true);
+                    
+                    // Collect map data
+                    const mapData = {
+                        coffeeShops: [],
+                        radius: null
+                    };
+                    
+                    // Gather coffee shop data
+                    if (map && coffeeShopsRef.current.length > 0) {
+                        coffeeShopsRef.current.forEach(({marker, potential}) => {
+                            const position = marker.getLatLng();
+                            const popupContent = marker.getPopup()?.getContent() || '';
+                            
+                            // Extract name from popup if available
+                            let name = "Coffee Shop";
+                            const nameMatch = popupContent.match(/Name: ([^<]+)/);
+                            if (nameMatch && nameMatch[1]) {
+                                name = nameMatch[1].trim();
+                            }
+                            
+                            mapData.coffeeShops.push({
+                                lat: position.lat,
+                                lng: position.lng,
+                                name: name,
+                                potential: potential,
+                                type: 'Coffee Shop'
+                            });
+                        });
+                    }
+                    
+                    // Gather radius data
+                    if (map && radiusCircleRef.current) {
+                        const circle = radiusCircleRef.current;
+                        mapData.radius = {
+                            center: circle.getLatLng(),
+                            radius: circle.getRadius()
+                        };
+                    }
+                    
+                    // Send to server for processing
+                    fetch('/api/export-map', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            format,
+                            mapData
+                        }),
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        
+                        // Get filename from content-disposition header if available
+                        let serverFilename = fullName;
+                        const contentDisposition = response.headers.get('content-disposition');
+                        if (contentDisposition) {
+                            const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                            if (filenameMatch && filenameMatch[1]) {
+                                serverFilename = filenameMatch[1];
+                            }
+                        }
+                        
+                        // Different handling based on the response type
+                        if (format === '.csv') {
+                            return response.text().then(text => ({
+                                data: text,
+                                type: 'text/csv',
+                                filename: serverFilename || `${filename}.csv`
+                            }));
+                        } else {
+                            return response.arrayBuffer().then(buffer => ({
+                                data: buffer,
+                                type: 'application/zip',
+                                filename: serverFilename || `${filename}${format}.zip`
+                            }));
+                        }
+                    })
+                    .then(({ data, type, filename }) => {
+                        // Create blob and trigger download
+                        const blob = new Blob([data], { type });
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = filename;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        // Success notification
+                        setNotificationMessage(`Successfully exported as ${format}`);
+                        setShowEmailNotification(true);
+                    })
+                    .catch(error => {
+                        console.error('Error exporting map:', error);
+                        setNotificationMessage(`Error exporting as ${format}. See console for details.`);
+                        setShowEmailNotification(true);
                     });
                 } else {
                     // For JPG and PNG formats
@@ -1262,15 +1387,15 @@ const AdditionalLayersMapComponent = ({ onLayersReady, onSaveMap, savedMaps = []
                 // Existing table download functionality
                 const tableIndex = parseInt(key.split('-')[1], 10);
                 const data = tableData[tableIndex];
-
+    
                 if (!data || !data.headers || !data.rows) return;
-
+    
                 const csvRows = [
                     data.headers.join(','),
                     ...data.rows.map(row => data.headers.map(h => `"${(row[h] ?? '').toString().replace(/"/g, '""')}"`).join(','))
                 ];
                 const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-
+    
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
                 link.setAttribute('download', fullName);
@@ -1279,7 +1404,7 @@ const AdditionalLayersMapComponent = ({ onLayersReady, onSaveMap, savedMaps = []
                 document.body.removeChild(link);
             }
         });
-
+    
         // Push notification
         if (downloadedFiles.length > 0) {
             const fileList = downloadedFiles.join(', ');
@@ -2546,8 +2671,8 @@ const fetchFootTraffic = async () => {
                     <div
                         className="absolute z-[9999] w-[150px] bg-white border border-gray-200 rounded-xl shadow-lg p-2 transition-all animate-fade-in"
                         style={{
-                            top: isFullscreen ? '80px' : '280px',
-                            left: isFullscreen ? '100px' : '60px',
+                            top: isFullscreen ? '80px' : '360px',
+                            left: isFullscreen ? '80px' : '130px',
                         }}
                     >
                         <div className="flex justify-between items-center mb-3">

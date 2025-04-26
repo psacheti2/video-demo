@@ -179,9 +179,17 @@ export default function Home() {
     
       if (data.artifacts && data.artifacts.length > 0) {
         botMessage.artifacts = data.artifacts;
-        data.artifacts.forEach((artifact: Artifact) => addArtifact(artifact));
+        data.artifacts.forEach((artifact: Artifact, index: number) => {
+          addArtifact(artifact);
+          // Select the first new artifact immediately
+          if (index === 0) {
+            setSelectedArtifact(artifact);
+            if (artifactsPanelWidth === 0) {
+              setArtifactsPanelWidth(40); // Open panel if closed
+            }
+          }
+        });
       }
-    
       const updatedMessages = [...messages, userMessage, botMessage];
       const updatedArtifacts = [...artifacts];
     
@@ -305,6 +313,7 @@ export default function Home() {
         onStartNewChat={startNewConversation}
         savedArtifacts={savedArtifacts}
         setModalArtifact={setModalArtifact}
+        activeChatId={conversationId}
       />
       
       <Navbar

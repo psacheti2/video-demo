@@ -182,7 +182,7 @@ export const chatResponses = {
   }]
 },
 "Let's compare the ROI for these locations. My budget is about $200,000 for initial setup.": {
-  text: "I've analyzed the projected ROI and break-even timelines for the potential coffee shop locations. Based on your $200,000 initial budget, here are my key findings:\n\n1) Hell's Kitchen shows the strongest ROI at 28%, breaking even in just under 13 months\n\n2) Union Square follows closely with a 26% ROI and breaks even around month 13-14\n\n3) Chelsea and Herald Square show moderate returns (24% and 22% respectively) with break-even points at approximately 14-15 months\n\n4) Midtown East has the lowest ROI at 19% and would take nearly 18 months to break even\n\nLooking at the monthly profit projections, Hell's Kitchen consistently shows the highest cash flow after break-even. Would you like me to provide a more detailed financial analysis for your preferred location?",
+  text: "Based on your $200,000 budget, here's a quick ROI breakdown:\n\n- Hell's Kitchen: 28% ROI, ~13 months break-even\n- Union Square: 26% ROI, ~13–14 months\n- Chelsea: 24%, Herald Square: 22%, ~14–15 months\n- Midtown East: 19%, ~18 months\n\nHell's Kitchen also shows the best cash flow after break-even.\n\nWant me to dive deeper into your top choice?",
   timing: [2000, 1500, 1500, 1500, 1500, 2000], // Timing for each line
   artifacts: [{
     type: "chart",
@@ -200,7 +200,7 @@ export const chatResponses = {
   artifacts: [] // No artifacts for this text-only question
 },
 "For the top 3 areas we identified, create a report that I can share with my team and potential investors.": {
-  text: "I've created a comprehensive report analyzing the top 3 locations for your new coffee shop venture. The report includes market analysis, competitive landscape, financial projections, and neighborhood profiles. Each location is evaluated against key metrics including foot traffic patterns, nearby amenities, and target demographics. The Executive Summary highlights Hell's Kitchen as the prime recommendation based on optimal ROI potential and favorable market conditions.",
+  text: "The report highlights the top 3 coffee shop locations with market insights, ROI projections, and neighborhood profiles. Hell's Kitchen is recommended as the strongest option based on ROI potential and local conditions.",
   timing: [3000], // Single paragraph timing
   artifacts: [{
     type: "report",

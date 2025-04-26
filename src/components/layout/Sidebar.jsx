@@ -12,6 +12,7 @@ export default function Sidebar({
   onStartNewChat,
   savedArtifacts = [],
   setModalArtifact,
+  activeChatId,
 }) {
   const [recentChats, setRecentChats] = useState([]);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -101,12 +102,14 @@ className={`fixed top-0 left-0 z-[150] w-64 h-full bg-[#FFFFFF] bg-opacity-100 t
     onClose();
     onLoadConversation(chat.id);
   }}
-  className="group w-full text-left block p-2 rounded transition-colors duration-200 hover:bg-[#008080]/90"
->
-  <div className="text-sm font-medium truncate text-[#2C3E50] group-hover:text-white">
+  className={`group w-full text-left block p-2 rounded transition-colors duration-200 ${
+    chat.id === activeChatId ? 'bg-[#e0f7f7] text-[#008080]' : 'hover:bg-[#e0f7f7]'
+  }`}  
+  >
+  <div className="text-sm font-medium truncate text-[#2C3E50]">
     {chat.title}
   </div>
-  <div className="text-xs text-[#2C3E50] group-hover:text-white">{chat.date}</div>
+  <div className="text-xs text-[#2C3E50]">{chat.date}</div>
 </button>
 
   </li>
