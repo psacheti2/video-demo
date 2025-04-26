@@ -5,7 +5,7 @@ import VancouverFloodInfraMap from './InfrastructureFloodMap';
 import VancouverPriorityDashboard from './BudgetDashboard';
 import VancouverBCAChart from './BenefitCostAnalysisDashboard';
 import { useNotificationStore } from '@/store/NotificationsStore';
-
+import ROIAnalysisDashboard from './ROIAnalysisDashboard';
 
 const CoffeeShopReport = ({ onLayersReady, reportName = "NYC Coffee Shop Investment Analysis: Location Assessment & ROI Projections", artifacts = [],
   }) => {
@@ -101,6 +101,7 @@ const sections = [
     { id: 'intro', name: 'Introduction' },
     { id: 'methodology', name: 'Research Methodology' },
     { id: 'locations', name: 'Location Analysis' },
+    { id: 'chart', name: 'ROI Analysis' },
     { id: 'hellskitchen', name: 'Hell\'s Kitchen Detailed Profile' },
     { id: 'unionsquare', name: 'Union Square Detailed Profile' },
     { id: 'chelsea', name: 'Chelsea Detailed Profile' },
@@ -141,39 +142,51 @@ const sections = [
       <p style="color: #34495E;">Each location was scored across 15 weighted factors to create a comprehensive ranking system and ROI projection model.</p>
     `,
     locations: `
-      <h2 class="text-xl font-bold mb-4" style="color: #008080;">Location Comparison</h2>
-      <div class="mb-6">
-        <h3 class="text-lg font-bold mb-2" style="color: #2C3E50;">Hell's Kitchen</h3>
-        <ul class="list-disc pl-5 mb-4" style="color: #34495E;">
-          <li><strong>ROI:</strong> 28% (highest)</li>
-          <li><strong>Break-even:</strong> 12.8 months</li>
-          <li><strong>Avg. Rent:</strong> $75-200/sq ft (most affordable)</li>
-          <li><strong>Foot Traffic:</strong> High (especially along 9th Avenue)</li>
-          <li><strong>Competition:</strong> Moderate (fewer specialty coffee shops)</li>
-        </ul>
-      </div>
-      
-      <div class="mb-6">
-        <h3 class="text-lg font-bold mb-2" style="color: #2C3E50;">Union Square</h3>
-        <ul class="list-disc pl-5 mb-4" style="color: #34495E;">
-          <li><strong>ROI:</strong> 26%</li>
-          <li><strong>Break-even:</strong> 13.5 months</li>
-          <li><strong>Avg. Rent:</strong> $150-400/sq ft</li>
-          <li><strong>Foot Traffic:</strong> Very High (diverse mix of office workers, students, residents)</li>
-          <li><strong>Competition:</strong> High (many established coffee brands)</li>
-        </ul>
-      </div>
-      
-      <div class="mb-6">
-        <h3 class="text-lg font-bold mb-2" style="color: #2C3E50;">Chelsea</h3>
-        <ul class="list-disc pl-5 mb-4" style="color: #34495E;">
-          <li><strong>ROI:</strong> 24%</li>
-          <li><strong>Break-even:</strong> 14.5 months</li>
-          <li><strong>Avg. Rent:</strong> $100-350/sq ft</li>
-          <li><strong>Foot Traffic:</strong> Moderate to High (especially near High Line)</li>
-          <li><strong>Competition:</strong> Moderate (mixture of chains and independents)</li>
-        </ul>
-      </div>
+     <h2 class="text-xl font-bold mb-4" style="color: #008080;">Location Comparison</h2>
+<div class="overflow-x-auto mb-6">
+  <table class="w-full border-collapse">
+    <thead>
+      <tr>
+        <th class="text-left p-2 border-b-2" style="color: #2C3E50; border-color: #008080;"></th>
+        <th class="text-left p-2 border-b-2" style="color: #2C3E50; border-color: #008080;">Hell's Kitchen</th>
+        <th class="text-left p-2 border-b-2" style="color: #2C3E50; border-color: #008080;">Union Square</th>
+        <th class="text-left p-2 border-b-2" style="color: #2C3E50; border-color: #008080;">Chelsea</th>
+      </tr>
+    </thead>
+    <tbody style="color: #34495E;">
+      <tr class="border-b border-gray-200">
+        <td class="p-2 font-medium">ROI</td>
+        <td class="p-2">28% (highest)</td>
+        <td class="p-2">26%</td>
+        <td class="p-2">24%</td>
+      </tr>
+      <tr class="border-b border-gray-200">
+        <td class="p-2 font-medium">Break-even</td>
+        <td class="p-2">12.8 months</td>
+        <td class="p-2">13.5 months</td>
+        <td class="p-2">14.5 months</td>
+      </tr>
+      <tr class="border-b border-gray-200">
+        <td class="p-2 font-medium">Avg. Rent</td>
+        <td class="p-2">$75-200/sq ft (most affordable)</td>
+        <td class="p-2">$150-400/sq ft</td>
+        <td class="p-2">$100-350/sq ft</td>
+      </tr>
+      <tr class="border-b border-gray-200">
+        <td class="p-2 font-medium">Foot Traffic</td>
+        <td class="p-2">High (especially along 9th Avenue)</td>
+        <td class="p-2">Very High (diverse mix of office workers, students, residents)</td>
+        <td class="p-2">Moderate to High (especially near High Line)</td>
+      </tr>
+      <tr>
+        <td class="p-2 font-medium">Competition</td>
+        <td class="p-2">Moderate (fewer specialty coffee shops)</td>
+        <td class="p-2">High (many established coffee brands)</td>
+        <td class="p-2">Moderate (mixture of chains and independents)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
     `,
     hellskitchen: `
       <h2 class="text-xl font-bold mb-4" style="color: #008080;">Hell's Kitchen Detailed Profile</h2>
@@ -918,7 +931,7 @@ useEffect(() => {
       </div>
     ) : section.id === 'chart' ? (
       <div className="w-full my-6">
-        <VancouverPriorityDashboard onLayersReady={onLayersReady} />
+        <ROIAnalysisDashboard onLayersReady={onLayersReady} />
       </div>
     ) : isEditing ? (
       <div 
@@ -1352,7 +1365,7 @@ useEffect(() => {
       </div>
     ) : section.id === 'chart' ? (
       <div className="w-full my-6">
-        <VancouverPriorityDashboard onLayersReady={onLayersReady} />
+        <ROIAnalysisDashboard onLayersReady={onLayersReady} />
       </div>
     ) : isEditing ? (
       <div 

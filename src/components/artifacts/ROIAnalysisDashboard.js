@@ -158,9 +158,14 @@ const ROIAnalysisDashboard = ({ onLayersReady, setSavedArtifacts, title, onBack 
   nameKey="name"
   label={({ value }) => `${value}%`}   
 >
-            {roiData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-            ))}
+{roiData.map((entry, index) => {
+  const colorKeys = ['blue', 'green', 'orange', 'purple', 'red'];
+  const colorKey = colorKeys[index % colorKeys.length];
+  return (
+    <Cell key={`cell-${index}`} fill={customColors[colorKey]} />
+  );
+})}
+
           </Pie>
           <Tooltip formatter={(value) => `${value}%`} />
           <Legend />
