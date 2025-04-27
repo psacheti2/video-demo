@@ -1,7 +1,7 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import html2canvas from 'html2canvas';
 import domtoimage from 'dom-to-image';
-import { ChevronLeft, ChevronRight, Maximize2, Download, Edit2, Save, Menu, Minimize2, Info, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize2, Download, Edit2, Save, Menu, Minimize2, Info, X, Share2 } from "lucide-react";
 import '../../app/globals.css';
 import SimpleNYCChart from './SimpleNYCMap';
 import VancouverPriorityDashboard from './BudgetDashboard';
@@ -27,7 +27,13 @@ const [showEmailNotification, setShowEmailNotification] = useState(false);
 const addNotification = useNotificationStore((state) => state.addNotification);
 const [slideOut, setSlideOut] = useState(false);
 const chartRef = useRef(null);
-
+const [showShareDialog, setShowShareDialog] = useState(false);
+const [searchTerm, setSearchTerm] = useState('');
+const [selectedTeammate, setSelectedTeammate] = useState(null);
+const [activeTab, setActiveTab] = useState('share');
+const teammateList = [
+    "Alice Johnson", "Bob Smith", "Catherine Nguyen", "David Li", "Emma Patel"
+  ];
   // Theme colors
   const COLORS = {
     primary: '#2C3E50',
@@ -36,6 +42,24 @@ const chartRef = useRef(null);
     white: '#FFFFFF',
     coral: '#008080',
     cta: '#FF5747'
+  };
+  const filteredTeammates = useMemo(() => {
+    return teammateList.filter(name => 
+      name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [searchTerm, teammateList]);
+  
+  // This function will handle the share action
+  const handleShareReport = () => {
+    if (!selectedTeammate) return;
+    
+    setShowShareDialog(false);
+    const msg = `Report shared with ${selectedTeammate}`;
+    setNotificationMessage(msg);
+    setShowEmailNotification(true);
+    addNotification(msg);
+    setSelectedTeammate(null);
+    setSearchTerm('');
   };
 
   const [isEditing, setIsEditing] = useState(false);
@@ -1306,27 +1330,27 @@ const handleDownloadFallback = () => {
             <Info size={20} />
           </button>
 
-            <button 
-              onClick={setShowReportDownloadDialog}
-              className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-              title="Download as PDF"
-              style={{ 
-                color: COLORS.coral, 
-                border: 'none',
-                backgroundColor: 'COLORS.white',
-                transition: 'all 0.2s ease-in-out'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = COLORS.coral;
-                e.currentTarget.style.color = 'white';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = COLORS.coral;
-              }}
-            >
-              <Download size={20} />
-            </button>
+          <button 
+  onClick={() => setShowShareDialog(true)}
+  className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
+  title="Share and Download"
+  style={{ 
+    color: COLORS.coral, 
+    border: 'none',
+    backgroundColor: 'transparent',
+    transition: 'all 0.2s ease-in-out'
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.backgroundColor = COLORS.coral;
+    e.currentTarget.style.color = 'white';
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.backgroundColor = 'transparent';
+    e.currentTarget.style.color = COLORS.coral;
+  }}
+>
+  <Share2 size={20} />
+</button>
 
             <button 
               onClick={toggleSidebar}
@@ -1489,28 +1513,27 @@ const handleDownloadFallback = () => {
   <Info size={20} />
 </button>
 
-
-          <button 
-            onClick={setShowReportDownloadDialog}
-            className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2"
-            title="Download as PDF"
-            style={{ 
-              color: COLORS.coral, 
-              border: 'none',
-              backgroundColor: 'transparent',
-              transition: 'all 0.2s ease-in-out'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = COLORS.coral;
-              e.currentTarget.style.color = 'white';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = COLORS.coral;
-            }}
-          >
-            <Download size={20} />
-          </button>
+<button 
+  onClick={() => setShowShareDialog(true)}
+  className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
+  title="Share and Download"
+  style={{ 
+    color: COLORS.coral, 
+    border: 'none',
+    backgroundColor: 'transparent',
+    transition: 'all 0.2s ease-in-out'
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.backgroundColor = COLORS.coral;
+    e.currentTarget.style.color = 'white';
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.backgroundColor = 'transparent';
+    e.currentTarget.style.color = COLORS.coral;
+  }}
+>
+  <Share2 size={20} />
+</button>
 
           <button 
             onClick={toggleSidebar}
@@ -1724,28 +1747,27 @@ const handleDownloadFallback = () => {
 </button>
 
   
-                    {/* Download button */}
-                    <button 
-                      onClick={setShowReportDownloadDialog}
-                      className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2"
-                      title="Download as PDF"
-                      style={{ 
-                        color: COLORS.coral, 
-                        border: 'none',
-                        backgroundColor: 'transparent',
-                        transition: 'all 0.2s ease-in-out'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = COLORS.coral;
-                        e.currentTarget.style.color = 'white';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                        e.currentTarget.style.color = COLORS.coral;
-                      }}
-                    >
-                      <Download size={20} />
-                    </button>
+<button 
+  onClick={() => setShowShareDialog(true)}
+  className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
+  title="Share and Download"
+  style={{ 
+    color: COLORS.coral, 
+    border: 'none',
+    backgroundColor: 'transparent',
+    transition: 'all 0.2s ease-in-out'
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.backgroundColor = COLORS.coral;
+    e.currentTarget.style.color = 'white';
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.backgroundColor = 'transparent';
+    e.currentTarget.style.color = COLORS.coral;
+  }}
+>
+  <Share2 size={20} />
+</button>
                     
                     {/* TOC toggle button */}
                     <button 
@@ -1898,27 +1920,27 @@ const handleDownloadFallback = () => {
 </button>
 
   
-                      <button 
-                        onClick={setShowReportDownloadDialog}
-                        className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-                        title="Download as PDF"
-                        style={{ 
-                          color: COLORS.coral, 
-                          border: 'none',
-                          backgroundColor: 'transparent',
-                          transition: 'all 0.2s ease-in-out'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = COLORS.coral;
-                          e.currentTarget.style.color = 'white';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'transparent';
-                          e.currentTarget.style.color = COLORS.coral;
-                        }}
-                      >
-                        <Download size={20} />
-                      </button>
+<button 
+  onClick={() => setShowShareDialog(true)}
+  className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
+  title="Share and Download"
+  style={{ 
+    color: COLORS.coral, 
+    border: 'none',
+    backgroundColor: 'transparent',
+    transition: 'all 0.2s ease-in-out'
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.backgroundColor = COLORS.coral;
+    e.currentTarget.style.color = 'white';
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.backgroundColor = 'transparent';
+    e.currentTarget.style.color = COLORS.coral;
+  }}
+>
+  <Share2 size={20} />
+</button>
   
                       <button 
                         onClick={toggleSidebar}
@@ -2144,6 +2166,137 @@ return (
     </div>
   </div>
 )}
+{showShareDialog && (
+  <div className="absolute bottom-[60px] right-6 z-[1000]">
+    <div className="bg-white w-[260px] rounded-lg shadow-lg p-4 border border-gray-200 relative">
+      <button
+        className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+        onClick={() => setShowShareDialog(false)}
+      >
+        <X size={14} />
+      </button>
+
+      {/* Tabs */}
+      <div className="flex mb-3 border-b border-gray-200">
+        <button 
+          onClick={() => setActiveTab('share')} 
+          className={`text-xs font-medium pb-2 px-3 ${activeTab === 'share' ? 'text-[#008080] border-b-2 border-[#008080]' : 'text-gray-500'}`}
+        >
+          Share
+        </button>
+        <button 
+          onClick={() => setActiveTab('download')} 
+          className={`text-xs font-medium pb-2 px-3 ${activeTab === 'download' ? 'text-[#008080] border-b-2 border-[#008080]' : 'text-gray-500'}`}
+        >
+          Download
+        </button>
+      </div>
+
+      {activeTab === 'share' ? (
+        <>
+          {/* Teammate Search - Share Tab */}
+          <div className="mb-2">
+            <input
+              type="text"
+              placeholder="Search teammates..."
+              className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-[#008080] focus:outline-none"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          {/* Teammate List - Compact */}
+          <div className="max-h-32 overflow-y-auto mb-2 space-y-1">
+            {filteredTeammates.map(teammate => (
+              <div
+                key={teammate}
+                onClick={() => setSelectedTeammate(teammate)}
+                className={`flex items-center justify-between px-2 py-1 rounded cursor-pointer transition border text-xs
+                  ${selectedTeammate === teammate 
+                    ? 'bg-[#008080]/10 border-[#008080]' 
+                    : 'bg-white hover:bg-gray-50 border-gray-200'}
+                `}
+              >
+                <div className="flex items-center space-x-2">
+                  <div className="w-6 h-6 rounded-full bg-[#008080]/90 text-white text-xs flex items-center justify-center">
+                    {teammate.split(' ').map(n => n[0]).join('').toUpperCase()}
+                  </div>
+                  <span className="font-medium truncate">{teammate}</span>
+                </div>
+                {selectedTeammate === teammate && (
+                  <span className="text-xs text-[#008080]">✓</span>
+                )}
+              </div>
+            ))}
+            {filteredTeammates.length === 0 && (
+              <div className="text-xs text-gray-500 text-center py-2">No matches</div>
+            )}
+          </div>
+
+          {/* Share Button */}
+          <button
+            disabled={!selectedTeammate}
+            onClick={handleShareReport}
+            className={`w-full py-1.5 rounded text-xs font-medium transition-all
+              ${selectedTeammate 
+                ? 'bg-[#008080] text-white hover:bg-teal-700' 
+                : 'bg-gray-200 text-gray-500 cursor-not-allowed'}
+            `}
+          >
+            Share Report
+          </button>
+        </>
+      ) : (
+        <>
+          {/* Download Tab */}
+          <div className="space-y-2">
+            <div className="flex space-x-1 items-center">
+              <input
+                type="text"
+                className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-[#008080] focus:outline-none"
+                value={reportDownloadSelections['report']?.filename || 'coffee_shop_report'}
+                onChange={(e) =>
+                  setReportDownloadSelections(prev => ({
+                    ...prev,
+                    report: {
+                      filename: e.target.value,
+                      format: prev['report']?.format || '.pdf'
+                    }
+                  }))
+                }
+                placeholder="Filename"
+              />
+              <select
+                value={reportDownloadSelections['report']?.format || '.pdf'}
+                onChange={(e) =>
+                  setReportDownloadSelections(prev => ({
+                    ...prev,
+                    report: {
+                      filename: prev['report']?.filename || 'coffee_shop_report',
+                      format: e.target.value
+                    }
+                  }))
+                }
+                className="px-1 py-1 text-xs border border-gray-300 rounded-md focus:outline-none"
+              >
+                <option value=".pdf">.pdf</option>
+                <option value=".docx">.docx</option>
+              </select>
+            </div>
+
+            <button
+              onClick={handleDownloadWithDomToImage}
+              className="w-full py-1.5 rounded text-xs font-medium bg-[#008080] text-white hover:bg-teal-700"
+            >
+              Download Report
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  </div>
+)}
+
 {showEmailNotification && (
   <div
     className={`fixed top-6 right-6 z-[9999] transition-all duration-300 ${
