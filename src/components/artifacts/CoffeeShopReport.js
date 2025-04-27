@@ -30,7 +30,6 @@ const chartRef = useRef(null);
 const [showShareDialog, setShowShareDialog] = useState(false);
 const [searchTerm, setSearchTerm] = useState('');
 const [selectedTeammate, setSelectedTeammate] = useState(null);
-const [activeTab, setActiveTab] = useState('share');
 const teammateList = [
     "Alice Johnson", "Bob Smith", "Catherine Nguyen", "David Li", "Emma Patel"
   ];
@@ -1279,12 +1278,13 @@ const handleDownloadFallback = () => {
         style={{ 
             backgroundColor: COLORS.white,
             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-            border: `1px solid ${COLORS.coral}`,
+            border: `none`,
             borderRadius: '9999px'
         }}
       >
         {isMenuOpen && (
-          <>
+          <div className="flex items-center space-x-1 bg-white rounded-full shadow-md p-2">
+
             <button 
               onClick={toggleEditMode}
               className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
@@ -1395,7 +1395,7 @@ const handleDownloadFallback = () => {
             >
               <Maximize2 size={20} />
             </button>
-          </>
+          </div>
         )}
         
       </div>
@@ -1462,7 +1462,7 @@ const handleDownloadFallback = () => {
       }}
     >
       {isMenuOpen && (
-        <>
+        <div className="flex items-center space-x-1 bg-white rounded-full shadow-md p-2">
           <button 
             onClick={toggleEditMode}
             className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2"
@@ -1578,7 +1578,7 @@ const handleDownloadFallback = () => {
           >
             <Maximize2 size={20} />
           </button>
-        </>
+        </div>
       )}
       
       {/* Menu toggle button - always rightmost */}
@@ -1690,12 +1690,13 @@ const handleDownloadFallback = () => {
                 style={{ 
                   backgroundColor: 'transparent',
                   boxShadow: 'none)',
-                  border: `1px solid ${COLORS.coral}`,
+                  border: `none`,
                 }}
               >
                 {/* Other buttons - only visible when menu is open */}
                 {isMenuOpen && (
-                  <>
+                  <div className="flex items-center space-x-1 bg-white rounded-full shadow-md p-2">
+
                     {/* Edit/Save button */}
                     <button 
                       onClick={toggleEditMode}
@@ -1814,7 +1815,7 @@ const handleDownloadFallback = () => {
                     >
                       <Minimize2 size={20} />
                     </button>
-                  </>
+                  </div>
                 )}
                 
                 {/* Menu toggle button - always visible and rightmost */}
@@ -1850,7 +1851,7 @@ const handleDownloadFallback = () => {
               className="border-r overflow-auto" 
               style={{ 
                 width: '0px', 
-                border: `1px solid ${COLORS.coral}`,
+                border: `none`,
                 borderColor: '#e5e7eb', 
                 backgroundColor: COLORS.white,
                 transition: 'width 300ms ease-in-out' 
@@ -1863,12 +1864,13 @@ const handleDownloadFallback = () => {
                   style={{ 
                     backgroundColor: COLORS.white,
   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-  border: `1px solid ${COLORS.coral}`,
+  border: `none`,
   borderRadius: '9999px'
                   }}
                 >
                   {isMenuOpen && (
-                    <>
+                    <div className="flex items-center space-x-1 bg-white rounded-full shadow-md p-2">
+
                       <button 
                         onClick={toggleEditMode}
                         className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
@@ -1985,7 +1987,7 @@ const handleDownloadFallback = () => {
                       >
                         <Minimize2 size={20} />
                       </button>
-                    </>
+                    </div>
                   )}
                   
                 </div>
@@ -2108,7 +2110,7 @@ return (
     <>
       {isFullscreen ? fullscreenPanelContent : regularPanelContent}
       {showReportDownloadDialog && (
-  <div className="absolute bottom-[60px] right-6 z-[1000]">
+  <div className="absolute bottom-[10px] right-6 z-[1000]">
     <div className="bg-white w-[320px] rounded-xl shadow-2xl p-6 border border-gray-200 relative">
       <button
         onClick={() => setShowReportDownloadDialog(false)}
@@ -2166,133 +2168,120 @@ return (
     </div>
   </div>
 )}
+
 {showShareDialog && (
-  <div className="absolute bottom-[60px] right-6 z-[1000]">
-    <div className="bg-white w-[260px] rounded-lg shadow-lg p-4 border border-gray-200 relative">
+  <div className="absolute bottom-[10px] right-6 z-[1000]">
+    <div className="bg-white w-[340px] rounded-2xl shadow-2xl p-6 border border-gray-200 relative animate-fade-in">
       <button
-        className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+        className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
         onClick={() => setShowShareDialog(false)}
       >
-        <X size={14} />
+        <X size={16} />
       </button>
 
-      {/* Tabs */}
-      <div className="flex mb-3 border-b border-gray-200">
-        <button 
-          onClick={() => setActiveTab('share')} 
-          className={`text-xs font-medium pb-2 px-3 ${activeTab === 'share' ? 'text-[#008080] border-b-2 border-[#008080]' : 'text-gray-500'}`}
-        >
-          Share
-        </button>
-        <button 
-          onClick={() => setActiveTab('download')} 
-          className={`text-xs font-medium pb-2 px-3 ${activeTab === 'download' ? 'text-[#008080] border-b-2 border-[#008080]' : 'text-gray-500'}`}
-        >
-          Download
-        </button>
+      <h2 className="text-lg font-semibold text-gray-800 mb-4">Share This Report</h2>
+
+      {/* Teammate Search */}
+      <div className="mb-4">
+        <label className="text-sm font-medium text-gray-700 mb-1 block">Search Teammate</label>
+        <input
+          type="text"
+          placeholder="Type a name..."
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#008080] focus:outline-none"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </div>
 
-      {activeTab === 'share' ? (
-        <>
-          {/* Teammate Search - Share Tab */}
-          <div className="mb-2">
-            <input
-              type="text"
-              placeholder="Search teammates..."
-              className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-[#008080] focus:outline-none"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-
-          {/* Teammate List - Compact */}
-          <div className="max-h-32 overflow-y-auto mb-2 space-y-1">
-            {filteredTeammates.map(teammate => (
-              <div
-                key={teammate}
-                onClick={() => setSelectedTeammate(teammate)}
-                className={`flex items-center justify-between px-2 py-1 rounded cursor-pointer transition border text-xs
-                  ${selectedTeammate === teammate 
-                    ? 'bg-[#008080]/10 border-[#008080]' 
-                    : 'bg-white hover:bg-gray-50 border-gray-200'}
-                `}
-              >
-                <div className="flex items-center space-x-2">
-                  <div className="w-6 h-6 rounded-full bg-[#008080]/90 text-white text-xs flex items-center justify-center">
-                    {teammate.split(' ').map(n => n[0]).join('').toUpperCase()}
-                  </div>
-                  <span className="font-medium truncate">{teammate}</span>
-                </div>
-                {selectedTeammate === teammate && (
-                  <span className="text-xs text-[#008080]">✓</span>
-                )}
-              </div>
-            ))}
-            {filteredTeammates.length === 0 && (
-              <div className="text-xs text-gray-500 text-center py-2">No matches</div>
-            )}
-          </div>
-
-          {/* Share Button */}
-          <button
-            disabled={!selectedTeammate}
-            onClick={handleShareReport}
-            className={`w-full py-1.5 rounded text-xs font-medium transition-all
-              ${selectedTeammate 
-                ? 'bg-[#008080] text-white hover:bg-teal-700' 
-                : 'bg-gray-200 text-gray-500 cursor-not-allowed'}
+      {/* Teammate List */}
+      <div className="max-h-40 overflow-y-auto mb-4 space-y-1 pr-1">
+        {filteredTeammates.map(teammate => (
+          <div
+            key={teammate}
+            onClick={() => setSelectedTeammate(teammate)}
+            className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition border 
+              ${selectedTeammate === teammate 
+                ? 'bg-[#008080]/10 border-[#008080]' 
+                : 'bg-white hover:bg-gray-50 border-gray-200'}
             `}
           >
-            Share Report
-          </button>
-        </>
-      ) : (
-        <>
-          {/* Download Tab */}
-          <div className="space-y-2">
-            <div className="flex space-x-1 items-center">
-              <input
-                type="text"
-                className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-[#008080] focus:outline-none"
-                value={reportDownloadSelections['report']?.filename || 'coffee_shop_report'}
-                onChange={(e) =>
-                  setReportDownloadSelections(prev => ({
-                    ...prev,
-                    report: {
-                      filename: e.target.value,
-                      format: prev['report']?.format || '.pdf'
-                    }
-                  }))
-                }
-                placeholder="Filename"
-              />
-              <select
-                value={reportDownloadSelections['report']?.format || '.pdf'}
-                onChange={(e) =>
-                  setReportDownloadSelections(prev => ({
-                    ...prev,
-                    report: {
-                      filename: prev['report']?.filename || 'coffee_shop_report',
-                      format: e.target.value
-                    }
-                  }))
-                }
-                className="px-1 py-1 text-xs border border-gray-300 rounded-md focus:outline-none"
-              >
-                <option value=".pdf">.pdf</option>
-                <option value=".docx">.docx</option>
-              </select>
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-full bg-[#008080]/90 text-white text-sm font-semibold flex items-center justify-center shadow-sm">
+                {teammate.split(' ').map(n => n[0]).join('').toUpperCase()}
+              </div>
+              <span className="text-sm text-gray-800 font-medium">{teammate}</span>
             </div>
-
-            <button
-              onClick={handleDownloadWithDomToImage}
-              className="w-full py-1.5 rounded text-xs font-medium bg-[#008080] text-white hover:bg-teal-700"
-            >
-              Download Report
-            </button>
+            {selectedTeammate === teammate && (
+              <span className="text-xs font-medium text-[#008080]">✓</span>
+            )}
           </div>
-        </>
-      )}
+        ))}
+        {filteredTeammates.length === 0 && (
+          <div className="text-sm text-gray-500 text-center py-3">No teammates found</div>
+        )}
+      </div>
+
+      {/* Share Button */}
+      <button
+        disabled={!selectedTeammate}
+        onClick={handleShareReport}
+        className={`w-full py-2 rounded-md text-sm font-semibold transition-all duration-200 mb-2
+          ${selectedTeammate 
+            ? 'bg-[#008080] text-white hover:bg-teal-700' 
+            : 'bg-gray-200 text-gray-500 cursor-not-allowed'}
+        `}
+      >
+        Share Report
+      </button>
+
+      {/* Divider */}
+      <div className="border-t border-gray-200 my-4" />
+
+      {/* Download Section */}
+      <h3 className="text-sm font-semibold text-gray-700 mb-3">Download This Report</h3>
+
+      <div className="space-y-3">
+        <div className="flex space-x-2">
+          <input
+            type="text"
+            className="border px-3 py-2 rounded-lg w-[160px] text-sm focus:outline-none focus:ring-2 focus:ring-[#008080]"
+            value={reportDownloadSelections['report']?.filename || 'coffee_shop_report'}
+            onChange={(e) =>
+              setReportDownloadSelections(prev => ({
+                ...prev,
+                report: {
+                  filename: e.target.value,
+                  format: prev['report']?.format || '.pdf'
+                }
+              }))
+            }
+            placeholder="File name"
+          />
+          <select
+            value={reportDownloadSelections['report']?.format || '.pdf'}
+            onChange={(e) =>
+              setReportDownloadSelections(prev => ({
+                ...prev,
+                report: {
+                  filename: prev['report']?.filename || 'coffee_shop_report',
+                  format: e.target.value
+                }
+              }))
+            }
+            className="border px-2 py-2 rounded-lg text-sm focus:outline-none"
+          >
+            <option value=".pdf">.pdf</option>
+            <option value=".docx">.docx</option>
+          </select>
+        </div>
+
+        <button
+          onClick={handleDownloadWithDomToImage}
+          className="w-full py-2 rounded-md text-sm font-semibold bg-[#008080] text-white hover:bg-teal-700"
+        >
+          Download Report
+        </button>
+      </div>
     </div>
   </div>
 )}
