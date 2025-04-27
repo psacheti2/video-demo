@@ -236,11 +236,11 @@ const ROIAnalysisDashboard = ({ onLayersReady, setSavedArtifacts, title, onBack 
       className={`transition-all duration-300 ${
         fullscreen
           ? 'fixed top-4 bottom-4 left-4 right-4 z-50 overflow-auto bg-white rounded-2xl shadow-2xl border border-gray-300 p-6'
-          : 'px-4 pt-4 max-h-[90vh] overflow-y-auto pb-4'
+          : 'px-4 pt-0 max-h-[90vh] overflow-y-auto pb-4'
       }`}
       ref={chartContainerRef}
     >
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4 md:gap-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-0 gap-0">
         {isFullscreen && title && (
           <div className="sticky top-0 z-50 flex items-center justify-between py-3 px-4 bg-white border-b border-gray-300 rounded-t-2xl">
             <div className="flex items-center gap-2">
@@ -260,7 +260,7 @@ const ROIAnalysisDashboard = ({ onLayersReady, setSavedArtifacts, title, onBack 
       </div>
 
       {/* Tabs */}
-      <div className="mb-6">
+      <div className="mb-0">
         <div className="flex flex-wrap space-x-1 border-b border-gray-200">
           {[
             { id: 'roi', label: 'ROI Comparison' },
@@ -281,8 +281,8 @@ const ROIAnalysisDashboard = ({ onLayersReady, setSavedArtifacts, title, onBack 
         </div>
       </div>
 
-      <div className="bg-white rounded-b-2xl shadow-inner p-1.5">
-  <div className="mb-4 text-center">
+      <div className="bg-white rounded-b-2xl shadow-inner pt-0 px-4 pb-4 min-h-[630px]">
+  <div className="mb-4 pt-4 text-center">
     <h2 className="text-xl font-semibold text-gray-800">
       {activeChart === 'roi' && "ROI Comparison by Location"}
       {activeChart === 'breakeven' && "Break-Even Timeline by Location"}

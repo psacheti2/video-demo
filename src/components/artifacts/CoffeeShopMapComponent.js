@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import {
     Layers, Maximize2, X, Info, ChevronDown, ChevronUp,
-    Download, Wrench, Palette, Share2, BookmarkPlus, Table, Minimize2, ChevronLeft, ArrowLeft, ChevronRight, Pencil, ListFilter
+    Download, Wrench, Palette, Share2, BookmarkPlus, Table, Minimize2, ChevronLeft, ArrowLeft, ChevronRight, Pencil, ListFilter, Ruler, 
 } from 'lucide-react';
 import { TbMapSearch } from "react-icons/tb";
 import html2canvas from 'html2canvas';
@@ -15,6 +15,7 @@ import _ from 'lodash';
 
 import { PiPolygon } from "react-icons/pi";
 import { FaRegCircle } from "react-icons/fa6";
+
 import { GiPathDistance } from "react-icons/gi";
 import { LiaShareAltSolid } from "react-icons/lia";
 import { LuMove3D, LuSquiggle } from "react-icons/lu";
@@ -1310,7 +1311,7 @@ const addPulseAnimation = () => {
                         const intensity = feature.properties?.intensity || 0.5;
 
                         // Add to heatmap data
-                        heatPoints.push([coords[0], coords[1], intensity * 3]);
+                        heatPoints.push([coords[0], coords[1], intensity * 5]);
                     }
                 });
             }
@@ -1318,7 +1319,7 @@ const addPulseAnimation = () => {
             // Create heatmap layer if we have points
             if (heatPoints.length > 0 && window.L.heatLayer) {
                 const heatmap = window.L.heatLayer(heatPoints, {
-                    radius: 25,
+                    radius: 30,
                     blur: 15,
                     maxZoom: 17,
                     gradient: {
@@ -1395,7 +1396,7 @@ const addPulseAnimation = () => {
                 minZoom: 11,
                 maxZoom: 18,
                 doubleClickZoom: false
-            }).setView([40.7589, -73.9866], 13);
+            }).setView([40.7589, -73.9866], 13.5);
             leafletMap.createPane('drawPane');
             leafletMap.getPane('drawPane').style.zIndex = 100000000000;
 
@@ -3291,7 +3292,7 @@ Freehand                            </button>
                                 },
                                 {
                                     id: 'radius',
-                                    name: '0.8-Mile Radius',
+                                    name: '1-Mile Radius',
                                     icon: <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-dashed" style={{ backgroundColor: 'transparent' }} />,
                                     legend: [
                                         { label: 'Times Square Radius', color: '#4169E1', dashed: true }

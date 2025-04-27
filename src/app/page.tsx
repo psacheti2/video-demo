@@ -250,42 +250,76 @@ export default function Home() {
     </button>
   );
 
-  // Create resizable divider component
-  const DividerComponent = () => {
-    const [isDragging, setIsDragging] = useState(false);
+  const DividerComponent = ({ artifactsPanelWidth, setArtifactsPanelWidth }: { artifactsPanelWidth: number, setArtifactsPanelWidth: (n: number) => void }) => {
+  const [isDragging, setIsDragging] = useState(false);
+    const dragDataRef = useRef({
+      startX: 0,
+      startWidth: 0
+    });
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaX = e.clientX - dragDataRef.current.startX;
+      const windowWidth = window.innerWidth;
+      const deltaPercentage = (deltaX / windowWidth) * 100;
+      const newWidth = Math.max(20, Math.min(80, dragDataRef.current.startWidth - deltaPercentage));
+      setArtifactsPanelWidth(newWidth);
+    };
+  
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      document.body.style.cursor = '';
+      document.body.classList.remove('resizing');
+  
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  
+    
+    const handleMouseDown = (e: React.MouseEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
 
-    useEffect(() => {
-      if (isDragging) {
-        const onMouseMove = (e: MouseEvent) => {
-          if (typeof window === 'undefined') return; // Guard against SSR
-          const containerWidth = document.body.clientWidth;
-          const widthPercentage = (e.clientX / containerWidth) * 100;
-          setArtifactsPanelWidth(Math.max(20, Math.min(80, 100 - widthPercentage)));
-        };
+  dragDataRef.current = {
+    startX: e.clientX,
+    startWidth: artifactsPanelWidth
+  };
 
-        const onMouseUp = () => {
-          setIsDragging(false);
-        };
+  setIsDragging(true);
+  document.body.style.cursor = 'ew-resize';
+  document.body.classList.add('resizing');
 
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
+  document.addEventListener('mousemove', handleMouseMove);
+  document.addEventListener('mouseup', handleMouseUp);
+};
 
-        return () => {
-          document.removeEventListener('mousemove', onMouseMove);
-          document.removeEventListener('mouseup', onMouseUp);
-        };
-      }
-    }, [isDragging]);
-
+  
+  
     return (
       <div
-        className="relative"
-        onMouseDown={() => setIsDragging(true)}
+        className="relative select-none cursor-ew-resize group"
+        onMouseDown={handleMouseDown}
+        style={{ 
+          touchAction: 'none',
+          width: '16px',
+          margin: '0 -8px', // Center the wider area
+          zIndex: 50, // High z-index to ensure it's above other elements
+          userSelect: 'none',
+          position: 'relative',
+          cursor: isDragging ? 'ew-resize' : 'col-resize'
+        }}
       >
-        <div className="group relative w-1 h-full cursor-ew-resize bg-transparent">
-          <div
-            className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[6px] rounded-md h-full bg-white/60 backdrop-blur-md shadow-sm border border-gray-300 group-hover:bg-[#008080] group-hover:shadow-md transition-all duration-200"
-          />
+        <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[6px] rounded-md h-full 
+                       bg-white/80 hover:bg-[#008080] 
+                       backdrop-blur-md shadow-sm border border-gray-300
+                       group-hover:shadow-md transition-all duration-200"
+             style={{ 
+               backgroundColor: isDragging ? '#008080' : undefined 
+             }}
+        />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
+                        w-[10px] h-[20px] flex flex-col items-center justify-center gap-1">
+          <div className="w-[1px] h-[4px] bg-gray-400 group-hover:bg-white"></div>
+          <div className="w-[1px] h-[4px] bg-gray-400 group-hover:bg-white"></div>
+          <div className="w-[1px] h-[4px] bg-gray-400 group-hover:bg-white"></div>
         </div>
       </div>
     );
@@ -336,44 +370,56 @@ export default function Home() {
               setSelectedArtifact={setSelectedArtifact}
               savedArtifacts={savedArtifacts}
               setSavedArtifacts={setSavedArtifacts}
+              artifactsPanelWidth={artifactsPanelWidth}
             />
           </div>
         ) : hasArtifacts || selectedArtifact ? (  
-          <div className="flex flex-1 overflow-hidden">
-            <div
-              className="flex-1 overflow-hidden relative"
-              style={{ width: `${100 - artifactsPanelWidth}%` }}
-            >
-              <ResponsiveChatLayout 
-                messages={messages}
-                setMessages={setMessages}
-                isLoading={isLoading}
-                onSendMessage={handleSendMessage}
-                isCentered={!hasArtifacts && !selectedArtifact}
-                sidebarOpen={showSidebar}
-                setSidebarOpen={setShowSidebar}
-                setSelectedArtifact={handleArtifactSelect}
-              />
-            </div>
-            
-            <DividerComponent />
-            
-            <div
-              style={{ width: `${artifactsPanelWidth}%` }}
-              className="bg-white overflow-hidden shadow-md"
-            >
-              <ArtifactsPanel
-                artifacts={artifacts}
-                toggleFullscreen={() => setIsArtifactFullscreen(!isArtifactFullscreen)}
-                messageId={lastMessageId}
-                prevArtifactsCount={prevArtifactsLength.current}
-                selectedArtifact={selectedArtifact}
-                setSelectedArtifact={setSelectedArtifact}
-                savedArtifacts={savedArtifacts}
-                setSavedArtifacts={setSavedArtifacts}
-              />
-            </div>
+          <div className="flex flex-1 overflow-hidden panels-container">
+          <div
+            className="flex-1 overflow-hidden relative chat-panel"
+            style={{ 
+              width: `${100 - artifactsPanelWidth}%`,
+              minWidth: '20%',
+              maxWidth: '80%'
+            }}
+          >
+            <ResponsiveChatLayout 
+              messages={messages}
+              setMessages={setMessages}
+              isLoading={isLoading}
+              onSendMessage={handleSendMessage}
+              isCentered={!hasArtifacts && !selectedArtifact}
+              sidebarOpen={showSidebar}
+              setSidebarOpen={setShowSidebar}
+              setSelectedArtifact={handleArtifactSelect}
+            />
           </div>
+          
+          <DividerComponent 
+  artifactsPanelWidth={artifactsPanelWidth} 
+  setArtifactsPanelWidth={setArtifactsPanelWidth} 
+/>          
+          <div
+            className="bg-white overflow-hidden shadow-md artifact-panel"
+            style={{ 
+              width: `${artifactsPanelWidth}%`,
+              minWidth: '20%',
+              maxWidth: '80%'
+            }}
+          >
+            <ArtifactsPanel
+              artifacts={artifacts}
+              toggleFullscreen={() => setIsArtifactFullscreen(!isArtifactFullscreen)}
+              messageId={lastMessageId}
+              prevArtifactsCount={prevArtifactsLength.current}
+              selectedArtifact={selectedArtifact}
+              setSelectedArtifact={setSelectedArtifact}
+              savedArtifacts={savedArtifacts}
+              setSavedArtifacts={setSavedArtifacts}
+            />
+          </div>
+        </div>
+        
         ) : (
           // Centered chat view with no artifacts
           <div className="flex justify-center w-full relative">

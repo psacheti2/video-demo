@@ -4,8 +4,8 @@ export default function ChatMessage({ message, isUser, onArtifactClick }) {
   const [displayedText, setDisplayedText] = useState(isUser ? message.text : '');
 
   useEffect(() => {
-    const isLive = !message.id.startsWith('assistant_') && !message.id.startsWith('error_');
-
+    console.log('Message effect running, isUser:', isUser);
+    const isLive = !isUser;
     if (!isUser && isLive) {
       let index = 0;
       const interval = setInterval(() => {

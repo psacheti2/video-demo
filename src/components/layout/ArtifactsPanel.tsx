@@ -38,6 +38,7 @@ interface ArtifactsPanelProps {
   setSelectedArtifact?: (artifact: ArtifactData | null) => void;
   savedArtifacts?: ArtifactData[];
   setSavedArtifacts?: React.Dispatch<React.SetStateAction<ArtifactData[]>>;
+  artifactsPanelWidth?: number;
 }
 
 
@@ -50,8 +51,10 @@ export default function ArtifactsPanel({
   selectedArtifact,
   setSelectedArtifact,
   savedArtifacts = [],
-  setSavedArtifacts = () => { }
+  setSavedArtifacts = () => { },
+  artifactsPanelWidth,
 }: ArtifactsPanelProps) {
+  
   const controlledArtifact = selectedArtifact;
   const setControlledArtifact = setSelectedArtifact || (() => { });
   const prevMessageId = useRef(messageId);
@@ -139,6 +142,20 @@ export default function ArtifactsPanel({
       prevArtifactsLength.current = artifacts.length;
     }
   }, [messageId, artifacts, prevArtifactsCount]);
+useEffect(() => {
+  // Tell any map to resize if the panel width changes
+  const timer = setTimeout(() => {
+    const mapContainers = document.querySelectorAll('.leaflet-container');
+    mapContainers.forEach((mapEl) => {
+      const map = (mapEl as any)._leaflet_map;
+      if (map && typeof map.invalidateSize === 'function') {
+        map.invalidateSize();
+      }
+    });
+  }, 200); // Small delay after drag
+
+  return () => clearTimeout(timer);
+}, [artifactsPanelWidth]);
 
 
   const renderArtifactComponent = (artifact: ArtifactData) => {

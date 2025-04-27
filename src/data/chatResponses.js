@@ -153,7 +153,7 @@ export const chatResponses = {
       }
     }]
   },
-  "I want to open a Coffee Shop within a 3 mile radius of Times Square. Can you help me identify the best locations?": {
+  "I want to open a Coffee Shop within a 1 mile radius of Times Square. Can you help me identify the best locations?": {
     text: "Key insights:\n\n1) The Hell's Kitchen area shows high potential with strong foot traffic but fewer existing coffee shops per capita\n2) Parts of Chelsea display favorable revenue patterns with strong weekend customer retention\n3) Areas near major subway stations in Midtown East show high weekday commuter patterns\n\nTimes Square adjacent locations experience approximately 12% drop in foot traffic during summer months, when Broadway shows have fewer performances.\n\nWould you like me to narrow down specific neighborhoods for deeper analysis?",
     timing: [2000, 2000, 1000, 1000, 1000, 1500], // Timing for each line
   artifacts: [{

@@ -125,11 +125,11 @@ const AdditionalLayersMapComponent = ({ onLayersReady, onSaveMap, savedMaps = []
         // Coffee shops
         existingShop: '#D2691E',
         highPotential: '#006400',
-        mediumPotential: '#FFA500',
+        mediumPotential: '#4caf50',
         lowPotential: '#DC143C',
 
         // Foot traffic
-        highTraffic: '#FF0000',
+        highTraffic: '#2e7d32',
         mediumTraffic: '#FF6B6B',
         lowTraffic: '#FFCCCB',
 
@@ -137,9 +137,9 @@ const AdditionalLayersMapComponent = ({ onLayersReady, onSaveMap, savedMaps = []
         subwayStation: '#0039A6',
 
         // Storefronts
-        lowRent: '#008000',
-        mediumRent: '#FFA500',
-        highRent: '#FF0000',
+        lowRent: '#2e7d32',
+        mediumRent: '#4caf50',
+        highRent: '#2e7d32',
 
         // UI Colors
         primary: '#2C3E50',
@@ -781,11 +781,11 @@ const AdditionalLayersMapComponent = ({ onLayersReady, onSaveMap, savedMaps = []
           });
           
           // Determine color based on price category
-          let markerColor = '#FFA500'; // Default color (medium)
+          let markerColor = '#4caf50'; // Default color (medium)
           if (row.priceCategory === 'Low') {
-            markerColor = '#008000'; // Green for low rent
+            markerColor = '#2e7d32'; // Green for low rent
           } else if (row.priceCategory === 'High') {
-            markerColor = '#FF0000'; // Red for high rent
+            markerColor = '#2e7d32'; // Red for high rent
           }
           
           // Create a highlighted marker with price-specific styling
@@ -1618,7 +1618,7 @@ const fetchFootTraffic = async () => {
             // Increase the intensity by multiplying the original value
             // Original: const intensity = feature.properties?.intensity || 0.5;
             const baseIntensity = feature.properties?.intensity || 0.5;
-            const intensity = Math.min(baseIntensity * 2.5, 1.0); // Boost intensity but cap at 1.0
+            const intensity = Math.min(baseIntensity * 4, 1.0); 
             
             // Add to heatmap data
             heatPoints.push([coords[0], coords[1], intensity]);
@@ -1630,7 +1630,7 @@ const fetchFootTraffic = async () => {
       if (heatPoints.length > 0 && window.L.heatLayer) {
         const heatmap = window.L.heatLayer(heatPoints, {
           radius: 50,     
-          blur: 25,       
+          blur: 40,       
           maxZoom: 17,
           gradient: {
             0.2: layerColors.lowTraffic,
@@ -1734,11 +1734,11 @@ const fetchFootTraffic = async () => {
                     // Determine color based on price
                     let priceColor;
                     if (rentalPrice < 200) {
-                        priceColor = '#008000'; // green for cheapest
+                        priceColor = '#2e7d32'; // green for cheapest
                     } else if (rentalPrice < 1000) {
-                        priceColor = '#FFA500'; // orange for mid-range
+                        priceColor = '#4caf50'; // orange for mid-range
                     } else {
-                        priceColor = '#FF0000'; // red for expensive
+                        priceColor = '#2e7d32'; // red for expensive
                     }
 
                     // Add rental price to properties
@@ -1761,9 +1761,9 @@ const fetchFootTraffic = async () => {
                     blur: 20,
                     maxZoom: 17,
                     gradient: {
-                        0.2: '#008000', // green (cheap rent)
-                        0.5: '#FFA500', // orange (mid-range rent)
-                        0.8: '#FF0000'  // red (expensive rent)
+                        0.2: '#2e7d32', // green (cheap rent)
+                        0.5: '#4caf50', // orange (mid-range rent)
+                        0.8: '#2e7d32'  // red (expensive rent)
                     }
                 });
 
@@ -3831,7 +3831,7 @@ Freehand                            </button>
                                 },
                                 {
                                     id: 'radius',
-                                    name: '3-Mile Radius',
+                                    name: '1-Mile Radius',
                                     icon: <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-dashed" style={{ backgroundColor: 'transparent' }} />,
                                     legend: [
                                         { label: 'Times Square Radius', color: '#4169E1', dashed: true }
@@ -3848,11 +3848,11 @@ Freehand                            </button>
                                 {
                                     id: 'storefronts',
                                     name: 'Available Storefronts',
-                                    icon: <div className="w-4 h-4 rounded-sm transform rotate-45" style={{ backgroundColor: '#FFA500' }} />,
+                                    icon: <div className="w-4 h-4 rounded-sm transform rotate-45" style={{ backgroundColor: '#4caf50' }} />,
                                     legend: [
-                                        { label: 'Low Rent (< $200/sqft)', color: '#008000' },
-                                        { label: 'Medium Rent ($200-$1000/sqft)', color: '#FFA500' },
-                                        { label: 'High Rent (> $1000/sqft)', color: '#FF0000' }
+                                        { label: 'Low Rent (< $200/sqft)', color: '#2e7d32' },
+                                        { label: 'Medium Rent ($200-$1000/sqft)', color: '#4caf50' },
+                                        { label: 'High Rent (> $1000/sqft)', color: '#2e7d32' }
                                     ]
                                 }
                             ].map(section => (

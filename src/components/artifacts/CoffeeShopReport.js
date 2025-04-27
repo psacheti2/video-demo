@@ -3,7 +3,7 @@ import html2canvas from 'html2canvas';
 import domtoimage from 'dom-to-image';
 import { ChevronLeft, ChevronRight, Maximize2, Download, Edit2, Save, Menu, Minimize2, Info, X } from "lucide-react";
 import '../../app/globals.css';
-import VancouverFloodInfraMap from './InfrastructureFloodMap';
+import SimpleNYCChart from './SimpleNYCMap';
 import VancouverPriorityDashboard from './BudgetDashboard';
 import VancouverBCAChart from './BenefitCostAnalysisDashboard';
 import { useNotificationStore } from '@/store/NotificationsStore';
@@ -105,6 +105,7 @@ const sections = [
     { id: 'methodology', name: 'Research Methodology' },
     { id: 'locations', name: 'Location Analysis' },
     { id: 'chart', name: 'ROI Analysis' },
+    { id: 'map', name: 'Areas' },
     { id: 'hellskitchen', name: 'Hell\'s Kitchen Detailed Profile' },
     { id: 'unionsquare', name: 'Union Square Detailed Profile' },
     { id: 'chelsea', name: 'Chelsea Detailed Profile' },
@@ -1074,7 +1075,7 @@ const handleDownloadWithDomToImage = () => {
       }
     }, 2000); // Increased delay for chart rendering
   };
-  
+
 const handleDownloadFallback = () => {
     if (isEditing) {
       setIsEditing(false);
@@ -1573,6 +1574,20 @@ const handleDownloadFallback = () => {
         <div className="flex-1 overflow-auto pl-4" style={{ backgroundColor: COLORS.white }}>
         <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-4 sm:py-6 my-4 bg-white rounded-lg shadow-sm" ref={reportContainerRef}>
         {/* All sections rendered in a single scrollable document */}
+        <div 
+  className={`text-3xl font-bold mb-10 ${isEditing ? 'border-b-2 pb-2' : ''}`}
+  style={{ 
+    color: COLORS.primary,
+    borderColor: isEditing ? COLORS.coral : 'transparent',
+    outline: 'none',
+    textAlign: 'center' // optional: if you want it centered
+  }}
+  contentEditable={isEditing}
+  suppressContentEditableWarning={true}
+  onBlur={handleTitleChange}
+>
+  {reportTitle}
+</div>
             {sections.map((section) => (
               <div 
                 key={section.id}
@@ -1580,25 +1595,10 @@ const handleDownloadFallback = () => {
                 ref={el => sectionRefs.current[section.id] = el}
                 className="mb-12"
               >
-                {/* Report title - editable when in edit mode */}
-{section.id === 'intro' && (
-  <div 
-    className={`text-2xl font-bold mb-6 ${isEditing ? 'border-b-2 pb-2' : ''}`}
-    style={{ 
-      color: COLORS.primary,
-      borderColor: isEditing ? COLORS.coral : 'transparent',
-      outline: 'none'
-    }}
-    contentEditable={isEditing}
-    suppressContentEditableWarning={true}
-    onBlur={handleTitleChange}
-  >
-    {reportTitle}
-  </div>
-)}
+
     {section.id === 'map' ? (
 <div className="w-full h-[400px] sm:h-[500px] md:h-[600px] my-6 rounded-lg overflow-hidden">
-        <VancouverFloodInfraMap onLayersReady={onLayersReady} />
+        <SimpleNYCChart onLayersReady={onLayersReady} />
       </div>
     ) : section.id === 'chart' ? (
 <div className="w-full my-6 chart-container" ref={chartRef}>
@@ -2005,7 +2005,22 @@ const handleDownloadFallback = () => {
         {/* Main content with added margin/gap from sidebar */}
         <div className="flex-1 overflow-auto pl-4" style={{ backgroundColor: COLORS.white,               marginTop: artifacts.length > 0 && !showArtifactGallery ? '60px' : '0' }}>
           <div className="max-w-4xl mx-auto p-8 bg-white my-6 rounded-lg shadow-sm" ref={reportContainerRef}>
-            {/* All sections rendered in a single scrollable document */}
+            
+<div 
+  className={`text-3xl font-bold mb-10 ${isEditing ? 'border-b-2 pb-2' : ''}`}
+  style={{ 
+    color: COLORS.primary,
+    borderColor: isEditing ? COLORS.coral : 'transparent',
+    outline: 'none',
+    textAlign: 'center' // optional: if you want it centered
+  }}
+  contentEditable={isEditing}
+  suppressContentEditableWarning={true}
+  onBlur={handleTitleChange}
+>
+  {reportTitle}
+</div>
+
             {sections.map((section) => (
               <div 
                 key={`fullscreen-${section.id}`}
@@ -2013,26 +2028,11 @@ const handleDownloadFallback = () => {
                 ref={el => sectionRefs.current[`fullscreen-${section.id}`] = el}
                 className="mb-16"
               >
-                {/* Report title - editable when in edit mode */}
-                {section.id === 'intro' && (
-                  <div 
-                    className={`text-3xl font-bold mb-8 ${isEditing ? 'border-b-2 pb-2' : ''}`}
-                    style={{ 
-                      color: COLORS.primary,
-                      borderColor: isEditing ? COLORS.coral : 'transparent',
-                      outline: 'none'
-                    }}
-                    contentEditable={isEditing}
-                    suppressContentEditableWarning={true}
-                    onBlur={handleTitleChange}
-                  >
-                    {reportTitle}
-                  </div>
-                )}
+               
 
 {section.id === 'map' ? (
       <div className="w-full h-[600px] my-6 rounded-lg overflow-hidden">
-        <VancouverFloodInfraMap onLayersReady={onLayersReady} />
+        <SimpleNYCChart onLayersReady={onLayersReady} />
       </div>
     ) : section.id === 'chart' ? (
       <div className="w-full my-6">
