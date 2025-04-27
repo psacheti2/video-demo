@@ -182,7 +182,7 @@ export const chatResponses = {
   }]
 },
 "Let's compare the ROI for these locations. My budget is about $200,000 for initial setup.": {
-  text: "Based on your $200,000 budget, here's a quick ROI breakdown:\n\n- Hell's Kitchen: 28% ROI, ~13 months break-even\n- Union Square: 26% ROI, ~13–14 months\n- Chelsea: 24%, Herald Square: 22%, ~14–15 months\n- Midtown East: 19%, ~18 months\n\nHell's Kitchen also shows the best cash flow after break-even.\n\nWant me to dive deeper into your top choice?",
+  text: "Based on your $200,000 budget, here's a quick ROI breakdown:\n\n- Midtown East: 28% ROI, ~13 months break-even\n- Midtown South: 26% ROI, ~13–14 months\n- Union Square: 24% ROI, ~14–15 months\n- Chelsea: 22% ROI, ~14–15 months\n- Herald Square: 20% ROI, ~18 months\n\nMidtown East also shows the best cash flow after break-even.\n\nWant me to dive deeper into your top choice?",
   timing: [2000, 1500, 1500, 1500, 1500, 2000], // Timing for each line
   artifacts: [{
     type: "chart",
@@ -195,12 +195,12 @@ export const chatResponses = {
   }]
 },
 "How can I differentiate my cafe from the competition?": {
-  text: "To stand out in NYC's competitive coffee market, consider these differentiation strategies:\n\n1) Neighborhood-Specific Identity: In Hell's Kitchen, embrace the theatrical heritage with Broadway-themed drinks and performance spaces for local artists\n\n2) Sustainability Focus: NYC consumers increasingly value eco-friendly practices - consider compostable packaging, visible recycling stations, and partnerships with local sustainable food suppliers\n\n3) Technology Integration: Implement seamless mobile ordering, contactless payment, and loyalty programs that track preferences and offer personalized recommendations\n\n4) Flexible Space Design: Create adaptable areas that transform from focused work environments during weekdays to community gathering spaces for events in evenings and weekends\n\n5) Elevated Coffee Program: Invest in direct-trade relationships with farmers, in-house roasting, or unique brewing methods not commonly found in the area\n\nWould you like more details on implementing any of these strategies in your coffee shop business plan?",
+  text: "To stand out in NYC's competitive coffee market, consider these neighborhood-specific strategies:\n\n1) Midtown East: Create a sleek, professional vibe with upscale design, artisanal pastries, and premium coffee catering to corporate clients\n\n2) Midtown South: Foster a creative, collaborative space with open seating, community events, and partnerships with local startups\n\n3) Union Square: Embrace the area's youthful energy by offering plant-based menus, trendy seasonal drinks, and social media-driven promotions\n\n4) Chelsea: Highlight art and culture with rotating local artist exhibits, gallery nights, and specialty brews named after famous artworks\n\n5) Herald Square: Focus on quick service and commuter convenience with grab-and-go options, mobile ordering kiosks, and extended morning hours\n\nWould you like me to help design a sample branding concept for your preferred neighborhood?",
   timing: [2000, 1500, 1500, 1500, 1500, 1500, 2000], // Timing for each line
   artifacts: [] // No artifacts for this text-only question
 },
 "For the top 3 areas we identified, create a report that I can share with my team and potential investors.": {
-  text: "The report highlights the top 3 coffee shop locations with market insights, ROI projections, and neighborhood profiles. Hell's Kitchen is recommended as the strongest option based on ROI potential and local conditions.",
+  text: "The report highlights the top 3 coffee shop locations with market insights, ROI projections, and neighborhood profiles. Midtown East is recommended as the strongest option based on ROI potential and local conditions.",
   timing: [3000], // Single paragraph timing
   artifacts: [{
     type: "report",
@@ -208,7 +208,7 @@ export const chatResponses = {
     component: "CoffeeShopReport",
     data: {
       sections: ["Executive Summary", "Introduction", "Research Methodology", "Location Comparison", 
-                "Hell's Kitchen Detailed Profile", "Union Square Detailed Profile", "Chelsea Detailed Profile",
+                "Midtown East Detailed Profile", "Midtown South Detailed Profile", "Union Square Detailed Profile",
                 "Financial Projections", "Implementation Timeline", "Conclusion & Recommendations"],
       priority: "high"
     }

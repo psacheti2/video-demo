@@ -111,23 +111,24 @@ const sections = [
     { id: 'chelsea', name: 'Chelsea Detailed Profile' },
     { id: 'financial', name: 'Financial Projections' },
     { id: 'implementation', name: 'Implementation Timeline' },
-    { id: 'conclusion', name: 'Conclusion & Recommendations' }
+    { id: 'conclusion', name: 'Conclusion & Recommendations' },
+    { id: 'sources', name: 'Sources & References' }
   ];
   
   const sampleContent = {
     executive: `
       <h2 class="text-xl font-bold mb-4" style="color: #008080;">Executive Summary</h2>
       <p class="mb-4" style="color: #34495E;">
-        This report analyzes three prime locations for a new specialty coffee shop venture within a 3-mile radius of Times Square, with an initial investment budget of $200,000. After thorough market research and financial modeling, <strong>Hell's Kitchen</strong> emerges as the optimal location with a projected 28% ROI and break-even point of under 13 months, followed by Union Square (26% ROI) and Chelsea (24% ROI).
+        This report analyzes three prime locations for a new specialty coffee shop venture within a 1-mile radius of Times Square, with an initial investment budget of $200,000. After thorough market research and financial modeling, <strong>Midtown East</strong> emerges as the optimal location with a projected 28% ROI and break-even point of under 13 months, followed by Midtown South (26% ROI) and Union Square (24% ROI).
       </p>
       <p class="mb-4" style="color: #34495E;">
-        The Hell's Kitchen location benefits from strong foot traffic, lower rental costs compared to other midtown-adjacent neighborhoods, favorable demographics, and a relative undersaturation of specialty coffee options. The financial model accounts for setup costs, operating expenses, and projected revenue growth based on comparable businesses in similar urban markets.
+        Midtown East benefits from a high concentration of office workers, strong daytime foot traffic, premium demographics, and relatively lower competition in the specialty coffee segment. The financial model accounts for setup costs, operating expenses, and projected revenue growth based on comparable businesses in similar urban markets.
       </p>
     `,
     intro: `
       <h2 class="text-xl font-bold mb-4" style="color: #008080;">Introduction</h2>
       <p class="mb-4" style="color: #34495E;">
-        The specialty coffee market in New York City continues to expand despite high market saturation, with consumers increasingly seeking quality experiences, sustainable practices, and unique cafe environments. This report evaluates optimal locations for establishing a new coffee shop venture within 3 miles of Times Square, with a focus on areas that balance foot traffic, competitive landscape, demographic fit, and financial viability.
+        The specialty coffee market in New York City continues to expand despite high market saturation, with consumers increasingly seeking quality experiences, sustainable practices, and unique cafe environments. This report evaluates optimal locations for establishing a new coffee shop venture within 1 mile of Times Square, with a focus on areas that balance foot traffic, competitive landscape, demographic fit, and financial viability.
       </p>
       <p class="mb-4" style="color: #34495E;">
         With an initial budget of $200,000, the venture aims to create a differentiated coffee experience that can achieve profitability within 18 months while establishing a foundation for potential expansion. The analysis prioritizes locations offering the strongest combination of ROI potential, neighborhood growth trajectory, and alignment with the target customer profile.
@@ -146,154 +147,167 @@ const sections = [
       <p style="color: #34495E;">Each location was scored across 15 weighted factors to create a comprehensive ranking system and ROI projection model.</p>
     `,
     locations: `
-     <h2 class="text-xl font-bold mb-4" style="color: #008080;">Location Comparison</h2>
-<div class="overflow-x-auto mb-6">
-  <table class="w-full border-collapse">
-    <thead>
-      <tr>
-        <th class="text-left p-2 border-b-2" style="color: #2C3E50; border-color: #008080;"></th>
-        <th class="text-left p-2 border-b-2" style="color: #2C3E50; border-color: #008080;">Hell's Kitchen</th>
-        <th class="text-left p-2 border-b-2" style="color: #2C3E50; border-color: #008080;">Union Square</th>
-        <th class="text-left p-2 border-b-2" style="color: #2C3E50; border-color: #008080;">Chelsea</th>
-      </tr>
-    </thead>
-    <tbody style="color: #34495E;">
-      <tr class="border-b border-gray-200">
-        <td class="p-2 font-medium">ROI</td>
-        <td class="p-2">28% (highest)</td>
-        <td class="p-2">26%</td>
-        <td class="p-2">24%</td>
-      </tr>
-      <tr class="border-b border-gray-200">
-        <td class="p-2 font-medium">Break-even</td>
-        <td class="p-2">12.8 months</td>
-        <td class="p-2">13.5 months</td>
-        <td class="p-2">14.5 months</td>
-      </tr>
-      <tr class="border-b border-gray-200">
-        <td class="p-2 font-medium">Avg. Rent</td>
-        <td class="p-2">$75-200/sq ft (most affordable)</td>
-        <td class="p-2">$150-400/sq ft</td>
-        <td class="p-2">$100-350/sq ft</td>
-      </tr>
-      <tr class="border-b border-gray-200">
-        <td class="p-2 font-medium">Foot Traffic</td>
-        <td class="p-2">High (especially along 9th Avenue)</td>
-        <td class="p-2">Very High (diverse mix of office workers, students, residents)</td>
-        <td class="p-2">Moderate to High (especially near High Line)</td>
-      </tr>
-      <tr>
-        <td class="p-2 font-medium">Competition</td>
-        <td class="p-2">Moderate (fewer specialty coffee shops)</td>
-        <td class="p-2">High (many established coffee brands)</td>
-        <td class="p-2">Moderate (mixture of chains and independents)</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-    `,
-    hellskitchen: `
-      <h2 class="text-xl font-bold mb-4" style="color: #008080;">Hell's Kitchen Detailed Profile</h2>
-      <p class="mb-4" style="color: #34495E;">
-        The recommended Hell's Kitchen location centers on the western section of the neighborhood, particularly along 9th Avenue between 50th and 55th Streets. This area benefits from:
-      </p>
-      <ul class="list-disc pl-5 mb-4" style="color: #34495E;">
-        <li><strong>Demographics:</strong> 62% of residents aged 25-44, median household income of $98,700, with 78% of residents holding bachelor's degrees or higher</li>
-        <li><strong>Growth Trajectory:</strong> 12% increase in food & beverage spending in the last 24 months</li>
-        <li><strong>Transit Access:</strong> Within 3 blocks of A/C/E and 1/2/3 subway lines, servicing over 35,000 daily riders</li>
-        <li><strong>Cultural Context:</strong> Strong arts community due to proximity to Theater District, with opportunity for cultural programming</li>
-        <li><strong>Competitive Landscape:</strong> Lower density of specialty coffee shops compared to other Manhattan neighborhoods with similar foot traffic</li>
-      </ul>
-      <p class="mb-4" style="color: #34495E;">
-        Two specific available storefronts have been identified, with the 9th Avenue & 53rd Street location offering the optimal balance of space (1,200 sq ft), visibility, and value ($115/sq ft annual rent).
-      </p>
-    `,
-    unionsquare: `
-      <h2 class="text-xl font-bold mb-4" style="color: #008080;">Union Square Detailed Profile</h2>
-      <p class="mb-4" style="color: #34495E;">
-        The Union Square area offers exceptional foot traffic and diverse customer segments but comes with higher operating costs and significant competition:
-      </p>
-      <ul class="list-disc pl-5 mb-4" style="color: #34495E;">
-        <li><strong>Demographics:</strong> Major student population from NYU and The New School, substantial office worker presence, and weekend shopping/tourist traffic</li>
-        <li><strong>Commercial Environment:</strong> High retail density with substantial anchor stores driving consistent traffic patterns</li>
-        <li><strong>Transit Hub:</strong> Serves 6 subway lines with approximately 98,000 daily riders</li>
-        <li><strong>Market Saturation:</strong> 16 coffee-focused establishments within a 4-block radius, including major chains and established independents</li>
-        <li><strong>Rental Costs:</strong> 65-85% higher than Hell's Kitchen for comparable spaces</li>
-      </ul>
-      <p class="mb-4" style="color: #34495E;">
-        While offering strong visibility and built-in foot traffic, the higher operating costs and competitive density require a more substantial marketing investment to achieve differentiation.
-      </p>
-    `,
-    chelsea: `
-      <h2 class="text-xl font-bold mb-4" style="color: #008080;">Chelsea Detailed Profile</h2>
-      <p class="mb-4" style="color: #34495E;">
-        Chelsea offers a compelling mix of residential and commercial traffic with particular strength in weekend business:
-      </p>
-      <ul class="list-disc pl-5 mb-4" style="color: #34495E;">
-        <li><strong>Demographics:</strong> Higher average household income ($115,200), with strong representation in creative industries and technology</li>
-        <li><strong>Cultural Attractions:</strong> Proximity to High Line and Chelsea Market creates consistent tourist and weekend traffic</li>
-        <li><strong>Growth Indicators:</strong> Continued development of Hudson Yards area driving northern expansion</li>
-        <li><strong>Weekday/Weekend Balance:</strong> More balanced traffic patterns compared to other neighborhoods, with strong weekend performance</li>
-        <li><strong>Storefront Availability:</strong> Limited inventory of appropriately-sized spaces under $150/sq ft annually</li>
-      </ul>
-      <p class="mb-4" style="color: #34495E;">
-        The most promising Chelsea location is on 8th Avenue near 18th Street, though the space would require significant buildout investment and higher initial rent compared to Hell's Kitchen.
-      </p>
-    `,
-    financial: `
-      <h2 class="text-xl font-bold mb-4" style="color: #008080;">Financial Projections</h2>
-      <p class="mb-4" style="color: #34495E;">
-        Financial models for each location are based on industry benchmarks and comparable NYC coffee shop performance metrics:
-      </p>
-      <div class="mb-4">
-        <h3 class="text-lg font-semibold mb-2" style="color: #2C3E50;">Hell's Kitchen</h3>
-        <ul class="list-disc pl-5" style="color: #34495E;">
-          <li><strong>Initial Investment:</strong> $200,000 (includes $145K buildout, $30K equipment, $25K operating reserve)</li>
-          <li><strong>Monthly Operating Costs:</strong> $32,000 (includes $11.5K rent, $12K labor, $5K COGS, $3.5K other)</li>
-          <li><strong>Projected Monthly Revenue:</strong> $50,000 (month 6+)</li>
-          <li><strong>Projected Monthly Profit:</strong> $18,000 (month 6+)</li>
-          <li><strong>Year 1 Net Income:</strong> $56,000</li>
-          <li><strong>Year 2 Net Income:</strong> $216,000</li>
-        </ul>
+      <h2 class="text-xl font-bold mb-4" style="color: #008080;">Location Comparison</h2>
+      <div class="overflow-x-auto mb-6">
+        <table class="w-full border-collapse">
+          <thead>
+            <tr>
+              <th class="text-left p-2 border-b-2" style="color: #2C3E50; border-color: #008080;"></th>
+              <th class="text-left p-2 border-b-2" style="color: #2C3E50; border-color: #008080;">Midtown East</th>
+              <th class="text-left p-2 border-b-2" style="color: #2C3E50; border-color: #008080;">Midtown South</th>
+              <th class="text-left p-2 border-b-2" style="color: #2C3E50; border-color: #008080;">Union Square</th>
+            </tr>
+          </thead>
+          <tbody style="color: #34495E;">
+            <tr class="border-b border-gray-200">
+              <td class="p-2 font-medium">ROI</td>
+              <td class="p-2">28% (highest)</td>
+              <td class="p-2">26%</td>
+              <td class="p-2">24%</td>
+            </tr>
+            <tr class="border-b border-gray-200">
+              <td class="p-2 font-medium">Break-even</td>
+              <td class="p-2">12.8 months</td>
+              <td class="p-2">13.5 months</td>
+              <td class="p-2">14.5 months</td>
+            </tr>
+            <tr class="border-b border-gray-200">
+              <td class="p-2 font-medium">Avg. Rent</td>
+              <td class="p-2">$120-300/sq ft</td>
+              <td class="p-2">$100-280/sq ft</td>
+              <td class="p-2">$150-400/sq ft</td>
+            </tr>
+            <tr class="border-b border-gray-200">
+              <td class="p-2 font-medium">Foot Traffic</td>
+              <td class="p-2">High (corporate workforce)</td>
+              <td class="p-2">Very High (tech/startup hubs)</td>
+              <td class="p-2">Very High (students, office workers, tourists)</td>
+            </tr>
+            <tr>
+              <td class="p-2 font-medium">Competition</td>
+              <td class="p-2">Moderate (underserved for specialty coffee)</td>
+              <td class="p-2">High (dense cafe environment)</td>
+              <td class="p-2">High (intense coffee competition)</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <p class="mb-4" style="color: #34495E;">
-        This location projects the strongest financial performance due to the combination of lower occupancy costs and favorable foot traffic patterns, with break-even occurring approximately 1-2 months earlier than the other locations.
-      </p>
-    `,
-    implementation: `
-      <h2 class="text-xl font-bold mb-4" style="color: #008080;">Implementation Timeline</h2>
-      <div class="mb-4" style="color: #34495E;">
-        <p class="mb-2">Recommended phased approach for the Hell's Kitchen location:</p>
-        <ul class="list-disc pl-5">
-          <li><strong>Months 1-2:</strong> Lease negotiation, architectural plans, permit applications</li>
-          <li><strong>Months 3-4:</strong> Construction and buildout, equipment ordering</li>
-          <li><strong>Month 5:</strong> Staff hiring and training, soft opening, menu refinement</li>
-          <li><strong>Month 6:</strong> Grand opening and initial marketing push</li>
-          <li><strong>Months 7-12:</strong> Operational optimization, community building, loyalty program implementation</li>
-          <li><strong>Month 13 onward:</strong> Evaluate expansion opportunities, menu diversification</li>
-        </ul>
-      </div>
-      <p class="mb-4" style="color: #34495E;">
-        Critical path items include securing the lease with favorable terms, completing buildout on schedule, and establishing supplier relationships. Contingency planning is recommended for construction delays, which are common in NYC commercial spaces.
-      </p>
-    `,
-    conclusion: `
-      <h2 class="text-xl font-bold mb-4" style="color: #008080;">Conclusion & Recommendations</h2>
-      <p class="mb-4" style="color: #34495E;">
-        Based on comprehensive analysis of market conditions, financial projections, and growth potential, we recommend:
-      </p>
-      <ul class="list-disc pl-5 mb-4" style="color: #34495E;">
-        <li><strong>Primary Recommendation:</strong> Secure the Hell's Kitchen location at 9th Avenue & 53rd Street, with target launch in Q3 2025</li>
-        <li><strong>Differentiation Strategy:</strong> Focus on theater district theme with extended evening hours, performance space, and arts partnerships</li>
-        <li><strong>Secondary Option:</strong> Union Square location offers high visibility but requires additional $45K investment and carries higher risk</li>
-        <li><strong>Expansion Potential:</strong> Success of Hell's Kitchen location could create opportunity for second location in Chelsea within 24-36 months</li>
-        <li><strong>Risk Mitigation:</strong> Negotiate graduated rent increase and tenant improvement allowance to preserve capital</li>
+    `,  
+    midtowneast: `
+    <h2 class="text-xl font-bold mb-4" style="color: #008080;">Midtown East Detailed Profile</h2>
+    <p class="mb-4" style="color: #34495E;">
+      Midtown East offers a strong combination of stable daytime traffic, affluent demographics, and strategic proximity to major corporate offices:
+    </p>
+    <ul class="list-disc pl-5 mb-4" style="color: #34495E;">
+      <li><strong>Demographics:</strong> Predominantly professional workforce, median household income exceeding $130,000, high levels of disposable income</li>
+      <li><strong>Foot Traffic:</strong> Driven by office workers, commuters from Grand Central Terminal, and nearby hotels</li>
+      <li><strong>Commercial Context:</strong> Relatively low density of independent specialty coffee shops compared to Midtown South and Union Square</li>
+      <li><strong>Rental Costs:</strong> Premium but justified by steady customer flow and consistent weekday revenue</li>
+      <li><strong>Accessibility:</strong> Excellent subway access (4/5/6, E/M trains) and major commuter arteries</li>
+    </ul>
+    <p class="mb-4" style="color: #34495E;">
+      Target storefronts are located along Lexington Avenue and 3rd Avenue corridors, offering high visibility and steady weekday sales potential.
+    </p>
+  `,
+  midtownsouth: `
+    <h2 class="text-xl font-bold mb-4" style="color: #008080;">Midtown South Detailed Profile</h2>
+    <p class="mb-4" style="color: #34495E;">
+      Midtown South presents a vibrant, creative customer base with strong synergies for a community-driven specialty coffee concept:
+    </p>
+    <ul class="list-disc pl-5 mb-4" style="color: #34495E;">
+      <li><strong>Demographics:</strong> Younger workforce skew, high percentage of technology, media, and creative professionals</li>
+      <li><strong>Growth Trends:</strong> Rapid expansion of co-working spaces, startups, and boutique hotels driving daytime demand</li>
+      <li><strong>Foot Traffic:</strong> High pedestrian volumes across weekdays and weekends, particularly near Madison Square Park</li>
+      <li><strong>Competitive Landscape:</strong> Higher cafe density, requiring strong differentiation and niche branding</li>
+      <li><strong>Rental Environment:</strong> Moderate to high ($100–280/sq ft), but offset by broader customer base</li>
+    </ul>
+    <p class="mb-4" style="color: #34495E;">
+      Best target areas include spaces south of 34th Street between 5th and 6th Avenues, offering access to both business and leisure traffic.
+    </p>
+  `,
+  unionsquare: `
+    <h2 class="text-xl font-bold mb-4" style="color: #008080;">Union Square Detailed Profile</h2>
+    <p class="mb-4" style="color: #34495E;">
+      Union Square offers exceptional foot traffic and a dynamic customer mix but comes with elevated operating costs and intense competition:
+    </p>
+    <ul class="list-disc pl-5 mb-4" style="color: #34495E;">
+      <li><strong>Demographics:</strong> Blend of NYU students, office workers, shoppers, and tourists</li>
+      <li><strong>Commercial Hub:</strong> High volume retail zone with multiple anchor stores and consistent seven-day activity</li>
+      <li><strong>Transit Access:</strong> Major hub connecting 4/5/6, L, N/Q/R/W subway lines (~98,000 daily riders)</li>
+      <li><strong>Competitive Pressure:</strong> 18+ coffee shops within a 4-block radius, requiring standout positioning</li>
+      <li><strong>Cost Considerations:</strong> Rent premiums of 60–90% higher than Midtown South for equivalent spaces</li>
+    </ul>
+    <p class="mb-4" style="color: #34495E;">
+      Union Square offers immediate market access but demands a strong marketing plan and differentiated offering to thrive.
+    </p>
+  `,
+  financial: `
+    <h2 class="text-xl font-bold mb-4" style="color: #008080;">Financial Projections</h2>
+    <p class="mb-4" style="color: #34495E;">
+      Financial models for each location are based on industry benchmarks and comparable NYC coffee shop performance metrics:
+    </p>
+    <div class="mb-4">
+      <h3 class="text-lg font-semibold mb-2" style="color: #2C3E50;">Midtown East</h3>
+      <ul class="list-disc pl-5" style="color: #34495E;">
+        <li><strong>Initial Investment:</strong> $200,000 (includes $150K buildout, $25K equipment, $25K operating reserve)</li>
+        <li><strong>Monthly Operating Costs:</strong> $35,000 (includes $13.5K rent, $12K labor, $6K COGS, $3.5K other)</li>
+        <li><strong>Projected Monthly Revenue:</strong> $55,000 (month 6+)</li>
+        <li><strong>Projected Monthly Profit:</strong> $20,000 (month 6+)</li>
+        <li><strong>Year 1 Net Income:</strong> $72,000</li>
+        <li><strong>Year 2 Net Income:</strong> $240,000</li>
       </ul>
-      <p class="mb-4" style="color: #34495E;">
-        The Hell's Kitchen location provides the optimal balance of financial return, market opportunity, and alignment with the concept's unique positioning in a neighborhood undergoing continued development with favorable demographics.
-      </p>
-    `
-  };
+    </div>
+    <p class="mb-4" style="color: #34495E;">
+      Midtown East projects the strongest overall financial outcome due to its combination of consistent traffic, premium demographics, and relatively favorable competitive environment.
+    </p>
+  `,
+  implementation: `
+    <h2 class="text-xl font-bold mb-4" style="color: #008080;">Implementation Timeline</h2>
+    <div class="mb-4" style="color: #34495E;">
+      <p class="mb-2">Recommended phased approach for the Midtown East location:</p>
+      <ul class="list-disc pl-5">
+        <li><strong>Months 1-2:</strong> Lease negotiation, architectural planning, permit applications</li>
+        <li><strong>Months 3-4:</strong> Construction buildout, equipment procurement</li>
+        <li><strong>Month 5:</strong> Staff recruitment and training, soft opening events</li>
+        <li><strong>Month 6:</strong> Grand opening and marketing activation</li>
+        <li><strong>Months 7-12:</strong> Customer loyalty programs, operational optimization, community partnerships</li>
+        <li><strong>Month 13 onward:</strong> Evaluate second location opportunities based on performance benchmarks</li>
+      </ul>
+    </div>
+    <p class="mb-4" style="color: #34495E;">
+      Key success factors include securing favorable lease terms, controlling buildout costs, and aligning marketing efforts with the local professional demographic.
+    </p>
+  `,
+  conclusion: `
+    <h2 class="text-xl font-bold mb-4" style="color: #008080;">Conclusion & Recommendations</h2>
+    <p class="mb-4" style="color: #34495E;">
+      Based on comprehensive analysis of market conditions, financial projections, and growth potential, we recommend:
+    </p>
+    <ul class="list-disc pl-5 mb-4" style="color: #34495E;">
+      <li><strong>Primary Recommendation:</strong> Secure the Midtown East location, targeting launch in Q3 2025</li>
+      <li><strong>Differentiation Strategy:</strong> Position the cafe as a premium, professional retreat with curated beverage options and tech-friendly design</li>
+      <li><strong>Secondary Option:</strong> Midtown South offers strong potential but requires more aggressive brand storytelling to succeed</li>
+      <li><strong>Risk Mitigation:</strong> Allocate additional contingency budget (~10%) for potential construction or permitting delays</li>
+      <li><strong>Expansion Strategy:</strong> Monitor early performance to identify readiness for a second location near Union Square or downtown within 24 months</li>
+    </ul>
+    <p class="mb-4" style="color: #34495E;">
+      Midtown East provides the optimal blend of financial upside, operational stability, and strategic brand positioning to support the initial phase of the venture.
+    </p>
+  `,
+  sources: `
+  <h2 class="text-m font-bold mb-4" style="color: #008080;">Sources & References</h2>
+  <div style="font-size: 11px; color: #34495E;">
+    <ul class="list-disc pl-5 mb-4">
+      <li><a href="https://data.cityofnewyork.us/Transportation/Bi-Annual-Pedestrian-Counts/cqsj-cfgu/about_data" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">NYC Bi-Annual Pedestrian Counts</a></li>
+      <li><a href="https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/43nn-pn8j/about_data" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">NYC Restaurant Inspection Results</a></li>
+      <li><a href="https://data.cityofnewyork.us/City-Government/2020-Neighborhood-Tabulation-Areas-NTAs-/9nt8-h7nd/about_data" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">NYC Neighborhood Tabulation Areas (NTAs)</a></li>
+      <li><a href="https://nycmaps-nyc.hub.arcgis.com/datasets/nyc::subway-station/explore?location=40.707675%2C-74.003874%2C9.72&showTable=true" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">NYC Subway Stations</a></li>
+      <li><a href="https://nycmaps-nyc.hub.arcgis.com/datasets/nyc::subway/explore?location=40.707404%2C-74.003705%2C9.71&showTable=true" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">NYC Subway System</a></li>
+    </ul>
+  </div>
+`
+};
+
 
 
 

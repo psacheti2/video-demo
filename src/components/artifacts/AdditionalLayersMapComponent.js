@@ -19,7 +19,7 @@ import { GiPathDistance } from "react-icons/gi";
 import { LiaShareAltSolid } from "react-icons/lia";
 import { LuMove3D, LuSquiggle } from "react-icons/lu";
 import { MdDraw } from "react-icons/md";
-
+import VirtualizedTable from './VirtualizedTable';
 
 const AdditionalLayersMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts, title,
     onBack, center = [-73.9866, 40.7589], radius = 3 }) => {
@@ -61,6 +61,7 @@ const AdditionalLayersMapComponent = ({ onLayersReady, onSaveMap, savedMaps = []
     const [drawDialogPos, setDrawDialogPos] = useState({ top: 0, left: 0 });
     const [selectedRowIndex, setSelectedRowIndex] = useState(null);
     const [selectedColIndex, setSelectedColIndex] = useState(null);
+    const footTrafficPointsRef = useRef([]);
     const [contextMenu, setContextMenu] = useState({
         visible: false, x: 0, y: 0, type: null, index: null,
         columnName: null,
@@ -76,6 +77,7 @@ const AdditionalLayersMapComponent = ({ onLayersReady, onSaveMap, savedMaps = []
     const [filterDialogPosition, setFilterDialogPosition] = useState({ x: 0, y: 0 });
     const [showFilterIcons, setShowFilterIcons] = useState(false);
     const storefrontDataRef = useRef({ features: [] });
+    const stationPointsRef = useRef([]);  // Add this ref to track station points
     const [attachments, setAttachments] = useState([
         { id: 'map', label: '📍 Vancouver Infrastructure & Flood Assessment Map.jpg' },
         ...tableTitles.map((title, i) => ({
@@ -128,10 +130,9 @@ const AdditionalLayersMapComponent = ({ onLayersReady, onSaveMap, savedMaps = []
         mediumPotential: '#4caf50',
         lowPotential: '#DC143C',
 
-        // Foot traffic
-        highTraffic: '#2e7d32',
-        mediumTraffic: '#FF6B6B',
-        lowTraffic: '#FFCCCB',
+highTraffic: '#8B0000',  // Dark red
+mediumTraffic: '#FF0000', // Medium red
+lowTraffic: '#FFCCCB',   // Light red
 
         // Subway stations
         subwayStation: '#0039A6',
@@ -444,399 +445,556 @@ const AdditionalLayersMapComponent = ({ onLayersReady, onSaveMap, savedMaps = []
     };
     
     const highlightCoffeeShop = (row) => {
-        if (!row || !map) return;
-      
-        let foundMarker = false;
-        
-        // Try to find the marker by checking all possible identifiers
-        coffeeShopsRef.current.forEach(({ marker }) => {
-          const popupContent = marker.getPopup()?.getContent() || '';
-          
-          // First try to match by name/dba if available
-          const nameMatch = row.name && popupContent.includes(row.name);
-          const dbaMatch = row.dba && popupContent.includes(row.dba);
-          const idMatch = row['Feature ID'] && popupContent.includes(`Feature ID: ${row['Feature ID']}`);
-          
-          if (nameMatch || dbaMatch || idMatch) {
+            if (!row || !map) return;
+            
+            // Look for the Feature ID first - this is the most reliable way to match
+            const featureId = row['Feature ID'];
+            
+            if (featureId) {
+                // Try to find a direct match by feature ID
+                const matchedShop = coffeeShopsRef.current.find(shop => shop.featureId === featureId);
+                
+                if (matchedShop) {
+                    // Direct match found - highlight this marker
+                    highlightMarker(matchedShop.marker);
+                    return;
+                }
+            }
+            
+            // Fallback to other matching methods if feature ID didn't match
+            let foundMarker = false;
+            
+            // Try to match by name or other properties
+            coffeeShopsRef.current.forEach(({ marker }) => {
+                const popupContent = marker.getPopup()?.getContent() || '';
+                
+                // Match by name/dba if available
+                const nameMatch = row.name && popupContent.includes(row.name);
+                const dbaMatch = row.dba && popupContent.includes(row.dba);
+                
+                if (nameMatch || dbaMatch) {
+                    highlightMarker(marker);
+                    foundMarker = true;
+                }
+            });
+            
+            // Last resort: try using coordinates
+            if (!foundMarker) {
+                highlightByCoordinates(row);
+            }
+        };
+    
+        // Extract the marker highlighting logic into a separate function
+        const highlightMarker = (marker) => {
             // Change the marker's icon to make it stand out
             marker.setIcon(L.divIcon({
-              html: `<div style="background-color: #ffff00; width: 14px; height: 14px; border-radius: 50%; border: 2px solid black; box-shadow: 0 0 4px white;"></div>`,
-              className: '',
-              iconSize: [18, 18]
+                html: `<div style="background-color: #ffff00; width: 14px; height: 14px; border-radius: 50%; border: 2px solid black; box-shadow: 0 0 4px white;"></div>`,
+                className: '',
+                iconSize: [18, 18]
             }));
-              
+    
             // Calculate visible map area when table is showing
             const containerHeight = mapContainerRef.current.clientHeight;
             const visibleMapHeight = showTable ? containerHeight - tableHeight : containerHeight;
-            const visibleMapCenter = showTable ? 
-              ((containerHeight - tableHeight) / 2) : 
-              (containerHeight / 2);
-                  
+    
             // Get marker position and calculate offset to center it in the visible area
             const markerLatLng = marker.getLatLng();
-            
+    
             // Create a point that will be centered in the visible map area
             // The offset calculation moves the point up to account for the table
-            const targetPoint = showTable ? 
-              map.project(markerLatLng).subtract([0, visibleMapHeight * 0.5]) : 
-              map.project(markerLatLng);
-            
+            const targetPoint = showTable ?
+                map.project(markerLatLng).subtract([0, visibleMapHeight * 0.5]) :
+                map.project(markerLatLng);
+    
             // Convert back to LatLng and pan the map to center on this point
             const targetLatLng = map.unproject(targetPoint);
-            
+    
             // Zoom and pan to the adjusted center
             map.setView(targetLatLng, 16, {
-              animate: true,
-              duration: 0.5
+                animate: true,
+                duration: 0.5
             });
-            
+    
             // Add a pulsing animation effect around the marker
             const pulseMarker = L.marker(markerLatLng, {
-              icon: L.divIcon({
-                html: `<div class="pulse-animation" style="width: 30px; height: 30px; border-radius: 50%; border: 3px solid #ffff00; box-shadow: 0 0 8px #ffff00;"></div>`,
-                className: '',
-                iconSize: [30, 30]
-              })
+                icon: L.divIcon({
+                    html: `<div class="pulse-animation" style="width: 30px; height: 30px; border-radius: 50%; border: 3px solid #ffff00; box-shadow: 0 0 8px #ffff00;"></div>`,
+                    className: '',
+                    iconSize: [30, 30]
+                })
             }).addTo(map);
-            
+    
             // Remove the pulse animation after 3 seconds
             setTimeout(() => {
-              if (map) map.removeLayer(pulseMarker);
+                if (map) map.removeLayer(pulseMarker);
             }, 3000);
-            
-            foundMarker = true;
-          }
-        });
-        
-        // If we couldn't find a marker based on name, try to use coordinates
-        if (!foundMarker) {
-          // Try to extract coordinates from the row data
-          let lat, lng;
-          
-          // Check various possible property names for coordinates
-          if (row.latitude && row.longitude) {
-            lat = parseFloat(row.latitude);
-            lng = parseFloat(row.longitude);
-          } else if (row.lat && row.lng) {
-            lat = parseFloat(row.lat);
-            lng = parseFloat(row.lng);
-          } else if (row.y && row.x) {
-            lat = parseFloat(row.y);
-            lng = parseFloat(row.x);
-          } else if (row.coordinates) {
-            try {
-              // Try to parse a coordinates string like "40.7589, -73.9866"
-              const coords = row.coordinates.split(',').map(c => parseFloat(c.trim()));
-              if (coords.length >= 2) {
-                lat = coords[0];
-                lng = coords[1];
+        };
+    
+        // Extract the coordinate-based highlighting into a separate function
+        const highlightByCoordinates = (row) => {
+            // Try to extract coordinates from the row data
+            let lat, lng;
+    
+            // Check various possible property names for coordinates
+            if (row.latitude && row.longitude) {
+                lat = parseFloat(row.latitude);
+                lng = parseFloat(row.longitude);
+            } else if (row.lat && row.lng) {
+                lat = parseFloat(row.lat);
+                lng = parseFloat(row.lng);
+            } else if (row.y && row.x) {
+                lat = parseFloat(row.y);
+                lng = parseFloat(row.x);
+            } else if (row.coordinates) {
+                try {
+                    // Try to parse a coordinates string like "40.7589, -73.9866"
+                    const coords = row.coordinates.split(',').map(c => parseFloat(c.trim()));
+                    if (coords.length >= 2) {
+                        lat = coords[0];
+                        lng = coords[1];
+                    }
+                } catch (e) {
+                    // Ignore parsing errors
+                }
+            }
+    
+            if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+                const latlng = L.latLng(lat, lng);
+    
+                // Calculate visible map area when table is showing
+                const containerHeight = mapContainerRef.current.clientHeight;
+                const visibleMapHeight = showTable ? containerHeight - tableHeight : containerHeight;
+    
+                // Get projected point and calculate offset
+                const point = map.project(latlng);
+                const offsetPoint = showTable ?
+                    point.subtract([0, visibleMapHeight * 0.1]) :
+                    point;
+    
+                // Convert back to LatLng and pan the map
+                const targetLatLng = map.unproject(offsetPoint);
+    
+                // Set view with animation
+                map.setView(targetLatLng, 16, {
+                    animate: true,
+                    duration: 0.5
+                });
+    
+                // Create a temporary highlight marker
+                const pulseMarker = L.marker(latlng, {
+                    icon: L.divIcon({
+                        html: `<div class="pulse-animation" style="width: 30px; height: 30px; border-radius: 50%; border: 3px solid #ffff00; box-shadow: 0 0 8px #ffff00;"></div>`,
+                        className: '',
+                        iconSize: [30, 30]
+                    })
+                }).addTo(map);
+    
+                // Remove after 3 seconds
+                setTimeout(() => {
+                    if (map) map.removeLayer(pulseMarker);
+                }, 3000);
+            }
+        };
+      
+      
+          const highlightFootTrafficArea = (row) => {
+              if (!row) return;
+              
+              // First try to match by Feature ID
+              const featureId = row['Feature ID'];
+              
+              if (featureId) {
+                  // Try to find the point with the matching Feature ID
+                  const matchedPoint = footTrafficPointsRef.current.find(point => point.featureId === featureId);
+                  
+                  if (matchedPoint) {
+                      highlightFootTrafficPoint(matchedPoint.latlng);
+                      return;
+                  }
               }
-            } catch (e) {
-              // Ignore parsing errors
-            }
-          }
+              
+              // Fallback: Try to highlight by coordinates from row
+              let lat, lng;
+              
+              // Try to get coordinates from various properties
+              if (row.location) {
+                  const [rowLat, rowLng] = row.location.split(',').map(coord => parseFloat(coord.trim()));
+                  if (!isNaN(rowLat) && !isNaN(rowLng)) {
+                      lat = rowLat;
+                      lng = rowLng;
+                  }
+              } else if (row.latitude && row.longitude) {
+                  lat = parseFloat(row.latitude);
+                  lng = parseFloat(row.longitude);
+              } else if (row.lat && row.lng) {
+                  lat = parseFloat(row.lat);
+                  lng = parseFloat(row.lng);
+              } else if (row.y && row.x) {
+                  lat = parseFloat(row.y);
+                  lng = parseFloat(row.x);
+              }
+              
+              if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+                  highlightFootTrafficPoint(L.latLng(lat, lng));
+              }
+          };
           
-          if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
-            const latlng = L.latLng(lat, lng);
-            
-            // Calculate visible map area when table is showing
-            const containerHeight = mapContainerRef.current.clientHeight;
-            const visibleMapHeight = showTable ? containerHeight - tableHeight : containerHeight;
-                  
-            // Get projected point and calculate offset
-            const point = map.project(latlng);
-            const offsetPoint = showTable ? 
-              point.subtract([0, visibleMapHeight * 0.1]) : 
-              point;
-            
-            // Convert back to LatLng and pan the map
-            const targetLatLng = map.unproject(offsetPoint);
-            
-            // Set view with animation
-            map.setView(targetLatLng, 16, {
-              animate: true,
-              duration: 0.5
-            });
-            
-            // Create a temporary highlight marker
-            const pulseMarker = L.marker(latlng, {
-              icon: L.divIcon({
-                html: `<div class="pulse-animation" style="width: 30px; height: 30px; border-radius: 50%; border: 3px solid #ffff00; box-shadow: 0 0 8px #ffff00;"></div>`,
-                className: '',
-                iconSize: [30, 30]
-              })
-            }).addTo(map);
-            
-            // Remove after 3 seconds
-            setTimeout(() => {
-              if (map) map.removeLayer(pulseMarker);
-            }, 3000);
-          }
-        }
-      };
-      
-      // Similarly update the highlightFootTrafficArea function
-      const highlightFootTrafficArea = (row) => {
-        if (!row || !row.location) return;
-        
-        if (map) {
-          const [lat, lng] = row.location.split(',').map(coord => parseFloat(coord.trim()));
-          if (!isNaN(lat) && !isNaN(lng)) {
-            const latlng = L.latLng(lat, lng);
-            
-            const containerHeight = mapContainerRef.current.clientHeight;
-            const visibleMapHeight = showTable ? containerHeight - tableHeight : containerHeight;
-                  
-            const point = map.project(latlng);
-            const offsetPoint = showTable ? 
-              point.subtract([0, visibleMapHeight * 0.25]) : 
-              point;
-            
-            const targetLatLng = map.unproject(offsetPoint);
-            
-            map.setView(targetLatLng, 16, {
-              animate: true,
-              duration: 0.5
-            });
-            
-            const highlightMarker = L.marker(latlng, {
-              icon: L.divIcon({
-                html: `<div class="pulse-animation" style="width: 30px; height: 30px; border-radius: 50%; border: 3px solid #ffff00; box-shadow: 0 0 8px #ffff00;"></div>`,
-                className: '',
-                iconSize: [30, 30]
-              })
-            }).addTo(map);
-            
-            setTimeout(() => {
-              if (map) map.removeLayer(highlightMarker);
-            }, 3000);
-          }
-        }
-      };
+          // Helper function to highlight a foot traffic point
+          const highlightFootTrafficPoint = (latlng) => {
+              if (!map || !latlng) return;
+              
+              // Calculate visible map area when table is showing
+              const containerHeight = mapContainerRef.current.clientHeight;
+              const visibleMapHeight = showTable ? containerHeight - tableHeight : containerHeight;
+              
+              // Get projected point and calculate offset
+              const point = map.project(latlng);
+              const offsetPoint = showTable ? 
+                  point.subtract([0, visibleMapHeight * 0.25]) : 
+                  point;
+              
+              // Convert back to LatLng and pan the map
+              const targetLatLng = map.unproject(offsetPoint);
+              
+              // Set view with animation
+              map.setView(targetLatLng, 16, {
+                  animate: true,
+                  duration: 0.5
+              });
+              
+              // Add a pulsing highlight marker
+              const highlightMarker = L.marker(latlng, {
+                  icon: L.divIcon({
+                      html: `<div class="pulse-animation" style="width: 30px; height: 30px; border-radius: 50%; border: 3px solid #ffff00; box-shadow: 0 0 8px #ffff00;"></div>`,
+                      className: '',
+                      iconSize: [30, 30]
+                  })
+              }).addTo(map);
+              
+              // Remove after 3 seconds
+              setTimeout(() => {
+                  if (map) map.removeLayer(highlightMarker);
+              }, 3000);
+          };
 
-      const highlightSubwayStation = (row) => {
-        if (!row || !map) return;
-        
-        // Try to find coordinates from the row data
-        let lat, lng;
-        
-        if (row.STATIONLOC) {
-          // If coordinates are stored in a combined field, parse them
-          try {
-            const coords = row.STATIONLOC.split(',').map(c => parseFloat(c.trim()));
-            if (coords.length >= 2) {
-              lat = coords[0];
-              lng = coords[1];
-            }
-          } catch (e) {
-          }
-        } else if (row.y && row.x) {
-          lat = parseFloat(row.y);
-          lng = parseFloat(row.x);
-        } else if (row.latitude && row.longitude) {
-          lat = parseFloat(row.latitude);
-          lng = parseFloat(row.longitude);
-        } else if (row.geometry && typeof row.geometry === 'string') {
-          try {
-            const geom = JSON.parse(row.geometry);
-            if (geom && geom.coordinates) {
-              lng = geom.coordinates[0];
-              lat = geom.coordinates[1];
-            }
-          } catch (e) {
-            // Ignore parsing errors
-          }
-        }
-        
-        // If we found coordinates, highlight and zoom to the station
-        if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
-          const latlng = L.latLng(lat, lng);
+      // Function to highlight subway stations
+const highlightSubwayStation = (row) => {
+    if (!row || !map) return;
+    
+    // First try to match by Feature ID - the most reliable approach
+    const featureId = row['Feature ID'];
+    let lat, lng, stationName, line, division;
+    let foundStation = false;
+    
+    // Look through the subway station markers to find a match
+    if (map.eachLayer) {
+      map.eachLayer(layer => {
+        // Check if this is a marker layer with the matching Feature ID
+        if (layer instanceof L.Marker && 
+            layer.featureId === featureId) {
           
-          // Calculate visible map area when table is showing
-          const containerHeight = mapContainerRef.current.clientHeight;
-          const visibleMapHeight = showTable ? containerHeight - tableHeight : containerHeight;
-                
-          // Get projected point and calculate offset for centering
-          const point = map.project(latlng);
-          const offsetPoint = showTable ? 
-            point.subtract([0, visibleMapHeight * 0.1]) : 
-            point;
+          // Found a match by Feature ID
+          foundStation = true;
+          const markerLatLng = layer.getLatLng();
+          lat = markerLatLng.lat;
+          lng = markerLatLng.lng;
           
-          // Convert back to LatLng and pan the map
-          const targetLatLng = map.unproject(offsetPoint);
+          // Get station details from popup content or marker properties
+          const popupContent = layer.getPopup()?.getContent() || '';
+          stationName = row.STATIONLABEL || row.name || 
+                       (popupContent.match(/Name: ([^<]+)/) || [])[1];
+          line = row.LINE || (popupContent.match(/Line: ([^<]+)/) || [])[1];
+          division = row.DIVISION || (popupContent.match(/Division: ([^<]+)/) || [])[1];
           
-          // Set view with animation
-          map.setView(targetLatLng, 16, {
-            animate: true,
-            duration: 0.5
-          });
+          // Change the marker icon to highlight it
+          layer.setIcon(L.divIcon({
+            html: `<div style="background-color: #0039A6; width: 16px; height: 16px; border-radius: 50%; border: 3px solid yellow; box-shadow: 0 0 6px rgba(0,0,0,0.5);"></div>`,
+            className: '',
+            iconSize: [22, 22]
+          }));
           
-          // Create a highlighted marker with subway-specific styling
-          const highlightMarker = L.marker(latlng, {
-            icon: L.divIcon({
-              html: `<div style="background-color: #0039A6; width: 16px; height: 16px; border-radius: 50%; border: 3px solid yellow; box-shadow: 0 0 6px rgba(0,0,0,0.5);"></div>`,
-              className: '',
-              iconSize: [22, 22]
-            })
-          }).addTo(map);
+          // Create a popup with station information and display it
+          let newPopupContent = '<strong>Subway Station</strong>';
+          if (stationName) newPopupContent += `<br>Name: ${stationName}`;
+          if (line) newPopupContent += `<br>Line: ${line}`;
+          if (division) newPopupContent += `<br>Division: ${division}`;
           
-          // Create a pulsing highlight effect
-          const pulseMarker = L.marker(latlng, {
-            icon: L.divIcon({
-              html: `<div class="pulse-animation" style="width: 36px; height: 36px; border-radius: 50%; border: 3px solid #ffff00; box-shadow: 0 0 10px #ffff00;"></div>`,
-              className: '',
-              iconSize: [36, 36]
-            })
-          }).addTo(map);
+          layer.bindPopup(newPopupContent).openPopup();
           
-          // Create a popup with station information
-          let popupContent = '<strong>Subway Station</strong>';
-          if (row.STATIONLABEL || row.name) {
-            popupContent += `<br>Name: ${row.STATIONLABEL || row.name}`;
-          }
-          if (row.LINE) {
-            popupContent += `<br>Line: ${row.LINE}`;
-          }
-          if (row.DIVISION) {
-            popupContent += `<br>Division: ${row.DIVISION}`;
-          }
-          
-          // Add popup
-          L.popup()
-            .setLatLng(latlng)
-            .setContent(popupContent)
-            .openOn(map);
-          
-          // Remove highlight markers after 3 seconds
+          // Return to original marker after 3 seconds
           setTimeout(() => {
             if (map) {
-              map.removeLayer(highlightMarker);
-              map.removeLayer(pulseMarker);
+              layer.setIcon(L.divIcon({
+                html: `<div style="background-color: #0039A6; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5);"></div>`,
+                className: '',
+                iconSize: [16, 16]
+              }));
             }
           }, 3000);
         }
-      };
+      });
+    }
+    
+    // If we didn't find a marker with matching Feature ID, try coordinates
+    if (!foundStation) {
+      // Extract coordinates from the row data
+      if (row.STATIONLOC) {
+        try {
+          const coords = row.STATIONLOC.split(',').map(c => parseFloat(c.trim()));
+          if (coords.length >= 2) {
+            lat = coords[0];
+            lng = coords[1];
+          }
+        } catch (e) { /* Ignore parsing errors */ }
+      } else if (row.y && row.x) {
+        lat = parseFloat(row.y);
+        lng = parseFloat(row.x);
+      } else if (row.latitude && row.longitude) {
+        lat = parseFloat(row.latitude);
+        lng = parseFloat(row.longitude);
+      } else if (row.geometry && typeof row.geometry === 'string') {
+        try {
+          const geom = JSON.parse(row.geometry);
+          if (geom && geom.coordinates) {
+            lng = geom.coordinates[0];
+            lat = geom.coordinates[1];
+          }
+        } catch (e) { /* Ignore parsing errors */ }
+      }
+    }
+    
+    // If we have coordinates (either from Feature ID match or extracted from row),
+    // pan and zoom to the station location
+    if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+      const latlng = L.latLng(lat, lng);
       
-      // Function to highlight storefronts
-      const highlightStorefront = (row) => {
-        if (!row || !map) return;
+      // Calculate visible map area when table is showing
+      const containerHeight = mapContainerRef.current.clientHeight;
+      const visibleMapHeight = showTable ? containerHeight - tableHeight : containerHeight;
+      
+      // Get projected point and calculate offset for centering
+      const point = map.project(latlng);
+      const offsetPoint = showTable ? 
+        point.subtract([0, visibleMapHeight * 0.1]) : 
+        point;
+      
+      // Convert back to LatLng and pan the map
+      const targetLatLng = map.unproject(offsetPoint);
+      
+      // Set view with animation
+      map.setView(targetLatLng, 16, {
+        animate: true,
+        duration: 0.5
+      });
+      
+      // If we didn't find a matching marker, create a temporary highlighted marker
+      if (!foundStation) {
+        // Create a highlighted marker with subway-specific styling
+        const highlightMarker = L.marker(latlng, {
+          icon: L.divIcon({
+            html: `<div style="background-color: #0039A6; width: 16px; height: 16px; border-radius: 50%; border: 3px solid yellow; box-shadow: 0 0 6px rgba(0,0,0,0.5);"></div>`,
+            className: '',
+            iconSize: [22, 22]
+          })
+        }).addTo(map);
         
-        // Try to find coordinates in the row data
-        let lat, lng;
+        // Create a pulsing highlight effect
+        const pulseMarker = L.marker(latlng, {
+          icon: L.divIcon({
+            html: `<div class="pulse-animation" style="width: 36px; height: 36px; border-radius: 50%; border: 3px solid #ffff00; box-shadow: 0 0 10px #ffff00;"></div>`,
+            className: '',
+            iconSize: [36, 36]
+          })
+        }).addTo(map);
         
-        if (row.property_street_address_or && row.nbhd) {
-          // Try to find the matching storefront in the original data
-          const matchingStorefront = storefrontDataRef.current.features.find(feature => 
-            feature.properties && 
-            feature.properties.property_street_address_or === row.property_street_address_or &&
-            feature.properties.nbhd === row.nbhd
-          );
-          
-          if (matchingStorefront && matchingStorefront.geometry && matchingStorefront.geometry.coordinates) {
-            lng = matchingStorefront.geometry.coordinates[0];
-            lat = matchingStorefront.geometry.coordinates[1];
-          }
-        } else if (row.latitude && row.longitude) {
-          lat = parseFloat(row.latitude);
-          lng = parseFloat(row.longitude);
-        } else if (row.lat && row.lng) {
-          lat = parseFloat(row.lat);
-          lng = parseFloat(row.lng);
-        } else if (row.y && row.x) {
-          lat = parseFloat(row.y);
-          lng = parseFloat(row.x);
-        } else if (row.coordinates) {
-          try {
-            const coords = row.coordinates.split(',').map(c => parseFloat(c.trim()));
-            if (coords.length >= 2) {
-              lat = coords[0];
-              lng = coords[1];
-            }
-          } catch (e) {
-            // Ignore parsing errors
-          }
+        // Create a popup with station information
+        let popupContent = '<strong>Subway Station</strong>';
+        if (row.STATIONLABEL || row.name) {
+          popupContent += `<br>Name: ${row.STATIONLABEL || row.name}`;
+        }
+        if (row.LINE) {
+          popupContent += `<br>Line: ${row.LINE}`;
+        }
+        if (row.DIVISION) {
+          popupContent += `<br>Division: ${row.DIVISION}`;
         }
         
-        // If we found coordinates, highlight and zoom to the storefront
-        if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
-          const latlng = L.latLng(lat, lng);
-          
-          // Calculate visible map area when table is showing
-          const containerHeight = mapContainerRef.current.clientHeight;
-          const visibleMapHeight = showTable ? containerHeight - tableHeight : containerHeight;
-                
-          // Get projected point and calculate offset for centering
-          const point = map.project(latlng);
-          const offsetPoint = showTable ? 
-            point.subtract([0, visibleMapHeight * 0.15]) : 
-            point;
-          
-          // Convert back to LatLng and pan the map
-          const targetLatLng = map.unproject(offsetPoint);
-          
-          // Set view with animation
-          map.setView(targetLatLng, 17, { // Slightly higher zoom for storefronts
-            animate: true,
-            duration: 0.5
-          });
-          
-          // Determine color based on price category
-          let markerColor = '#4caf50'; // Default color (medium)
-          if (row.priceCategory === 'Low') {
-            markerColor = '#2e7d32'; // Green for low rent
-          } else if (row.priceCategory === 'High') {
-            markerColor = '#2e7d32'; // Red for high rent
+        // Add popup
+        L.popup()
+          .setLatLng(latlng)
+          .setContent(popupContent)
+          .openOn(map);
+        
+        // Remove highlight markers after 3 seconds
+        setTimeout(() => {
+          if (map) {
+            map.removeLayer(highlightMarker);
+            map.removeLayer(pulseMarker);
           }
-          
-          // Create a highlighted marker with price-specific styling
-          const highlightMarker = L.marker(latlng, {
-            icon: L.divIcon({
-              html: `<div style="background-color: ${markerColor}; width: 18px; height: 18px; border-radius: 3px; transform: rotate(45deg); border: 3px solid yellow; box-shadow: 0 0 6px rgba(0,0,0,0.5);"></div>`,
-              className: '',
-              iconSize: [24, 24]
-            })
-          }).addTo(map);
-          
-          // Create a pulsing highlight effect
-          const pulseMarker = L.marker(latlng, {
-            icon: L.divIcon({
-              html: `<div class="pulse-animation" style="width: 36px; height: 36px; border-radius: 50%; border: 3px solid #ffff00; box-shadow: 0 0 10px #ffff00;"></div>`,
-              className: '',
-              iconSize: [36, 36]
-            })
-          }).addTo(map);
-          
-          // Create a popup with storefront information
-          let popupContent = '<strong>Available Storefront</strong>';
-          if (row.property_street_address_or) {
-            popupContent += `<br>Address: ${row.property_street_address_or}`;
+        }, 3000);
+      }
+    }
+  };
+  
+  // Function to highlight available storefronts
+  const highlightStorefront = (row) => {
+    if (!row || !map) return;
+    
+    // First try to match by Feature ID
+    const featureId = row['Feature ID'];
+    let foundStorefront = false;
+    let lat, lng, storeProperties;
+    
+    // Try to find the matching storefront in the original data
+    if (featureId && storefrontDataRef.current && storefrontDataRef.current.features) {
+      const matchingStorefront = storefrontDataRef.current.features.find(feature => 
+        feature.properties && feature.properties['Feature ID'] === featureId
+      );
+      
+      if (matchingStorefront && matchingStorefront.geometry && matchingStorefront.geometry.coordinates) {
+        foundStorefront = true;
+        lng = matchingStorefront.geometry.coordinates[0];
+        lat = matchingStorefront.geometry.coordinates[1];
+        storeProperties = matchingStorefront.properties;
+      }
+    }
+    
+    // If no match by Feature ID, try matching by address and neighborhood
+    if (!foundStorefront && row.property_street_address_or && row.nbhd) {
+      const matchingStorefront = storefrontDataRef.current.features.find(feature => 
+        feature.properties && 
+        feature.properties.property_street_address_or === row.property_street_address_or &&
+        feature.properties.nbhd === row.nbhd
+      );
+      
+      if (matchingStorefront && matchingStorefront.geometry && matchingStorefront.geometry.coordinates) {
+        foundStorefront = true;
+        lng = matchingStorefront.geometry.coordinates[0];
+        lat = matchingStorefront.geometry.coordinates[1];
+        storeProperties = matchingStorefront.properties;
+      }
+    }
+    
+    // If still no match, try to extract coordinates from the row data
+    if (!foundStorefront) {
+      if (row.latitude && row.longitude) {
+        lat = parseFloat(row.latitude);
+        lng = parseFloat(row.longitude);
+      } else if (row.lat && row.lng) {
+        lat = parseFloat(row.lat);
+        lng = parseFloat(row.lng);
+      } else if (row.y && row.x) {
+        lat = parseFloat(row.y);
+        lng = parseFloat(row.x);
+      } else if (row.coordinates) {
+        try {
+          const coords = row.coordinates.split(',').map(c => parseFloat(c.trim()));
+          if (coords.length >= 2) {
+            lat = coords[0];
+            lng = coords[1];
           }
-          if (row.nbhd) {
-            popupContent += `<br>Neighborhood: ${row.nbhd}`;
-          }
-          if (row.rentalPrice) {
-            popupContent += `<br>Estimated Rent: $${row.rentalPrice}/sq ft annually`;
-            popupContent += `<br>Price Category: ${row.priceCategory}`;
-          }
-          if (row.vacant_on_12_31 === "YES") {
-            popupContent += `<br>Vacancy Status: Currently Vacant`;
-          }
-          
-          // Add popup
-          L.popup()
-            .setLatLng(latlng)
-            .setContent(popupContent)
-            .openOn(map);
-          
-          // Remove highlight markers after 3 seconds
-          setTimeout(() => {
-            if (map) {
-              map.removeLayer(highlightMarker);
-              map.removeLayer(pulseMarker);
-            }
-          }, 3000);
+        } catch (e) {
+          // Ignore parsing errors
         }
-      };
+      }
+    }
+    
+    // If we found coordinates, highlight and zoom to the storefront
+    if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+      const latlng = L.latLng(lat, lng);
+      
+      // Calculate visible map area when table is showing
+      const containerHeight = mapContainerRef.current.clientHeight;
+      const visibleMapHeight = showTable ? containerHeight - tableHeight : containerHeight;
+      
+      // Get projected point and calculate offset for centering
+      const point = map.project(latlng);
+      const offsetPoint = showTable ? 
+        point.subtract([0, visibleMapHeight * 0.15]) : 
+        point;
+      
+      // Convert back to LatLng and pan the map
+      const targetLatLng = map.unproject(offsetPoint);
+      
+      // Set view with animation
+      map.setView(targetLatLng, 17, { // Slightly higher zoom for storefronts
+        animate: true,
+        duration: 0.5
+      });
+      
+      // Determine color based on price category
+      let markerColor = '#4caf50'; // Default medium green
+      
+      // Use properties from either the row or matching storefront
+      const priceCategory = row.priceCategory || (storeProperties && storeProperties.priceCategory);
+      
+      if (priceCategory === 'Low') {
+        markerColor = '#007A7A'; // Dark teal for low rent
+      } else if (priceCategory === 'High') {
+        markerColor = '#C7FFDA'; // Light green for high rent
+      } else {
+        markerColor = '#00B8B8'; // Medium teal for medium rent
+      }
+      
+      // Create a highlighted marker with price-specific styling
+      const highlightMarker = L.marker(latlng, {
+        icon: L.divIcon({
+          html: `<div style="background-color: ${markerColor}; width: 18px; height: 18px; border-radius: 3px; transform: rotate(45deg); border: 3px solid yellow; box-shadow: 0 0 6px rgba(0,0,0,0.5);"></div>`,
+          className: '',
+          iconSize: [24, 24]
+        })
+      }).addTo(map);
+      
+      // Create a pulsing highlight effect
+      const pulseMarker = L.marker(latlng, {
+        icon: L.divIcon({
+          html: `<div class="pulse-animation" style="width: 36px; height: 36px; border-radius: 50%; border: 3px solid #ffff00; box-shadow: 0 0 10px #ffff00;"></div>`,
+          className: '',
+          iconSize: [36, 36]
+        })
+      }).addTo(map);
+      
+      // Create a popup with storefront information
+      let popupContent = '<strong>Available Storefront</strong>';
+      
+      // Use either row data or properties from matching storefront
+      const address = row.property_street_address_or || (storeProperties && storeProperties.property_street_address_or);
+      const neighborhood = row.nbhd || (storeProperties && storeProperties.nbhd);
+      const rentalPrice = row.rentalPrice || (storeProperties && storeProperties.rentalPrice);
+      const priceCat = row.priceCategory || (storeProperties && storeProperties.priceCategory);
+      const vacancy = row.vacant_on_12_31 || (storeProperties && storeProperties.vacant_on_12_31);
+      
+      if (address) {
+        popupContent += `<br>Address: ${address}`;
+      }
+      if (neighborhood) {
+        popupContent += `<br>Neighborhood: ${neighborhood}`;
+      }
+      if (rentalPrice) {
+        popupContent += `<br>Estimated Rent: $${rentalPrice}/sq ft annually`;
+        if (priceCat) {
+          popupContent += `<br>Price Category: ${priceCat}`;
+        }
+      }
+      if (vacancy === "YES") {
+        popupContent += `<br>Vacancy Status: Currently Vacant`;
+      }
+      
+      // Add popup
+      L.popup()
+        .setLatLng(latlng)
+        .setContent(popupContent)
+        .openOn(map);
+      
+      // Remove highlight markers after 3 seconds
+      setTimeout(() => {
+        if (map) {
+          map.removeLayer(highlightMarker);
+          map.removeLayer(pulseMarker);
+        }
+      }, 3000);
+    }
+  };
       
     
     const addPulseAnimation = () => {
@@ -1288,14 +1446,6 @@ const AdditionalLayersMapComponent = ({ onLayersReady, onSaveMap, savedMaps = []
                         });
                     }
                     
-                    // Gather radius data
-                    if (map && radiusCircleRef.current) {
-                        const circle = radiusCircleRef.current;
-                        mapData.radius = {
-                            center: circle.getLatLng(),
-                            radius: circle.getRadius()
-                        };
-                    }
                     
                     // Send to server for processing
                     fetch('/api/export-map', {
@@ -1504,151 +1654,213 @@ const AdditionalLayersMapComponent = ({ onLayersReady, onSaveMap, savedMaps = []
     };
 
     const fetchCoffeeShops = async () => {
-        try {
-            const res = await fetch('/data/coffeeshop-data.geojson');
-            const shopData = await res.json();
-            const coffeeLayer = L.layerGroup();
-
-            // Times Square coordinates
-            const timesSquare = L.latLng(40.7589, -73.9866);
-            // 3 miles in meters (3 * 1609.34)
-            const radiusInMeters = radius * 1609.34;
-
-            // Create a filtered version of the shop data for the table
-            const filteredShopData = {
-                type: "FeatureCollection",
-                features: []
-            };
-
-            if (shopData.features && shopData.features.length > 0) {
-                shopData.features.forEach(feature => {
-                    let coords;
-
-                    // Get coordinates either from geometry or from properties
-                    if (feature.geometry && feature.geometry.type === 'Point') {
-                        coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
-                    } else if (feature.properties && feature.properties.latitude && feature.properties.longitude) {
-                        coords = [
-                            parseFloat(feature.properties.latitude),
-                            parseFloat(feature.properties.longitude)
-                        ];
-                    } else {
-                        // Skip features without coordinates
-                        return;
-                    }
-
-                    // Create a Leaflet LatLng object for distance calculation
-                    const shopLocation = L.latLng(coords[0], coords[1]);
-
-                    // Calculate distance from Times Square
-                    const distanceToTimesSquare = timesSquare.distanceTo(shopLocation);
-
-                    // Skip shops outside the radius
-                    if (distanceToTimesSquare > radiusInMeters) {
-                        return;
-                    }
-
-                    // Add this feature to our filtered data for the table
-                    filteredShopData.features.push(feature);
-
-                    // Determine the coffee shop type and potential
-                    let color = layerColors.existingShop;
-                    let potential = feature.properties?.potential || 'existing';
-
-                    // Create marker with appropriate styling
-                    const marker = L.marker(coords, {
-                        icon: L.divIcon({
-                            html: `<div style="background-color: ${color}; width: 10px; height: 10px; border-radius: 50%; border: 2px solid white;"></div>`,
-                            className: '',
-                            iconSize: [14, 14]
-                        })
-                    });
-
-                    // Create popup content
-                    let popupContent = '<strong>Coffee Shop</strong>';
-                    if (feature.properties) {
-                        if (feature.properties.dba || feature.properties.name) {
-                            popupContent += `<br>Name: ${feature.properties.dba || feature.properties.name}`;
-                        }
-                        if (feature.properties.street && feature.properties.building) {
-                            popupContent += `<br>Address: ${feature.properties.building} ${feature.properties.street}`;
-                        }
-                        if (feature.properties.grade) {
-                            popupContent += `<br>Grade: ${feature.properties.grade}`;
-                        }
-                        if (feature.properties.score) {
-                            popupContent += `<br>Score: ${feature.properties.score}`;
-                        }
-                        if (feature.properties.cuisine_description) {
-                            popupContent += `<br>Type: ${feature.properties.cuisine_description}`;
-                        }
-                    }
-
-                    marker.bindPopup(popupContent);
-                    marker.on('click', () => {
-                        selectRowByFeatureProperties(feature.properties);
-                    });
-
-                    coffeeShopsRef.current.push({ marker, potential });
-                    coffeeLayer.addLayer(marker);
-                });
-            }
-
-            return { coffeeLayer, shopData: filteredShopData };
-        } catch (error) {
-            console.error("Error fetching coffee shop data:", error);
-            return { coffeeLayer: L.layerGroup(), shopData: { features: [] } };
-        }
-    };
-
-    // Find the fetchFootTraffic function (around line 790)
-const fetchFootTraffic = async () => {
-    try {
-      const res = await fetch('/data/pedestrian-data.geojson');
-      const trafficData = await res.json();
-      const trafficLayer = L.layerGroup();
-      
-      // Process for heatmap
-      const heatPoints = [];
-      
-      if (trafficData.features && trafficData.features.length > 0) {
-        trafficData.features.forEach(feature => {
-          if (feature.geometry && feature.geometry.type === 'Point') {
-            const coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
-            // Increase the intensity by multiplying the original value
-            // Original: const intensity = feature.properties?.intensity || 0.5;
-            const baseIntensity = feature.properties?.intensity || 0.5;
-            const intensity = Math.min(baseIntensity * 4, 1.0); 
-            
-            // Add to heatmap data
-            heatPoints.push([coords[0], coords[1], intensity]);
-          }
-        });
-      }
-      
-      // Create heatmap layer if we have points
-      if (heatPoints.length > 0 && window.L.heatLayer) {
-        const heatmap = window.L.heatLayer(heatPoints, {
-          radius: 50,     
-          blur: 40,       
-          maxZoom: 17,
-          gradient: {
-            0.2: layerColors.lowTraffic,
-            0.5: layerColors.mediumTraffic,
-            0.8: layerColors.highTraffic
-          }
-        });
+            try {
+                const res = await fetch('/data/coffeeshop-data.geojson');
+                const shopData = await res.json();
+                const coffeeLayer = L.layerGroup();
         
-        footTrafficHeatmapRef.current = heatmap;
-        trafficLayer.addLayer(heatmap);
-      }
-      
-      return { trafficLayer, trafficData };
-    } catch (error) {
-      console.error("Error fetching foot traffic data:", error);
-      return { trafficLayer: L.layerGroup(), trafficData: { features: [] } };
-    }
-  };
+                // Times Square coordinates
+                const timesSquare = L.latLng(40.7589, -73.9866);
+                const radiusInMeters = radius * 1609.34;
+                
+                // Create a filtered version of the shop data for the table
+                const filteredShopData = {
+                    type: "FeatureCollection",
+                    features: []
+                };
+        
+                if (shopData.features && shopData.features.length > 0) {
+                    // First pass: Ensure all features have a consistent Feature ID
+                    shopData.features.forEach((feature, index) => {
+                        if (!feature.properties) {
+                            feature.properties = {};
+                        }
+                        
+                        // Create a consistent Feature ID that will be used in both map and table
+                        // If there's already an ID, use it; otherwise, create a new one
+                        feature.properties['Feature ID'] = feature.properties['Feature ID'] || 
+                                                          feature.properties.id || 
+                                                          `${index + 1}`;
+                    });
+        
+                    // Second pass: Create markers and populate filtered data
+                    shopData.features.forEach((feature) => {
+                        let coords;
+        
+                        // Get coordinates either from geometry or from properties
+                        if (feature.geometry && feature.geometry.type === 'Point') {
+                            coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
+                        } else if (feature.properties && feature.properties.latitude && feature.properties.longitude) {
+                            coords = [
+                                parseFloat(feature.properties.latitude),
+                                parseFloat(feature.properties.longitude)
+                            ];
+                        } else {
+                            // Skip features without coordinates
+                            return;
+                        }
+        
+                        // Create a Leaflet LatLng object for distance calculation
+                        const shopLocation = L.latLng(coords[0], coords[1]);
+        
+                        // Calculate distance from Times Square
+                        const distanceToTimesSquare = timesSquare.distanceTo(shopLocation);
+        
+                        // Skip shops outside the radius
+                        if (distanceToTimesSquare > radiusInMeters) {
+                            return;
+                        }
+        
+                        // Get the consistent Feature ID
+                        const featureId = feature.properties['Feature ID'];
+                        
+                        // Add this feature to our filtered data for the table
+                        filteredShopData.features.push(feature);
+        
+                        // Determine the coffee shop type and potential
+                        let color = layerColors.existingShop;
+                        let potential = feature.properties?.potential || 'existing';
+        
+                        // Create marker with appropriate styling
+                        const marker = L.marker(coords, {
+                            icon: L.divIcon({
+                                html: `<div style="background-color: ${color}; width: 10px; height: 10px; border-radius: 50%; border: 2px solid white;"></div>`,
+                                className: '',
+                                iconSize: [14, 14]
+                            })
+                        });
+        
+                        // Store the Feature ID directly on the marker for easy access
+                        marker.featureId = featureId;
+        
+                        // Create popup content with Feature ID prominently displayed
+                        let popupContent = '<strong>Coffee Shop</strong>';
+                        popupContent += `<br>Feature ID: ${featureId}`;
+                        
+                        if (feature.properties) {
+                            if (feature.properties.dba || feature.properties.name) {
+                                popupContent += `<br>Name: ${feature.properties.dba || feature.properties.name}`;
+                            }
+                            if (feature.properties.street && feature.properties.building) {
+                                popupContent += `<br>Address: ${feature.properties.building} ${feature.properties.street}`;
+                            }
+                            if (feature.properties.grade) {
+                                popupContent += `<br>Grade: ${feature.properties.grade}`;
+                            }
+                            if (feature.properties.score) {
+                                popupContent += `<br>Score: ${feature.properties.score}`;
+                            }
+                            if (feature.properties.cuisine_description) {
+                                popupContent += `<br>Type: ${feature.properties.cuisine_description}`;
+                            }
+                        }
+        
+                        marker.bindPopup(popupContent);
+                        
+                        // When marker is clicked, select the corresponding row
+                        marker.on('click', () => {
+                            selectRowByFeatureProperties(feature.properties);
+                        });
+        
+                        // Store reference to marker with its feature ID for easier lookup
+                        coffeeShopsRef.current.push({ marker, potential, featureId });
+                        coffeeLayer.addLayer(marker);
+                    });
+                }
+        
+                return { coffeeLayer, shopData: filteredShopData };
+            } catch (error) {
+                console.error("Error fetching coffee shop data:", error);
+                return { coffeeLayer: L.layerGroup(), shopData: { features: [] } };
+            }
+        };
+    
+        const fetchFootTraffic = async () => {
+            try {
+                const res = await fetch('/data/pedestrian-data.geojson');
+                const trafficData = await res.json();
+                const trafficLayer = L.layerGroup();
+        
+                // Process for heatmap
+                const heatPoints = [];
+                
+                // Times Square coordinates for distance calculation
+                const timesSquare = L.latLng(40.7589, -73.9866);
+                const radiusInMeters = radius * 1609.34; // Convert miles to meters
+        
+                // Ensure all features have Feature IDs
+                if (trafficData.features && trafficData.features.length > 0) {
+                    // First pass: Assign Feature IDs to all features
+                    trafficData.features.forEach((feature, index) => {
+                        if (!feature.properties) {
+                            feature.properties = {};
+                        }
+                        
+                        // Create a consistent Feature ID
+                        feature.properties['Feature ID'] = feature.properties['Feature ID'] || 
+                                                          feature.properties.id || 
+                                                          `${index + 1}`; // Prefix with 'ft-' to distinguish from coffee shops
+                    });
+        
+                    // Second pass: Process features for display and create the filtered dataset
+                    const footTrafficPoints = [];
+                    
+                    trafficData.features.forEach(feature => {
+                        if (feature.geometry && feature.geometry.type === 'Point') {
+                            const coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
+                            const intensity = feature.properties?.intensity || 0.5;
+                            const featureId = feature.properties['Feature ID'];
+                            
+                            // Create a point for distance calculation
+                            const point = L.latLng(coords[0], coords[1]);
+                            
+                            // Check if the point is within the radius
+                            const distanceToTimesSquare = timesSquare.distanceTo(point);
+                            
+                            // Only add points that are within the radius
+                            if (distanceToTimesSquare <= radiusInMeters) {
+                                // Add to heatmap data
+                                heatPoints.push([coords[0], coords[1], intensity * 5]);
+                                
+                                // Store the point with its Feature ID for potential lookup
+                                footTrafficPoints.push({
+                                    latlng: point,
+                                    featureId: featureId,
+                                    properties: feature.properties
+                                });
+                            }
+                        }
+                    });
+                    
+                    // Store the foot traffic points for later reference
+                    // This will allow us to highlight them when selected in the table
+                    footTrafficPointsRef.current = footTrafficPoints;
+                }
+        
+                // Create heatmap layer if we have points
+                if (heatPoints.length > 0 && window.L.heatLayer) {
+                    const heatmap = window.L.heatLayer(heatPoints, {
+                        radius: 20,
+                        blur: 8,
+                        maxZoom: 17,
+                        gradient: {
+                            0.2: layerColors.lowTraffic,
+                            0.5: layerColors.mediumTraffic,
+                            0.8: layerColors.highTraffic
+                        }
+                    });
+        
+                    footTrafficHeatmapRef.current = heatmap;
+                    trafficLayer.addLayer(heatmap);
+                }
+        
+                return { trafficLayer, trafficData };
+            } catch (error) {
+                console.error("Error fetching foot traffic data:", error);
+                return { trafficLayer: L.layerGroup(), trafficData: { features: [] } };
+            }
+        };
+    
 
     const createRadiusCircle = () => {
         // Times Square coordinates
@@ -1707,6 +1919,16 @@ const fetchFootTraffic = async () => {
 
             // Process each storefront
             if (storefrontData.features && storefrontData.features.length > 0) {
+                storefrontData.features.forEach((feature, index) => {
+                    if (!feature.properties) {
+                      feature.properties = {};
+                    }
+                    
+                    // Create a consistent Feature ID
+                    feature.properties['Feature ID'] = feature.properties['Feature ID'] || 
+                                                      feature.properties.id || 
+                                                      `store-${index + 1}`;  // Prefix for storefronts
+                  });
                 for (const feature of storefrontData.features) {
                     if (!feature.properties) continue;
 
@@ -1732,14 +1954,14 @@ const fetchFootTraffic = async () => {
                     const rentalPrice = Math.floor(Math.random() * (maxRent - minRent) + minRent);
 
                     // Determine color based on price
-                    let priceColor;
-                    if (rentalPrice < 200) {
-                        priceColor = '#2e7d32'; // green for cheapest
-                    } else if (rentalPrice < 1000) {
-                        priceColor = '#4caf50'; // orange for mid-range
-                    } else {
-                        priceColor = '#2e7d32'; // red for expensive
-                    }
+let priceColor;
+if (rentalPrice < 200) {
+    priceColor = '#007A7A'; // lowest rent
+} else if (rentalPrice < 1000) {
+    priceColor = '#00B8B8'; // medium rent
+} else {
+    priceColor = '#C7FFDA'; // highest rent
+}
 
                     // Add rental price to properties
                     feature.properties.rentalPrice = rentalPrice;
@@ -1757,13 +1979,13 @@ const fetchFootTraffic = async () => {
             }
             if (heatPoints.length > 0 && window.L.heatLayer) {
                 const storefrontHeatmap = window.L.heatLayer(heatPoints, {
-                    radius: 10,
-                    blur: 20,
+                    radius: 15,
+                    blur: 5,
                     maxZoom: 17,
                     gradient: {
-                        0.2: '#2e7d32', // green (cheap rent)
-                        0.5: '#4caf50', // orange (mid-range rent)
-                        0.8: '#2e7d32'  // red (expensive rent)
+                        0.0: '#C7FFDA',  // very light green
+                        0.4: '#00B8B8',  // medium green
+                        0.7: '#007A7A',  // dark olive green
                     }
                 });
 
@@ -1779,82 +2001,103 @@ const fetchFootTraffic = async () => {
 
     const fetchSubwayStations = async () => {
         try {
-            const res = await fetch('/data/subway-data.geojson');
-            const stationData = await res.json();
-            const stationLayer = L.layerGroup();
-
-            // Times Square coordinates
-            const timesSquare = L.latLng(40.7589, -73.9866);
-            // 3 miles in meters (3 * 1609.34)
-            const radiusInMeters = radius * 1609.34;
-
-            // Create a filtered version of the station data for the table
-            const filteredStationData = {
-                type: "FeatureCollection",
-                features: []
-            };
-
-            if (stationData.features && stationData.features.length > 0) {
-                stationData.features.forEach(feature => {
-                    // Skip entries without geometry/coordinates
-                    if (!feature.geometry || feature.geometry.type !== 'Point' || !feature.geometry.coordinates) {
-                        return;
-                    }
-
-                    const coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
-
-                    // Create a Leaflet LatLng object for distance calculation
-                    const stationLocation = L.latLng(coords[0], coords[1]);
-
-                    // Calculate distance from Times Square
-                    const distanceToTimesSquare = timesSquare.distanceTo(stationLocation);
-
-                    // Skip stations outside the radius
-                    if (distanceToTimesSquare > radiusInMeters) {
-                        return;
-                    }
-
-                    // Add this feature to our filtered data for the table
-                    filteredStationData.features.push(feature);
-
-                    // Create subway icon
-                    const marker = L.marker(coords, {
-                        icon: L.divIcon({
-                            html: `<div style="background-color: #0039A6; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5);"></div>`,
-                            className: '',
-                            iconSize: [16, 16]
-                        })
-                    });
-
-                    // Create popup content
-                    let popupContent = '<strong>Subway Station</strong>';
-                    if (feature.properties) {
-                        if (feature.properties.STATIONLABEL) {
-                            popupContent += `<br>Name: ${feature.properties.STATIONLABEL}`;
-                        }
-                        if (feature.properties.LINE) {
-                            popupContent += `<br>Line: ${feature.properties.LINE}`;
-                        }
-                        if (feature.properties.DIVISION) {
-                            popupContent += `<br>Division: ${feature.properties.DIVISION}`;
-                        }
-                    }
-
-                    marker.bindPopup(popupContent);
-                    marker.on('click', () => {
-                        selectRowByFeatureProperties(feature.properties);
-                    });
-
-                    stationLayer.addLayer(marker);
-                });
-            }
-
-            return { stationLayer, stationData: filteredStationData };
+          const res = await fetch('/data/subway-data.geojson');
+          const stationData = await res.json();
+          const stationLayer = L.layerGroup();
+      
+          // Times Square coordinates
+          const timesSquare = L.latLng(40.7589, -73.9866);
+          const radiusInMeters = radius * 1609.34;
+      
+          // Create a filtered version of the station data for the table
+          const filteredStationData = {
+            type: "FeatureCollection",
+            features: []
+          };
+      
+          if (stationData.features && stationData.features.length > 0) {
+            // First pass: Assign Feature IDs
+            stationData.features.forEach((feature, index) => {
+              if (!feature.properties) {
+                feature.properties = {};
+              }
+              
+              // Create a consistent Feature ID
+              feature.properties['Feature ID'] = feature.properties['Feature ID'] || 
+                                                feature.properties.id || 
+                                                `subway-${index + 1}`;  // Prefix to distinguish from other layers
+            });
+      
+            // Second pass: Process features
+            stationData.features.forEach(feature => {
+              // Skip entries without geometry/coordinates
+              if (!feature.geometry || feature.geometry.type !== 'Point' || !feature.geometry.coordinates) {
+                return;
+              }
+      
+              const coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
+              const featureId = feature.properties['Feature ID'];
+      
+              // Create a Leaflet LatLng object for distance calculation
+              const stationLocation = L.latLng(coords[0], coords[1]);
+      
+              // Calculate distance from Times Square
+              const distanceToTimesSquare = timesSquare.distanceTo(stationLocation);
+      
+              // Skip stations outside the radius
+              if (distanceToTimesSquare > radiusInMeters) {
+                return;
+              }
+      
+              // Add this feature to our filtered data for the table
+              filteredStationData.features.push(feature);
+      
+              // Create subway icon
+              const marker = L.marker(coords, {
+                icon: L.divIcon({
+                  html: `<div style="background-color: #0039A6; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5);"></div>`,
+                  className: '',
+                  iconSize: [16, 16]
+                })
+              });
+      
+              // Store Feature ID on marker for easy lookup
+              marker.featureId = featureId;
+      
+              // Create popup content
+              let popupContent = '<strong>Subway Station</strong>';
+              popupContent += `<br>Feature ID: ${featureId}`;
+              
+              if (feature.properties) {
+                if (feature.properties.STATIONLABEL) {
+                  popupContent += `<br>Name: ${feature.properties.STATIONLABEL}`;
+                }
+                if (feature.properties.LINE) {
+                  popupContent += `<br>Line: ${feature.properties.LINE}`;
+                }
+                if (feature.properties.DIVISION) {
+                  popupContent += `<br>Division: ${feature.properties.DIVISION}`;
+                }
+              }
+      
+              marker.bindPopup(popupContent);
+              marker.on('click', () => {
+                selectRowByFeatureProperties(feature.properties);
+              });
+      
+              // Store reference to this marker for later lookup
+              stationPointsRef.current.push({ marker, featureId, properties: feature.properties });
+              stationLayer.addLayer(marker);
+            });
+          }
+      
+          return { stationLayer, stationData: filteredStationData };
         } catch (error) {
-            console.error("Error fetching subway station data:", error);
-            return { stationLayer: L.layerGroup(), stationData: { features: [] } };
+          console.error("Error fetching subway station data:", error);
+          return { stationLayer: L.layerGroup(), stationData: { features: [] } };
         }
-    };
+      };
+      
 
     useEffect(() => {
         const initializeMap = async () => {
@@ -1879,7 +2122,7 @@ const fetchFootTraffic = async () => {
                 minZoom: 11,
                 maxZoom: 18,
                 doubleClickZoom: false
-            }).setView([40.7589, -73.9866], 13);
+            }).setView([40.7589, -73.9866], 14.3);
             leafletMap.createPane('drawPane');
             leafletMap.getPane('drawPane').style.zIndex = 100000000000;
 
@@ -1909,7 +2152,6 @@ const fetchFootTraffic = async () => {
                     bbox.getSouthWest()
                 ]);
                 leafletMap.fitBounds(poly.getBounds());
-                L.marker(e.geocode.center).addTo(leafletMap);
             });
 
             const [
@@ -1935,7 +2177,24 @@ const fetchFootTraffic = async () => {
             }
 
             if (footTrafficResult.trafficData) {
-                const footTrafficTable = convertGeoJSONToTable(footTrafficResult.trafficData, 'footTraffic');
+                // Filter the trafficData to only include points within the radius
+                const timesSquare = L.latLng(40.7589, -73.9866);
+                const radiusInMeters = radius * 1609.34;
+                
+                const filteredTrafficData = {
+                    type: "FeatureCollection",
+                    features: footTrafficResult.trafficData.features.filter(feature => {
+                        if (feature.geometry && feature.geometry.type === 'Point') {
+                            const coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
+                            const point = L.latLng(coords[0], coords[1]);
+                            const distanceToTimesSquare = timesSquare.distanceTo(point);
+                            return distanceToTimesSquare <= radiusInMeters;
+                        }
+                        return false;
+                    })
+                };
+                
+                const footTrafficTable = convertGeoJSONToTable(filteredTrafficData, 'footTraffic');
                 setTableData(prevData => {
                     const newData = [...prevData];
                     newData[1] = footTrafficTable;
@@ -2666,53 +2925,53 @@ const fetchFootTraffic = async () => {
                 )}
 
 
-
-                {showDrawTools && (
-                    <div
-                        className="absolute z-[9999] w-[150px] bg-white border border-gray-200 rounded-xl shadow-lg p-2 transition-all animate-fade-in"
-                        style={{
-                            top: isFullscreen ? '80px' : '360px',
-                            left: isFullscreen ? '80px' : '130px',
-                        }}
-                    >
-                        <div className="flex justify-between items-center mb-3">
-                        <h3 className="text-xs font-semibold text-gray-800">Drawing Tools</h3>
-                        <button onClick={() => setShowDrawTools(false)}>
-                                <X size={16} className="text-gray-500 hover:text-gray-700" />
-                            </button>
-                        </div>
-                        <div className="grid gap-1">
-
-
-                            <button
-                            
-                                onClick={() => setShowGeocoder(!showGeocoder)}
-                                title="Search Location"
-                                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
-                                style={{
-                                    color: COLORS.coral,
-                                    border: `1px solid ${COLORS.coral}`,
-                                    transition: 'all 0.2s ease-in-out'
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor = COLORS.coral;
-                                    e.currentTarget.style.color = 'white';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor = 'white';
-                                    e.currentTarget.style.color = COLORS.coral;
-                                }}
-                            >
-Search                            </button>
-                            <button
-                                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
-                                onClick={() => {
-                                    if (!map) return;
-                                    setShowDrawTools(false);
-                                    // Prevent duplicate draw tools
-                                    if (map._drawControl) {
-                                        map._drawControl.disable();
-                                    }
+{showDrawTools && (
+    <div
+        className="absolute z-[9999] w-[130px] bg-white border border-gray-200 rounded-xl shadow-lg p-2 transition-all animate-fade-in"
+        style={{
+            top: isFullscreen ? '80px' : '360px',
+            left: isFullscreen ? '80px' : '130px',
+        }}
+    >
+        <div className="flex justify-between items-center mb-3">
+            <h3 className="text-xs font-semibold text-gray-800">Drawing Tools</h3>
+            <button onClick={() => setShowDrawTools(false)}>
+                <X size={16} className="text-gray-500 hover:text-gray-700" />
+            </button>
+        </div>
+        <div className="grid gap-1">
+            <button
+                onClick={() => setShowGeocoder(!showGeocoder)}
+                title="Search Location"
+                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                style={{
+                    color: COLORS.coral,
+                    border: `1px solid ${COLORS.coral}`,
+                    transition: 'all 0.2s ease-in-out'
+                }}
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = COLORS.coral;
+                    e.currentTarget.style.color = 'white';
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'white';
+                    e.currentTarget.style.color = COLORS.coral;
+                }}
+            >
+                <div className="flex items-center">
+                    <TbMapSearch className="mr-1" size={12} style={{ minWidth: '12px' }} /> 
+                    <span>Search</span>
+                </div>
+            </button>
+            <button
+                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                onClick={() => {
+                    if (!map) return;
+                    setShowDrawTools(false);
+                    // Prevent duplicate draw tools
+                    if (map._drawControl) {
+                        map._drawControl.disable();
+                    }
 
                                     // Ensure draw handler is removed before adding a new one
                                     map.off(L.Draw.Event.CREATED);
@@ -2827,16 +3086,19 @@ Search                            </button>
                                 }}
 
                             >
-Polygon                            </button>
-                            <button
-                                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
-                                onClick={() => {
-                                    if (!map) return;
-                                    setShowDrawTools(false);
-                                    if (map._drawControl) {
-                                        map._drawControl.disable();
-                                    }
-
+                                <div className="flex items-center">
+                    <PiPolygon className="mr-1" size={12} style={{ minWidth: '12px' }} /> 
+                    <span>Polygon</span>
+                </div>
+            </button>
+            <button
+                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                onClick={() => {
+                    if (!map) return;
+                    setShowDrawTools(false);
+                    if (map._drawControl) {
+                        map._drawControl.disable();
+                    }
                                     const drawCircle = new L.Draw.Circle(map, {
                                         shapeOptions: {
                                             color: '#008080',
@@ -2858,17 +3120,16 @@ Polygon                            </button>
                                     });
                                 }}
                             >
-Circle                            </button>
-                            <button
-                                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
-                                onClick={() => {
-                                    if (!map) return;
-                                    setShowDrawTools(false);
-                                    // Disable existing draw control if any
-                                    if (map._drawControl) {
-                                        map._drawControl.disable();
-                                    }
-
+                                <div className="flex items-center">
+                    <FaRegCircle className="mr-1" size={12} style={{ minWidth: '12px' }} /> 
+                    <span>Circle</span>
+                </div>
+            </button>
+            <button
+                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                onClick={() => {
+                    if (!map) return;
+                    setShowDrawTools(false);
                                     // Create dashed polyline draw tool
                                     const drawPolyline = new L.Draw.Polyline(map, {
                                         shapeOptions: {
@@ -2910,17 +3171,16 @@ Circle                            </button>
                                     });
                                 }}
                             >
-Measure                            </button>
-
-                            <button
-                                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
-                                onClick={() => {
-                                    if (!map) return;
-                                    setShowDrawTools(false);
-                                    // Disable any active drawing tool
-                                    if (map._drawControl) {
-                                        map._drawControl.disable();
-                                    }
+                                <div className="flex items-center">
+                    <Ruler className="mr-1" size={12} style={{ minWidth: '12px' }} /> 
+                    <span>Measure</span>
+                </div>
+            </button>
+            <button
+                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                onClick={() => {
+                    if (!map) return;
+                    setShowDrawTools(false);
 
                                     const drawPolygon = new L.Draw.Polygon(map, {
                                         allowIntersection: false,
@@ -3060,16 +3320,16 @@ Measure                            </button>
                                     });
                                 }}
                             >
-Area                            </button>
-                            <button
-                                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
-                                onClick={() => {
-                                    if (!map || !map.drawnItems) return;
-                                    setShowDrawTools(false);
-                                    // Disable previous draw tools if any
-                                    if (map._drawControl) {
-                                        map._drawControl.disable();
-                                    }
+                                <div className="flex items-center">
+                    <GiPathDistance className="mr-1" size={12} style={{ minWidth: '12px' }} /> 
+                    <span>Area</span>
+                </div>
+            </button>
+            <button
+                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                onClick={() => {
+                    if (!map || !map.drawnItems) return;
+                    setShowDrawTools(false);
 
                                     // Create a higher z-index pane specifically for editing vertices if needed
                                     if (!map.getPane('editPane')) {
@@ -3106,18 +3366,16 @@ Area                            </button>
                                     });
                                 }}
                             >
-Edit                            </button>
-
-                            <button
-                                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
-                                onClick={() => {
-                                    if (!map) return;
-                                    setShowDrawTools(false);
-
-                                    if (map._drawControl) {
-                                        map._drawControl.disable();
-                                    }
-
+                                <div className="flex items-center">
+                    <Pencil className="mr-1" size={12} style={{ minWidth: '12px' }} /> 
+                    <span>Edit Vertices</span>
+                </div>
+            </button>
+            <button
+                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                onClick={() => {
+                    if (!map) return;
+                    setShowDrawTools(false);
                                     // Set up Freehand Polyline
                                     const freehandPolyline = new L.Draw.Polyline(map, {
                                         shapeOptions: {
@@ -3140,7 +3398,11 @@ Edit                            </button>
                                     });
                                 }}
                             >
-Freehand                            </button>
+                                <div className="flex items-center">
+                    <MdDraw className="mr-1" size={12} style={{ minWidth: '12px' }} /> 
+                    <span>Freehand</span>
+                </div>
+            </button>
                         </div>
                     </div>
                 )}
@@ -3168,223 +3430,29 @@ Freehand                            </button>
                 <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" style={{ zIndex: 0 }} />
 
 
-                {/* Drag handle */}
                 {showTable && (
-                    <div
-                        ref={dragHandleRef}
-                        className="cursor-row-resize transition-all"
-                        onMouseDown={handleMouseDown}
-                        style={{
-                            height: "4px",
-                            backgroundColor: "#e0e0e0",
-                            position: "absolute",
-                            bottom: tableHeight,
-                            left: 0,
-                            right: 0,
-                            zIndex: 21
-                        }}
-                    />
-                )}
+  <VirtualizedTable
+    tableData={tableData}
+    setTableData={setTableData}
+    currentTableIndex={currentTableIndex}
+    setCurrentTableIndex={setCurrentTableIndex}
+    tableTitles={tableTitles}
+    selectedRowIndex={selectedRowIndex}
+    setSelectedRowIndex={setSelectedRowIndex}
+    selectedColIndex={selectedColIndex}
+    setSelectedColIndex={setSelectedColIndex}
+    highlightFeatureByRowProperties={highlightFeatureByRowProperties}
+    resetLayerHighlighting={resetLayerHighlighting}
+    handleCellEdit={handleCellEdit}
+    tableHeight={tableHeight}
+    setTableHeight={setTableHeight}
+    showTable={showTable}
+    setIsModified={setIsModified}
+    originalRowsMap={originalRowsMap}
+    setOriginalRowsMap={setOriginalRowsMap}
+  />
+)}
 
-                {/* Table section */}
-                {showTable && (
-                    <div
-                        className="absolute bottom-0 left-0 right-0 bg-white shadow-inner border-t border-gray-300 z-20"
-                        style={{ height: `${tableHeight}px` }}
-                    >
-                        {/* Table header with tabs */}
-                        {!isFullscreen && <Toolbar showTable={true} />}
-                        <div className="flex justify-between items-center p-1 bg-white text-gray-800 border-b border-gray-200 h-10 px-4">
-                            {/* Tabs on the left */}
-                            <div className="flex space-x-1">
-                                {tableTitles.map((title, index) => (
-                                    <button
-                                        key={index}
-                                        className={`px-2 py-1 border rounded-t-md text-xs font-medium transition-all duration-200
-          ${currentTableIndex === index
-                                                ? 'bg-[#008080] text-white border-[#008080]'
-                                                : 'bg-white text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white'}
-        `}
-                                        onClick={() => {
-                                            setCurrentTableIndex(index);
-                                            setOriginalRowsMap(prev => ({
-                                                ...prev,
-                                                [index]: JSON.parse(JSON.stringify(tableData[index].rows)) // deep clone
-                                            }));
-                                            setIsModified(false);
-                                        }}
-                                    >
-                                        {title}
-                                    </button>
-                                ))}
-                            </div>
-
-                        </div>
-
-                        {/* Table content */}
-                        <div className="h-[calc(100%-40px)] overflow-auto p-2">
-                            {tableData[currentTableIndex] && tableData[currentTableIndex].headers ? (
-                                <table className="min-w-full border-collapse">
-                                    <thead>
-                                        {/* Excel-style A/B/C header row */}
-                                        <tr key="header-row">
-  <th className="w-8 text-[10px] bg-gray-100"></th>
-  {tableData[currentTableIndex].headers.map((_, colIdx) => (
-    <th
-      key={`abc-${colIdx}`}
-      onClick={() => setSelectedColIndex((prev) => (prev === colIdx ? null : colIdx))}
-      onContextMenu={(e) => {
-        e.preventDefault();
-        setContextMenu({
-          visible: true,
-          x: e.clientX,
-          y: e.clientY,
-          type: 'column',
-          index: colIdx,
-          columnName: tableData[currentTableIndex].headers[colIdx],
-        });
-      }}
-      className={`px-3 py-1 text-center text-[10px] font-semibold text-gray-700 uppercase border border-gray-300
-      ${selectedColIndex === colIdx ? 'bg-[#ccecec]' : 'bg-gray-100'}`}
-    >
-      {String.fromCharCode(65 + colIdx)}
-    </th>
-  ))}
-</tr>
-                                        {/* Actual column names */}
-                                        <tr key="column-names-row">
-
-                                            <th className="w-8 bg-white"></th>
-                                            {tableData[currentTableIndex].headers.map((header, idx) => (
-                                                <th
-                                                    key={`label-${idx}`}
-                                                    className="px-3 py-1 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200"
-                                                >
-                                                    <div className="flex items-center justify-between">
-                                                        <span>{header}</span>
-                                                        {showFilterIcons && (
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    const rect = e.currentTarget.getBoundingClientRect();
-                                                                    const uniqueVals = [...new Set(tableData[currentTableIndex].rows.map(row => row[header]))];
-                                                                    setFilterOptions(uniqueVals);
-                                                                    setSelectedFilters(prev => ({
-                                                                        ...prev,
-                                                                        [header]: new Set(uniqueVals) // default: all selected
-                                                                    }));
-                                                                    setFilterColumn(header);
-                                                                    setShowFilterDialog(true);
-                                                                    // Position the filter dialog near the icon
-                                                                    setFilterDialogPosition({ x: rect.right, y: rect.bottom });
-                                                                }}
-                                                                className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none"
-                                                            >
-                                                                <svg
-                                                                    xmlns="http://www.w3.org/2000/svg"
-                                                                    width="10"
-                                                                    height="10"
-                                                                    viewBox="0 0 24 24"
-                                                                    fill="none"
-                                                                    stroke="currentColor"
-                                                                    strokeWidth="2"
-                                                                    strokeLinecap="round"
-                                                                    strokeLinejoin="round"
-                                                                >
-                                                                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-                                                                </svg>
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-
-<tbody>
-  {tableData[currentTableIndex].rows.map((row, rowIndex) => (
-    <tr 
-      key={`row-${rowIndex}`}
-      onClick={() => {
-        // Set the selected row index in state
-        setSelectedRowIndex(rowIndex);
-        
-        // Directly trigger the highlight function for immediate feedback
-        if (row) {
-          resetLayerHighlighting();
-          if (currentTableIndex === 0) { // Coffee Shops table
-            highlightCoffeeShop(row);
-          } else if (currentTableIndex === 1) { // Foot Traffic table
-            highlightFootTrafficArea(row);
-          } else if (currentTableIndex === 2) { // Subway Stations table
-            highlightSubwayStation(row);
-          } else if (currentTableIndex === 3) { // Storefronts table
-            highlightStorefront(row);
-          }
-        }
-      }}
-      className={`cursor-pointer transition-colors duration-200 ${selectedRowIndex === rowIndex ? 'bg-[#ccecec]' : 'hover:bg-gray-50'}`}
-    >
-      <th
-        onClick={(e) => {
-          e.stopPropagation(); // Prevent row click handler
-          setSelectedRowIndex(rowIndex);
-          
-          // Also trigger highlight directly
-          if (tableData[currentTableIndex].rows[rowIndex]) {
-            resetLayerHighlighting();
-            if (currentTableIndex === 0) {
-              highlightCoffeeShop(tableData[currentTableIndex].rows[rowIndex]);
-            } else if (currentTableIndex === 1) {
-              highlightFootTrafficArea(tableData[currentTableIndex].rows[rowIndex]);
-            } else if (currentTableIndex === 2) {
-              highlightSubwayStation(tableData[currentTableIndex].rows[rowIndex]);
-            } else if (currentTableIndex === 3) {
-              highlightStorefront(tableData[currentTableIndex].rows[rowIndex]);
-            }
-          }
-        }}
-        onContextMenu={(e) => handleRightClick(e, 'row', rowIndex)}
-        className={`text-center text-[11px] font-semibold border border-gray-300 bg-gray-100
-          ${selectedRowIndex === rowIndex ? 'bg-[#ccecec]' : ''}`}
-      >
-        {rowIndex + 1}
-      </th>
-      {tableData[currentTableIndex].headers.map((header, colIdx) => (
-        <td
-          key={colIdx}
-          contentEditable
-          suppressContentEditableWarning
-          onClick={(e) => e.stopPropagation()} // Prevent row click handler when editing cells
-          onBlur={(e) => {
-            const value = e.target.innerText.trim();
-            handleCellEdit(rowIndex, header, value);
-          }}
-          className={`px-2 py-1 text-xs border border-gray-200 min-w-[80px] whitespace-nowrap align-top hover:bg-[#f0fdfa]
-            ${selectedRowIndex === rowIndex ? 'bg-[#ccecec]' : ''}
-            ${selectedColIndex === colIdx ? 'bg-[#ccecec]' : ''}`}
-          style={{ outline: 'none' }}
-        >
-          {tableData[currentTableIndex].rows[rowIndex][header]}
-        </td>
-      ))}
-    </tr>
-  ))}
-</tbody>
-                                </table>
-
-
-                            ) : (
-                                <div className="h-full flex flex-col items-center justify-center">
-                                    <Table className="h-8 w-8 text-coral/50 mb-2" />
-                                    <p className="text-sm text-gray-500">No data available for this layer</p>
-                                </div>
-                            )}
-                        </div>
-
-
-                    </div>
-                )}
                 {contextMenu.visible && (
                     <div
                         className="fixed z-[9999] w-28 rounded-md border border-gray-200 bg-white shadow-xl text-xs font-medium"
@@ -3850,9 +3918,9 @@ Freehand                            </button>
                                     name: 'Available Storefronts',
                                     icon: <div className="w-4 h-4 rounded-sm transform rotate-45" style={{ backgroundColor: '#4caf50' }} />,
                                     legend: [
-                                        { label: 'Low Rent (< $200/sqft)', color: '#2e7d32' },
-                                        { label: 'Medium Rent ($200-$1000/sqft)', color: '#4caf50' },
-                                        { label: 'High Rent (> $1000/sqft)', color: '#2e7d32' }
+                                        { label: 'Low Rent (< $200/sqft)', color: '#007A7A' },
+                                        { label: 'Medium Rent ($200-$1000/sqft)', color: '#00B8B8' },
+                                        { label: 'High Rent (> $1000/sqft)', color: '#C7FFDA' }
                                     ]
                                 }
                             ].map(section => (

@@ -18,6 +18,75 @@
     background-color: #008080 !important;
     opacity: 0.8;
   }
+
+  /* Add these styles to your CSS file or style section */
+
+/* For scrollable headers that stay aligned with content */
+.virtualized-table-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.table-headers-container {
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.table-body-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+/* Make sure scrollbars align */
+.table-headers-container::-webkit-scrollbar,
+.table-body-container::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+
+.table-headers-container::-webkit-scrollbar-track,
+.table-body-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.table-headers-container::-webkit-scrollbar-thumb,
+.table-body-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 5px;
+}
+
+/* Sticky first column (row numbers) */
+.row-number-cell {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+}
+
+/* Header cell should be right on top of body cell */
+.header-cell {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-right: 1px solid #e5e7eb;
+}
+
+.body-cell {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-right: 1px solid #e5e7eb;
+}
   
   .artifact-panel, .chat-panel {
     transition: width 0.1s ease;

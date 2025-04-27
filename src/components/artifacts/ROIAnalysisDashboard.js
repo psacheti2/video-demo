@@ -17,41 +17,40 @@ const COLORS = {
   white: '#FFFFFF'
 };
 
-// Synthetic data - ROI percentages for different locations
 const roiData = [
-  { name: 'Hell\'s Kitchen', value: 28 },
-  { name: 'Chelsea', value: 24 },
-  { name: 'Midtown East', value: 19 },
-  { name: 'Herald Square', value: 22 },
-  { name: 'Union Square', value: 26 },
-];
+    { name: 'Midtown East', value: 28 },
+    { name: 'Midtown South', value: 26 },
+    { name: 'Union Square', value: 24 },
+    { name: 'Chelsea', value: 22 },
+    { name: 'Herald Square', value: 20 },
+  ];
 
 // Synthetic data - Break-even timeline (months)
 const breakEvenData = [
-  { month: 1, "Hell's Kitchen": -200000, "Chelsea": -200000, "Midtown East": -200000, "Herald Square": -200000, "Union Square": -200000 },
-  { month: 2, "Hell's Kitchen": -182000, "Chelsea": -184000, "Midtown East": -188000, "Herald Square": -185000, "Union Square": -183000 },
-  { month: 3, "Hell's Kitchen": -164000, "Chelsea": -168000, "Midtown East": -176000, "Herald Square": -170000, "Union Square": -166000 },
-  { month: 4, "Hell's Kitchen": -146000, "Chelsea": -152000, "Midtown East": -164000, "Herald Square": -155000, "Union Square": -149000 },
-  { month: 5, "Hell's Kitchen": -128000, "Chelsea": -136000, "Midtown East": -152000, "Herald Square": -140000, "Union Square": -132000 },
-  { month: 6, "Hell's Kitchen": -110000, "Chelsea": -120000, "Midtown East": -140000, "Herald Square": -125000, "Union Square": -115000 },
-  { month: 7, "Hell's Kitchen": -92000, "Chelsea": -104000, "Midtown East": -128000, "Herald Square": -110000, "Union Square": -98000 },
-  { month: 8, "Hell's Kitchen": -74000, "Chelsea": -88000, "Midtown East": -116000, "Herald Square": -95000, "Union Square": -81000 },
-  { month: 9, "Hell's Kitchen": -56000, "Chelsea": -72000, "Midtown East": -104000, "Herald Square": -80000, "Union Square": -64000 },
-  { month: 10, "Hell's Kitchen": -38000, "Chelsea": -56000, "Midtown East": -92000, "Herald Square": -65000, "Union Square": -47000 },
-  { month: 11, "Hell's Kitchen": -20000, "Chelsea": -40000, "Midtown East": -80000, "Herald Square": -50000, "Union Square": -30000 },
-  { month: 12, "Hell's Kitchen": -2000, "Chelsea": -24000, "Midtown East": -68000, "Herald Square": -35000, "Union Square": -13000 },
-  { month: 13, "Hell's Kitchen": 16000, "Chelsea": -8000, "Midtown East": -56000, "Herald Square": -20000, "Union Square": 4000 },
-  { month: 14, "Hell's Kitchen": 34000, "Chelsea": 8000, "Midtown East": -44000, "Herald Square": -5000, "Union Square": 21000 },
-  { month: 15, "Hell's Kitchen": 52000, "Chelsea": 24000, "Midtown East": -32000, "Herald Square": 10000, "Union Square": 38000 },
-  { month: 16, "Hell's Kitchen": 70000, "Chelsea": 40000, "Midtown East": -20000, "Herald Square": 25000, "Union Square": 55000 },
-  { month: 17, "Hell's Kitchen": 88000, "Chelsea": 56000, "Midtown East": -8000, "Herald Square": 40000, "Union Square": 72000 },
-  { month: 18, "Hell's Kitchen": 106000, "Chelsea": 72000, "Midtown East": 4000, "Herald Square": 55000, "Union Square": 89000 },
-  { month: 19, "Hell's Kitchen": 124000, "Chelsea": 88000, "Midtown East": 16000, "Herald Square": 70000, "Union Square": 106000 },
-  { month: 20, "Hell's Kitchen": 142000, "Chelsea": 104000, "Midtown East": 28000, "Herald Square": 85000, "Union Square": 123000 },
-  { month: 21, "Hell's Kitchen": 160000, "Chelsea": 120000, "Midtown East": 40000, "Herald Square": 100000, "Union Square": 140000 },
-  { month: 22, "Hell's Kitchen": 178000, "Chelsea": 136000, "Midtown East": 52000, "Herald Square": 115000, "Union Square": 157000 },
-  { month: 23, "Hell's Kitchen": 196000, "Chelsea": 152000, "Midtown East": 64000, "Herald Square": 130000, "Union Square": 174000 },
-  { month: 24, "Hell's Kitchen": 214000, "Chelsea": 168000, "Midtown East": 76000, "Herald Square": 145000, "Union Square": 191000 },
+  { month: 1, "Midtown East": -200000, "Midtown South": -200000, "Union Square": -200000, "Chelsea": -200000, "Herald Square": -200000 },
+  { month: 2, "Midtown East": -182000, "Midtown South": -184000, "Union Square": -188000, "Chelsea": -185000, "Herald Square": -183000 },
+  { month: 3, "Midtown East": -164000, "Midtown South": -168000, "Union Square": -176000, "Chelsea": -170000, "Herald Square": -166000 },
+  { month: 4, "Midtown East": -146000, "Midtown South": -152000, "Union Square": -164000, "Chelsea": -155000, "Herald Square": -149000 },
+  { month: 5, "Midtown East": -128000, "Midtown South": -136000, "Union Square": -152000, "Chelsea": -140000, "Herald Square": -132000 },
+  { month: 6, "Midtown East": -110000, "Midtown South": -120000, "Union Square": -140000, "Chelsea": -125000, "Herald Square": -115000 },
+  { month: 7, "Midtown East": -92000, "Midtown South": -104000, "Union Square": -128000, "Chelsea": -110000, "Herald Square": -98000 },
+  { month: 8, "Midtown East": -74000, "Midtown South": -88000, "Union Square": -116000, "Chelsea": -95000, "Herald Square": -81000 },
+  { month: 9, "Midtown East": -56000, "Midtown South": -72000, "Union Square": -104000, "Chelsea": -80000, "Herald Square": -64000 },
+  { month: 10, "Midtown East": -38000, "Midtown South": -56000, "Union Square": -92000, "Chelsea": -65000, "Herald Square": -47000 },
+  { month: 11, "Midtown East": -20000, "Midtown South": -40000, "Union Square": -80000, "Chelsea": -50000, "Herald Square": -30000 },
+  { month: 12, "Midtown East": -2000, "Midtown South": -24000, "Union Square": -68000, "Chelsea": -35000, "Herald Square": -13000 },
+  { month: 13, "Midtown East": 16000, "Midtown South": -8000, "Union Square": -56000, "Chelsea": -20000, "Herald Square": 4000 },
+  { month: 14, "Midtown East": 34000, "Midtown South": 8000, "Union Square": -44000, "Chelsea": -5000, "Herald Square": 21000 },
+  { month: 15, "Midtown East": 52000, "Midtown South": 24000, "Union Square": -32000, "Chelsea": 10000, "Herald Square": 38000 },
+  { month: 16, "Midtown East": 70000, "Midtown South": 40000, "Union Square": -20000, "Chelsea": 25000, "Herald Square": 55000 },
+  { month: 17, "Midtown East": 88000, "Midtown South": 56000, "Union Square": -8000, "Chelsea": 40000, "Herald Square": 72000 },
+  { month: 18, "Midtown East": 106000, "Midtown South": 72000, "Union Square": 4000, "Chelsea": 55000, "Herald Square": 89000 },
+  { month: 19, "Midtown East": 124000, "Midtown South": 88000, "Union Square": 16000, "Chelsea": 70000, "Herald Square": 106000 },
+  { month: 20, "Midtown East": 142000, "Midtown South": 104000, "Union Square": 28000, "Chelsea": 85000, "Herald Square": 123000 },
+  { month: 21, "Midtown East": 160000, "Midtown South": 120000, "Union Square": 40000, "Chelsea": 100000, "Herald Square": 140000 },
+  { month: 22, "Midtown East": 178000, "Midtown South": 136000, "Union Square": 52000, "Chelsea": 115000, "Herald Square": 157000 },
+  { month: 23, "Midtown East": 196000, "Midtown South": 152000, "Union Square": 64000, "Chelsea": 130000, "Herald Square": 174000 },
+  { month: 24, "Midtown East": 214000, "Midtown South": 168000, "Union Square": 76000, "Chelsea": 145000, "Herald Square": 191000 },
 ];
 
 
@@ -174,18 +173,21 @@ const ROIAnalysisDashboard = ({ onLayersReady, setSavedArtifacts, title, onBack 
     );
   };
 
-  const renderBreakEvenLineChart = () => {
-    if (loading) return <div className="flex justify-center items-center h-64">Loading...</div>;
+// Replace your current renderBreakEvenLineChart function with this:
 
+const renderBreakEvenLineChart = () => {
+    if (loading) return <div className="flex justify-center items-center h-64">Loading...</div>;
+  
     const formattedData = breakEvenData.map(entry => {
-      return {
-        ...entry,
-        "Hell's Kitchen": entry["Hell's Kitchen"],
-        "Chelsea": entry["Chelsea"],
-        "Midtown East": entry["Midtown East"],
-        "Herald Square": entry["Herald Square"],
-        "Union Square": entry["Union Square"]
-      };
+      const newEntry = { ...entry };
+      
+      const unionSquareValue = newEntry["Union Square"];
+      
+      newEntry["Union Square"] = newEntry["Herald Square"];
+      
+      newEntry["Herald Square"] = unionSquareValue;
+      
+      return newEntry;
     });
     
     return (
@@ -197,28 +199,26 @@ const ROIAnalysisDashboard = ({ onLayersReady, setSavedArtifacts, title, onBack 
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="month" label={{ value: 'Month', position: 'insideBottomRight', offset: -10 }} />
           <YAxis 
-  label={{ 
-    value: 'Profit/Loss ($)', 
-    angle: -90, 
-    position: 'outsideLeft',  // move fully outside the axis
-    dy: 5,                   // push label a little downward
-    dx: -60                   // push label more left
-  }} 
-/>
-    <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
+            label={{ 
+              value: 'Profit/Loss ($)', 
+              angle: -90, 
+              position: 'outsideLeft',
+              dy: 5,
+              dx: -60
+            }} 
+          />
+          <Tooltip formatter={(value) => `${value.toLocaleString()}`} />
           <Legend />
           <ReferenceLine y={0} stroke="#008080" strokeWidth={2} strokeDasharray="4 4" />
-          <Line type="monotone" dataKey="Hell's Kitchen" stroke={customColors.blue} activeDot={{ r: 8 }} />
-          <Line type="monotone" dataKey="Chelsea" stroke={customColors.green} activeDot={{ r: 8 }} />
-          <Line type="monotone" dataKey="Midtown East" stroke={customColors.orange} activeDot={{ r: 8 }} />
-          <Line type="monotone" dataKey="Herald Square" stroke={customColors.purple} activeDot={{ r: 8 }} />
-          <Line type="monotone" dataKey="Union Square" stroke={customColors.red} activeDot={{ r: 8 }} />
+          <Line type="monotone" dataKey="Midtown East" stroke={customColors.blue} activeDot={{ r: 8 }} />
+          <Line type="monotone" dataKey="Midtown South" stroke={customColors.green} activeDot={{ r: 8 }} />
+          <Line type="monotone" dataKey="Union Square" stroke={customColors.purple} activeDot={{ r: 8 }} />
+          <Line type="monotone" dataKey="Chelsea" stroke={customColors.orange} activeDot={{ r: 8 }} />
+          <Line type="monotone" dataKey="Herald Square" stroke={customColors.red} activeDot={{ r: 8 }} />
         </LineChart>
       </ResponsiveContainer>
     );
   };
-
-
   const handleDownloadChart = () => {
     // In a real implementation, this would use html2canvas or similar
     // to convert the chart to an image for download
@@ -580,11 +580,11 @@ const ROIAnalysisDashboard = ({ onLayersReady, setSavedArtifacts, title, onBack 
             {/* Color Pickers */}
             <div className="space-y-3">
               {[
-                { label: "Hell's Kitchen", key: "blue" },
-                { label: "Chelsea", key: "green" },
-                { label: "Midtown East", key: "orange" },
-                { label: "Herald Square", key: "purple" },
-                { label: "Union Square", key: "red" },
+                { label: "Midtown East", key: "blue" },
+                { label: "Midtown South", key: "green" },
+                { label: "Union Square", key: "orange" },
+                { label: "Chelsea", key: "purple" },
+                { label: "Herald Square", key: "red" },
               ].map(({ label, key }) => (
                 <div key={key}>
                   <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>

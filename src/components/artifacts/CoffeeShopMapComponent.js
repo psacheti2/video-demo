@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import {
     Layers, Maximize2, X, Info, ChevronDown, ChevronUp,
-    Download, Wrench, Palette, Share2, BookmarkPlus, Table, Minimize2, ChevronLeft, ArrowLeft, ChevronRight, Pencil, ListFilter, Ruler, 
+    Download, Wrench, Palette, Share2, BookmarkPlus, Table, Minimize2, ChevronLeft, ArrowLeft, ChevronRight, Pencil, ListFilter, Ruler,
 } from 'lucide-react';
 import { TbMapSearch } from "react-icons/tb";
 import html2canvas from 'html2canvas';
@@ -18,9 +18,9 @@ import { FaRegCircle } from "react-icons/fa6";
 
 import { GiPathDistance } from "react-icons/gi";
 import { LiaShareAltSolid } from "react-icons/lia";
-import { LuMove3D, LuSquiggle } from "react-icons/lu";
+import { LuMove3D, LuSquiggle } from "react-icons/lu";// {showTable && (
 import { MdDraw } from "react-icons/md";
-
+import VirtualizedTable from './VirtualizedTable';
 
 const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts, title,
     onBack, center = [-73.9866, 40.7589], radius = 0.8 }) => {
@@ -62,6 +62,7 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
     const [drawDialogPos, setDrawDialogPos] = useState({ top: 0, left: 0 });
     const [selectedRowIndex, setSelectedRowIndex] = useState(null);
     const [selectedColIndex, setSelectedColIndex] = useState(null);
+    const footTrafficPointsRef = useRef([]);
     const [contextMenu, setContextMenu] = useState({
         visible: false, x: 0, y: 0, type: null, index: null,
         columnName: null,
@@ -83,6 +84,7 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
             label: `📊 ${title}.csv`
         }))
     ]);
+    const [originalData, setOriginalData] = useState({});
     const debouncedSearch = useRef(_.debounce((query) => {
         runGeocodeSearch(query);
     }, 300)).current;
@@ -174,28 +176,28 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
     const resetLayerHighlighting = () => {
         // Reset coffee shops
         coffeeShopsRef.current.forEach(({ marker, potential }) => {
-          const color = COLORS.existingShop;
-          marker.setIcon(L.divIcon({
-            html: `<div style="background-color: ${color}; width: 10px; height: 10px; border-radius: 50%; border: 2px solid white;"></div>`,
-            className: '',
-            iconSize: [14, 14]
-          }));
-          
-          // Close any open popups
-          if (marker.isPopupOpen()) {
-            marker.closePopup();
-          }
+            const color = COLORS.existingShop;
+            marker.setIcon(L.divIcon({
+                html: `<div style="background-color: ${color}; width: 10px; height: 10px; border-radius: 50%; border: 2px solid white;"></div>`,
+                className: '',
+                iconSize: [14, 14]
+            }));
+
+            // Close any open popups
+            if (marker.isPopupOpen()) {
+                marker.closePopup();
+            }
         });
-        
+
         // Remove any pulse markers that might be on the map
         if (map) {
-          map.eachLayer(layer => {
-            if (layer._icon && layer._icon.innerHTML && layer._icon.innerHTML.includes('pulse-animation')) {
-              map.removeLayer(layer);
-            }
-          });
+            map.eachLayer(layer => {
+                if (layer._icon && layer._icon.innerHTML && layer._icon.innerHTML.includes('pulse-animation')) {
+                    map.removeLayer(layer);
+                }
+            });
         }
-      };
+    };
 
     const handleCellEdit = (selectedRowIndex, columnName, newValue) => {
         setTableData(prev => {
@@ -221,38 +223,6 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
     }, []);
 
 
-    const handleMouseDown = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const container = isFullscreen
-            ? document.querySelector('.fullscreen-container')
-            : mapContainerRef.current;
-
-        if (!container) return;
-
-        if (dragState.current.rafId) {
-            cancelAnimationFrame(dragState.current.rafId);
-        }
-
-        dragState.current = {
-            isDragging: true,
-            startY: e.clientY,
-            lastY: e.clientY,
-            startHeight: showTable ? tableHeight : 0,
-            containerHeight: container.clientHeight,
-            wasCollapsed: !showTable,
-            rafId: null
-        };
-
-        document.addEventListener('mousemove', handleMouseMove, { passive: true });
-        document.addEventListener('mouseup', handleMouseUp);
-        document.body.style.cursor = 'row-resize';
-
-        if (dragHandleRef.current) {
-            dragHandleRef.current.classList.add('dragging');
-        }
-    };
     const runGeocodeSearch = async (query) => {
         if (!query) {
             setSearchResults([]);
@@ -292,9 +262,22 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
 
         // Loop through each table to find the matching row
         for (let i = 0; i < tableData.length; i++) {
-            const rowIndex = tableData[i]?.rows?.findIndex(row =>
-                Object.keys(properties).some(key => row[key] === properties[key])
-            );
+            let rowIndex = -1;
+
+            // First try to match by Feature ID if available
+            if (properties.id || properties['Feature ID']) {
+                const featureId = properties.id || properties['Feature ID'];
+                rowIndex = tableData[i]?.rows?.findIndex(row =>
+                    row['Feature ID'] === featureId || row.id === featureId
+                );
+            }
+
+            // If no match by ID, fall back to property matching
+            if (rowIndex < 0) {
+                rowIndex = tableData[i]?.rows?.findIndex(row =>
+                    Object.keys(properties).some(key => row[key] === properties[key])
+                );
+            }
 
             if (rowIndex >= 0) {
                 // Set the correct table view and show table
@@ -318,215 +301,265 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
         }
     };
 
-    // This update improves the highlighting and zooming functionality when a user selects a row in the table
-
-// 1. First, let's enhance the highlightFeatureByRowProperties function
-const highlightFeatureByRowProperties = (rowIndex) => {
-    if (rowIndex === null || !map) return;
-
-    const row = tableData[currentTableIndex]?.rows[rowIndex];
-    if (!row) return;
-
-    // Reset any previous highlighting
-    resetLayerHighlighting();
-
-    // Check which table we're on and highlight the appropriate feature
-    switch (currentTableIndex) {
-        case 0: // Coffee Shops
-            highlightCoffeeShop(row);
-            break;
-        case 1: // Foot Traffic
-            highlightFootTrafficArea(row);
-            break;
-    }
-};
-
-const highlightCoffeeShop = (row) => {
-    if (!row || !map) return;
-  
-    let foundMarker = false;
+    const highlightFeatureByRowProperties = (rowIndex) => {
+        if (rowIndex === null || !map) return;
     
-    // Try to find the marker by checking all possible identifiers
-    coffeeShopsRef.current.forEach(({ marker }) => {
-      const popupContent = marker.getPopup()?.getContent() || '';
-      
-      // First try to match by name/dba if available
-      const nameMatch = row.name && popupContent.includes(row.name);
-      const dbaMatch = row.dba && popupContent.includes(row.dba);
-      const idMatch = row['Feature ID'] && popupContent.includes(`Feature ID: ${row['Feature ID']}`);
-      
-      if (nameMatch || dbaMatch || idMatch) {
+        const row = tableData[currentTableIndex]?.rows[rowIndex];
+        if (!row) return;
+    
+        // Reset any previous highlighting
+        resetLayerHighlighting();
+    
+        // Check which table we're on and highlight the appropriate feature
+        switch (currentTableIndex) {
+            case 0: // Coffee Shops
+                highlightCoffeeShop(row);
+                break;
+            case 1: // Foot Traffic
+                highlightFootTrafficArea(row);
+                break;
+        }
+    };
+    
+    const highlightCoffeeShop = (row) => {
+        if (!row || !map) return;
+        
+        // Look for the Feature ID first - this is the most reliable way to match
+        const featureId = row['Feature ID'];
+        
+        if (featureId) {
+            // Try to find a direct match by feature ID
+            const matchedShop = coffeeShopsRef.current.find(shop => shop.featureId === featureId);
+            
+            if (matchedShop) {
+                // Direct match found - highlight this marker
+                highlightMarker(matchedShop.marker);
+                return;
+            }
+        }
+        
+        // Fallback to other matching methods if feature ID didn't match
+        let foundMarker = false;
+        
+        // Try to match by name or other properties
+        coffeeShopsRef.current.forEach(({ marker }) => {
+            const popupContent = marker.getPopup()?.getContent() || '';
+            
+            // Match by name/dba if available
+            const nameMatch = row.name && popupContent.includes(row.name);
+            const dbaMatch = row.dba && popupContent.includes(row.dba);
+            
+            if (nameMatch || dbaMatch) {
+                highlightMarker(marker);
+                foundMarker = true;
+            }
+        });
+        
+        // Last resort: try using coordinates
+        if (!foundMarker) {
+            highlightByCoordinates(row);
+        }
+    };
+
+    // Extract the marker highlighting logic into a separate function
+    const highlightMarker = (marker) => {
         // Change the marker's icon to make it stand out
         marker.setIcon(L.divIcon({
-          html: `<div style="background-color: #ffff00; width: 14px; height: 14px; border-radius: 50%; border: 2px solid black; box-shadow: 0 0 4px white;"></div>`,
-          className: '',
-          iconSize: [18, 18]
+            html: `<div style="background-color: #ffff00; width: 14px; height: 14px; border-radius: 50%; border: 2px solid black; box-shadow: 0 0 4px white;"></div>`,
+            className: '',
+            iconSize: [18, 18]
         }));
-          
+
         // Calculate visible map area when table is showing
         const containerHeight = mapContainerRef.current.clientHeight;
         const visibleMapHeight = showTable ? containerHeight - tableHeight : containerHeight;
-        const visibleMapCenter = showTable ? 
-          ((containerHeight - tableHeight) / 2) : 
-          (containerHeight / 2);
-              
+
         // Get marker position and calculate offset to center it in the visible area
         const markerLatLng = marker.getLatLng();
-        
+
         // Create a point that will be centered in the visible map area
         // The offset calculation moves the point up to account for the table
-        const targetPoint = showTable ? 
-          map.project(markerLatLng).subtract([0, visibleMapHeight * 0.5]) : 
-          map.project(markerLatLng);
-        
+        const targetPoint = showTable ?
+            map.project(markerLatLng).subtract([0, visibleMapHeight * 0.5]) :
+            map.project(markerLatLng);
+
         // Convert back to LatLng and pan the map to center on this point
         const targetLatLng = map.unproject(targetPoint);
-        
+
         // Zoom and pan to the adjusted center
         map.setView(targetLatLng, 16, {
-          animate: true,
-          duration: 0.5
+            animate: true,
+            duration: 0.5
         });
-        
+
         // Add a pulsing animation effect around the marker
         const pulseMarker = L.marker(markerLatLng, {
-          icon: L.divIcon({
-            html: `<div class="pulse-animation" style="width: 30px; height: 30px; border-radius: 50%; border: 3px solid #ffff00; box-shadow: 0 0 8px #ffff00;"></div>`,
-            className: '',
-            iconSize: [30, 30]
-          })
+            icon: L.divIcon({
+                html: `<div class="pulse-animation" style="width: 30px; height: 30px; border-radius: 50%; border: 3px solid #ffff00; box-shadow: 0 0 8px #ffff00;"></div>`,
+                className: '',
+                iconSize: [30, 30]
+            })
         }).addTo(map);
-        
+
         // Remove the pulse animation after 3 seconds
         setTimeout(() => {
-          if (map) map.removeLayer(pulseMarker);
+            if (map) map.removeLayer(pulseMarker);
         }, 3000);
-        
-        foundMarker = true;
-      }
-    });
-    
-    // If we couldn't find a marker based on name, try to use coordinates
-    if (!foundMarker) {
-      // Try to extract coordinates from the row data
-      let lat, lng;
-      
-      // Check various possible property names for coordinates
-      if (row.latitude && row.longitude) {
-        lat = parseFloat(row.latitude);
-        lng = parseFloat(row.longitude);
-      } else if (row.lat && row.lng) {
-        lat = parseFloat(row.lat);
-        lng = parseFloat(row.lng);
-      } else if (row.y && row.x) {
-        lat = parseFloat(row.y);
-        lng = parseFloat(row.x);
-      } else if (row.coordinates) {
-        try {
-          // Try to parse a coordinates string like "40.7589, -73.9866"
-          const coords = row.coordinates.split(',').map(c => parseFloat(c.trim()));
-          if (coords.length >= 2) {
-            lat = coords[0];
-            lng = coords[1];
-          }
-        } catch (e) {
-          // Ignore parsing errors
+    };
+
+    // Extract the coordinate-based highlighting into a separate function
+    const highlightByCoordinates = (row) => {
+        // Try to extract coordinates from the row data
+        let lat, lng;
+
+        // Check various possible property names for coordinates
+        if (row.latitude && row.longitude) {
+            lat = parseFloat(row.latitude);
+            lng = parseFloat(row.longitude);
+        } else if (row.lat && row.lng) {
+            lat = parseFloat(row.lat);
+            lng = parseFloat(row.lng);
+        } else if (row.y && row.x) {
+            lat = parseFloat(row.y);
+            lng = parseFloat(row.x);
+        } else if (row.coordinates) {
+            try {
+                // Try to parse a coordinates string like "40.7589, -73.9866"
+                const coords = row.coordinates.split(',').map(c => parseFloat(c.trim()));
+                if (coords.length >= 2) {
+                    lat = coords[0];
+                    lng = coords[1];
+                }
+            } catch (e) {
+                // Ignore parsing errors
+            }
         }
-      }
-      
-      if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
-        const latlng = L.latLng(lat, lng);
+
+        if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+            const latlng = L.latLng(lat, lng);
+
+            // Calculate visible map area when table is showing
+            const containerHeight = mapContainerRef.current.clientHeight;
+            const visibleMapHeight = showTable ? containerHeight - tableHeight : containerHeight;
+
+            // Get projected point and calculate offset
+            const point = map.project(latlng);
+            const offsetPoint = showTable ?
+                point.subtract([0, visibleMapHeight * 0.1]) :
+                point;
+
+            // Convert back to LatLng and pan the map
+            const targetLatLng = map.unproject(offsetPoint);
+
+            // Set view with animation
+            map.setView(targetLatLng, 16, {
+                animate: true,
+                duration: 0.5
+            });
+
+            // Create a temporary highlight marker
+            const pulseMarker = L.marker(latlng, {
+                icon: L.divIcon({
+                    html: `<div class="pulse-animation" style="width: 30px; height: 30px; border-radius: 50%; border: 3px solid #ffff00; box-shadow: 0 0 8px #ffff00;"></div>`,
+                    className: '',
+                    iconSize: [30, 30]
+                })
+            }).addTo(map);
+
+            // Remove after 3 seconds
+            setTimeout(() => {
+                if (map) map.removeLayer(pulseMarker);
+            }, 3000);
+        }
+    };
+
+    const highlightFootTrafficArea = (row) => {
+        if (!row) return;
         
-        // Calculate visible map area when table is showing
-        const containerHeight = mapContainerRef.current.clientHeight;
-        const visibleMapHeight = showTable ? containerHeight - tableHeight : containerHeight;
-              
-        // Get projected point and calculate offset
-        const point = map.project(latlng);
-        const offsetPoint = showTable ? 
-          point.subtract([0, visibleMapHeight * 0.1]) : 
-          point;
+        // First try to match by Feature ID
+        const featureId = row['Feature ID'];
         
-        // Convert back to LatLng and pan the map
-        const targetLatLng = map.unproject(offsetPoint);
+        if (featureId) {
+            // Try to find the point with the matching Feature ID
+            const matchedPoint = footTrafficPointsRef.current.find(point => point.featureId === featureId);
+            
+            if (matchedPoint) {
+                highlightFootTrafficPoint(matchedPoint.latlng);
+                return;
+            }
+        }
         
-        // Set view with animation
-        map.setView(targetLatLng, 16, {
-          animate: true,
-          duration: 0.5
-        });
+        // Fallback: Try to highlight by coordinates from row
+        let lat, lng;
         
-        // Create a temporary highlight marker
-        const pulseMarker = L.marker(latlng, {
-          icon: L.divIcon({
-            html: `<div class="pulse-animation" style="width: 30px; height: 30px; border-radius: 50%; border: 3px solid #ffff00; box-shadow: 0 0 8px #ffff00;"></div>`,
-            className: '',
-            iconSize: [30, 30]
-          })
-        }).addTo(map);
+        // Try to get coordinates from various properties
+        if (row.location) {
+            const [rowLat, rowLng] = row.location.split(',').map(coord => parseFloat(coord.trim()));
+            if (!isNaN(rowLat) && !isNaN(rowLng)) {
+                lat = rowLat;
+                lng = rowLng;
+            }
+        } else if (row.latitude && row.longitude) {
+            lat = parseFloat(row.latitude);
+            lng = parseFloat(row.longitude);
+        } else if (row.lat && row.lng) {
+            lat = parseFloat(row.lat);
+            lng = parseFloat(row.lng);
+        } else if (row.y && row.x) {
+            lat = parseFloat(row.y);
+            lng = parseFloat(row.x);
+        }
         
-        // Remove after 3 seconds
-        setTimeout(() => {
-          if (map) map.removeLayer(pulseMarker);
-        }, 3000);
-      }
-    }
-  };
-  
-  // Similarly update the highlightFootTrafficArea function
-  const highlightFootTrafficArea = (row) => {
-    if (!row || !row.location) return;
+        if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+            highlightFootTrafficPoint(L.latLng(lat, lng));
+        }
+    };
     
-    // Since heatmap doesn't have individual elements to highlight,
-    // we can just pan to the location
-    if (map) {
-      const [lat, lng] = row.location.split(',').map(coord => parseFloat(coord.trim()));
-      if (!isNaN(lat) && !isNaN(lng)) {
-        const latlng = L.latLng(lat, lng);
+    // Helper function to highlight a foot traffic point
+    const highlightFootTrafficPoint = (latlng) => {
+        if (!map || !latlng) return;
         
         // Calculate visible map area when table is showing
         const containerHeight = mapContainerRef.current.clientHeight;
         const visibleMapHeight = showTable ? containerHeight - tableHeight : containerHeight;
-              
+        
         // Get projected point and calculate offset
         const point = map.project(latlng);
         const offsetPoint = showTable ? 
-          point.subtract([0, visibleMapHeight * 0.25]) : 
-          point;
+            point.subtract([0, visibleMapHeight * 0.25]) : 
+            point;
         
         // Convert back to LatLng and pan the map
         const targetLatLng = map.unproject(offsetPoint);
         
         // Set view with animation
         map.setView(targetLatLng, 16, {
-          animate: true,
-          duration: 0.5
+            animate: true,
+            duration: 0.5
         });
         
         // Add a pulsing highlight marker
         const highlightMarker = L.marker(latlng, {
-          icon: L.divIcon({
-            html: `<div class="pulse-animation" style="width: 30px; height: 30px; border-radius: 50%; border: 3px solid #ffff00; box-shadow: 0 0 8px #ffff00;"></div>`,
-            className: '',
-            iconSize: [30, 30]
-          })
+            icon: L.divIcon({
+                html: `<div class="pulse-animation" style="width: 30px; height: 30px; border-radius: 50%; border: 3px solid #ffff00; box-shadow: 0 0 8px #ffff00;"></div>`,
+                className: '',
+                iconSize: [30, 30]
+            })
         }).addTo(map);
         
         // Remove after 3 seconds
         setTimeout(() => {
-          if (map) map.removeLayer(highlightMarker);
+            if (map) map.removeLayer(highlightMarker);
         }, 3000);
-      }
-    }
-  };
+    };
 
-const addPulseAnimation = () => {
-    // Check if the style already exists
-    if (document.getElementById('pulse-animation-style')) return;
-    
-    const styleElement = document.createElement('style');
-    styleElement.id = 'pulse-animation-style';
-    styleElement.textContent = `
+    const addPulseAnimation = () => {
+        // Check if the style already exists
+        if (document.getElementById('pulse-animation-style')) return;
+
+        const styleElement = document.createElement('style');
+        styleElement.id = 'pulse-animation-style';
+        styleElement.textContent = `
       @keyframes pulse {
         0% { transform: scale(0.8); opacity: 1; }
         70% { transform: scale(1.2); opacity: 0.7; }
@@ -536,20 +569,20 @@ const addPulseAnimation = () => {
         animation: pulse 1.5s infinite;
       }
     `;
-    document.head.appendChild(styleElement);
-    
-    return () => {
-      const existingStyle = document.getElementById('pulse-animation-style');
-      if (existingStyle) document.head.removeChild(existingStyle);
-    };
-  };
+        document.head.appendChild(styleElement);
 
-  useEffect(() => {
-    const cleanup = addPulseAnimation();
-    return () => {
-      if (cleanup) cleanup();
+        return () => {
+            const existingStyle = document.getElementById('pulse-animation-style');
+            if (existingStyle) document.head.removeChild(existingStyle);
+        };
     };
-  }, []);
+
+    useEffect(() => {
+        const cleanup = addPulseAnimation();
+        return () => {
+            if (cleanup) cleanup();
+        };
+    }, []);
 
 
     useEffect(() => {
@@ -705,15 +738,15 @@ const addPulseAnimation = () => {
 
     useEffect(() => {
         const handleClickOutside = (e) => {
-          // Prevent deselect if clicking on context menu or header
-          if (e.target.closest('th') || e.target.closest('.context-menu')) return;
-          setSelectedRowIndex(null);
-          setSelectedColIndex(null);
+            // Prevent deselect if clicking on context menu or header
+            if (e.target.closest('th') || e.target.closest('.context-menu')) return;
+            setSelectedRowIndex(null);
+            setSelectedColIndex(null);
         };
-      
+
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-      }, []);
+    }, []);
 
     useEffect(() => {
         if (showDrawTools && pencilRef.current) {
@@ -754,20 +787,6 @@ const addPulseAnimation = () => {
     }, [map]);
 
 
-    // Add this useEffect to update the circle when radius changes
-    useEffect(() => {
-        if (map && radiusCircleRef.current) {
-            const timesSquare = L.latLng(40.7589, -73.9866);
-            const radiusInMeters = radius * 1609.34;
-
-            // Update the existing circle
-            radiusCircleRef.current.setRadius(radiusInMeters);
-
-            // Force map to update and recenter
-            map.invalidateSize();
-            map.setView(timesSquare, map.getZoom());
-        }
-    }, [radius, map]);
 
     useEffect(() => {
         if (isFullscreen) {
@@ -781,71 +800,12 @@ const addPulseAnimation = () => {
         }
     }, [isFullscreen]);
 
-    useEffect(() => {
-        const handleMouseMove = (e) => {
-            if (!wrenchRef.current || !wrenchRef.current.dataset.dragging) return;
-            setToolbarPosition({
-                top: e.clientY - 20,
-                left: e.clientX - 20,
-            });
-        };
 
-        const handleMouseUp = () => {
-            if (wrenchRef.current) {
-                delete wrenchRef.current.dataset.dragging;
-            }
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-        };
 
-        document.addEventListener('mouseup', handleMouseUp);
-        return () => {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-        };
-    }, []);
-
-    useEffect(() => {
-        if (map) {
-            // Give it a moment to paint/render first
-            const timeout = setTimeout(() => {
-                map.invalidateSize();
-            }, 500);
-
-            return () => clearTimeout(timeout);
-        }
-    }, [map]);
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (infoRef.current && !infoRef.current.contains(event.target)) {
-                setShowSources(false);
-            }
-        };
-
-        if (showSources) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [showSources]);
-
-    useEffect(() => {
-        return () => {
-            if (dragState.current.rafId) {
-                cancelAnimationFrame(dragState.current.rafId);
-            }
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-            document.body.style.cursor = '';
-        };
-    }, []);
 
     const convertGeoJSONToTable = (data, layerType) => {
-        if (!data || !data.features || !data.features.length) return [];
-
+        if (!data || !data.features || !data.features.length) return { headers: [], rows: [] };
+    
         // Get all possible properties across features
         const allProperties = new Set();
         data.features.forEach(feature => {
@@ -853,48 +813,54 @@ const addPulseAnimation = () => {
                 Object.keys(feature.properties).forEach(key => allProperties.add(key));
             }
         });
-
-        // Create table headers
-        const headers = ["Feature ID", "Geometry Type", ...Array.from(allProperties)];
-
+    
+        // Create table headers - put Feature ID first for clarity
+        const headers = ["Feature ID", "Geometry Type", ...Array.from(allProperties).filter(prop => prop !== 'Feature ID')];
+    
         // Create table rows
-        const rows = data.features.map((feature, index) => {
+        const rows = data.features.map((feature) => {
+            // Use the same Feature ID that was set on the feature
+            const featureId = feature.properties && feature.properties['Feature ID'] 
+                ? feature.properties['Feature ID'] 
+                : null;
+            
             const row = {
-                "Feature ID": index + 1,
+                "Feature ID": featureId, // Use the consistent Feature ID
                 "Geometry Type": feature.geometry?.type || "Unknown"
             };
-
+    
             // Add all properties
             allProperties.forEach(prop => {
-                const value = feature.properties ? feature.properties[prop] : "";
-                row[prop] = typeof value === 'object' && value !== null
-                    ? JSON.stringify(value)
-                    : value ?? "";
+                if (prop !== 'Feature ID') { // Skip Feature ID since we already added it
+                    const value = feature.properties ? feature.properties[prop] : "";
+                    row[prop] = typeof value === 'object' && value !== null
+                        ? JSON.stringify(value)
+                        : value ?? "";
+                }
             });
-
-
+    
             return row;
         });
-
+    
         return { headers, rows };
     };
 
     const handleDownloadAll = () => {
         const downloadedFiles = [];
-    
+
         Object.entries(downloadSelections).forEach(([key, { filename, format }]) => {
             const fullName = `${filename}${format}`;
             downloadedFiles.push(fullName);
-    
+
             if (key === 'map') {
                 // Get the map container element
                 const mapElement = mapContainerRef.current;
-    
+
                 if (!mapElement) {
                     console.error("Map element not found");
                     return;
                 }
-    
+
                 if (format === '.pdf') {
                     // For PDF format
                     html2canvas(mapElement, {
@@ -907,7 +873,7 @@ const addPulseAnimation = () => {
                         try {
                             // Convert canvas to image
                             const imgData = canvas.toDataURL('image/jpeg', 1.0);
-    
+
                             // Check if jsPDF is available
                             if (typeof jsPDF === 'undefined') {
                                 // Load jsPDF if not available
@@ -920,14 +886,14 @@ const addPulseAnimation = () => {
                                         orientation: 'landscape',
                                         unit: 'mm'
                                     });
-    
+
                                     // Get canvas dimensions
                                     const imgWidth = 280; // mm
                                     const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    
+
                                     // Add image to PDF
                                     pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight);
-    
+
                                     // Save PDF
                                     pdf.save(`${filename}.pdf`);
                                 };
@@ -954,26 +920,26 @@ const addPulseAnimation = () => {
                     // First show loading notification
                     setNotificationMessage(`Processing ${format} export...`);
                     setShowEmailNotification(true);
-                    
+
                     // Collect map data
                     const mapData = {
                         coffeeShops: [],
                         radius: null
                     };
-                    
+
                     // Gather coffee shop data
                     if (map && coffeeShopsRef.current.length > 0) {
-                        coffeeShopsRef.current.forEach(({marker, potential}) => {
+                        coffeeShopsRef.current.forEach(({ marker, potential }) => {
                             const position = marker.getLatLng();
                             const popupContent = marker.getPopup()?.getContent() || '';
-                            
+
                             // Extract name from popup if available
                             let name = "Coffee Shop";
                             const nameMatch = popupContent.match(/Name: ([^<]+)/);
                             if (nameMatch && nameMatch[1]) {
                                 name = nameMatch[1].trim();
                             }
-                            
+
                             mapData.coffeeShops.push({
                                 lat: position.lat,
                                 lng: position.lng,
@@ -983,7 +949,7 @@ const addPulseAnimation = () => {
                             });
                         });
                     }
-                    
+
                     // Gather radius data
                     if (map && radiusCircleRef.current) {
                         const circle = radiusCircleRef.current;
@@ -992,7 +958,7 @@ const addPulseAnimation = () => {
                             radius: circle.getRadius()
                         };
                     }
-                    
+
                     // Send to server for processing
                     fetch('/api/export-map', {
                         method: 'POST',
@@ -1004,56 +970,56 @@ const addPulseAnimation = () => {
                             mapData
                         }),
                     })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        
-                        // Get filename from content-disposition header if available
-                        let serverFilename = fullName;
-                        const contentDisposition = response.headers.get('content-disposition');
-                        if (contentDisposition) {
-                            const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-                            if (filenameMatch && filenameMatch[1]) {
-                                serverFilename = filenameMatch[1];
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
                             }
-                        }
-                        
-                        // Different handling based on the response type
-                        if (format === '.csv') {
-                            return response.text().then(text => ({
-                                data: text,
-                                type: 'text/csv',
-                                filename: serverFilename || `${filename}.csv`
-                            }));
-                        } else {
-                            return response.arrayBuffer().then(buffer => ({
-                                data: buffer,
-                                type: 'application/zip',
-                                filename: serverFilename || `${filename}${format}.zip`
-                            }));
-                        }
-                    })
-                    .then(({ data, type, filename }) => {
-                        // Create blob and trigger download
-                        const blob = new Blob([data], { type });
-                        const url = URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.download = filename;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        
-                        // Success notification
-                        setNotificationMessage(`Successfully exported as ${format}`);
-                        setShowEmailNotification(true);
-                    })
-                    .catch(error => {
-                        console.error('Error exporting map:', error);
-                        setNotificationMessage(`Error exporting as ${format}. See console for details.`);
-                        setShowEmailNotification(true);
-                    });
+
+                            // Get filename from content-disposition header if available
+                            let serverFilename = fullName;
+                            const contentDisposition = response.headers.get('content-disposition');
+                            if (contentDisposition) {
+                                const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                                if (filenameMatch && filenameMatch[1]) {
+                                    serverFilename = filenameMatch[1];
+                                }
+                            }
+
+                            // Different handling based on the response type
+                            if (format === '.csv') {
+                                return response.text().then(text => ({
+                                    data: text,
+                                    type: 'text/csv',
+                                    filename: serverFilename || `${filename}.csv`
+                                }));
+                            } else {
+                                return response.arrayBuffer().then(buffer => ({
+                                    data: buffer,
+                                    type: 'application/zip',
+                                    filename: serverFilename || `${filename}${format}.zip`
+                                }));
+                            }
+                        })
+                        .then(({ data, type, filename }) => {
+                            // Create blob and trigger download
+                            const blob = new Blob([data], { type });
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = filename;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+
+                            // Success notification
+                            setNotificationMessage(`Successfully exported as ${format}`);
+                            setShowEmailNotification(true);
+                        })
+                        .catch(error => {
+                            console.error('Error exporting map:', error);
+                            setNotificationMessage(`Error exporting as ${format}. See console for details.`);
+                            setShowEmailNotification(true);
+                        });
                 } else {
                     // For JPG and PNG formats
                     html2canvas(mapElement, {
@@ -1083,15 +1049,15 @@ const addPulseAnimation = () => {
                 // Existing table download functionality
                 const tableIndex = parseInt(key.split('-')[1], 10);
                 const data = tableData[tableIndex];
-    
+
                 if (!data || !data.headers || !data.rows) return;
-    
+
                 const csvRows = [
                     data.headers.join(','),
                     ...data.rows.map(row => data.headers.map(h => `"${(row[h] ?? '').toString().replace(/"/g, '""')}"`).join(','))
                 ];
                 const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-    
+
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
                 link.setAttribute('download', fullName);
@@ -1100,7 +1066,7 @@ const addPulseAnimation = () => {
                 document.body.removeChild(link);
             }
         });
-    
+
         // Push notification
         if (downloadedFiles.length > 0) {
             const fileList = downloadedFiles.join(', ');
@@ -1204,20 +1170,35 @@ const addPulseAnimation = () => {
             const res = await fetch('/data/coffeeshop-data.geojson');
             const shopData = await res.json();
             const coffeeLayer = L.layerGroup();
-
+    
             // Times Square coordinates
             const timesSquare = L.latLng(40.7589, -73.9866);
             const radiusInMeters = radius * 1609.34;
+            
             // Create a filtered version of the shop data for the table
             const filteredShopData = {
                 type: "FeatureCollection",
                 features: []
             };
-
+    
             if (shopData.features && shopData.features.length > 0) {
-                shopData.features.forEach(feature => {
+                // First pass: Ensure all features have a consistent Feature ID
+                shopData.features.forEach((feature, index) => {
+                    if (!feature.properties) {
+                        feature.properties = {};
+                    }
+                    
+                    // Create a consistent Feature ID that will be used in both map and table
+                    // If there's already an ID, use it; otherwise, create a new one
+                    feature.properties['Feature ID'] = feature.properties['Feature ID'] || 
+                                                      feature.properties.id || 
+                                                      `${index + 1}`;
+                });
+    
+                // Second pass: Create markers and populate filtered data
+                shopData.features.forEach((feature) => {
                     let coords;
-
+    
                     // Get coordinates either from geometry or from properties
                     if (feature.geometry && feature.geometry.type === 'Point') {
                         coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
@@ -1230,25 +1211,28 @@ const addPulseAnimation = () => {
                         // Skip features without coordinates
                         return;
                     }
-
+    
                     // Create a Leaflet LatLng object for distance calculation
                     const shopLocation = L.latLng(coords[0], coords[1]);
-
+    
                     // Calculate distance from Times Square
                     const distanceToTimesSquare = timesSquare.distanceTo(shopLocation);
-
+    
                     // Skip shops outside the radius
                     if (distanceToTimesSquare > radiusInMeters) {
                         return;
                     }
-
+    
+                    // Get the consistent Feature ID
+                    const featureId = feature.properties['Feature ID'];
+                    
                     // Add this feature to our filtered data for the table
                     filteredShopData.features.push(feature);
-
+    
                     // Determine the coffee shop type and potential
                     let color = layerColors.existingShop;
                     let potential = feature.properties?.potential || 'existing';
-
+    
                     // Create marker with appropriate styling
                     const marker = L.marker(coords, {
                         icon: L.divIcon({
@@ -1257,9 +1241,14 @@ const addPulseAnimation = () => {
                             iconSize: [14, 14]
                         })
                     });
-
-                    // Create popup content
+    
+                    // Store the Feature ID directly on the marker for easy access
+                    marker.featureId = featureId;
+    
+                    // Create popup content with Feature ID prominently displayed
                     let popupContent = '<strong>Coffee Shop</strong>';
+                    popupContent += `<br>Feature ID: ${featureId}`;
+                    
                     if (feature.properties) {
                         if (feature.properties.dba || feature.properties.name) {
                             popupContent += `<br>Name: ${feature.properties.dba || feature.properties.name}`;
@@ -1277,17 +1266,20 @@ const addPulseAnimation = () => {
                             popupContent += `<br>Type: ${feature.properties.cuisine_description}`;
                         }
                     }
-
+    
                     marker.bindPopup(popupContent);
+                    
+                    // When marker is clicked, select the corresponding row
                     marker.on('click', () => {
                         selectRowByFeatureProperties(feature.properties);
                     });
-
-                    coffeeShopsRef.current.push({ marker, potential });
+    
+                    // Store reference to marker with its feature ID for easier lookup
+                    coffeeShopsRef.current.push({ marker, potential, featureId });
                     coffeeLayer.addLayer(marker);
                 });
             }
-
+    
             return { coffeeLayer, shopData: filteredShopData };
         } catch (error) {
             console.error("Error fetching coffee shop data:", error);
@@ -1300,27 +1292,68 @@ const addPulseAnimation = () => {
             const res = await fetch('/data/pedestrian-data.geojson');
             const trafficData = await res.json();
             const trafficLayer = L.layerGroup();
-
+    
             // Process for heatmap
             const heatPoints = [];
-
+            
+            // Times Square coordinates for distance calculation
+            const timesSquare = L.latLng(40.7589, -73.9866);
+            const radiusInMeters = radius * 1609.34; // Convert miles to meters
+    
+            // Ensure all features have Feature IDs
             if (trafficData.features && trafficData.features.length > 0) {
+                // First pass: Assign Feature IDs to all features
+                trafficData.features.forEach((feature, index) => {
+                    if (!feature.properties) {
+                        feature.properties = {};
+                    }
+                    
+                    // Create a consistent Feature ID
+                    feature.properties['Feature ID'] = feature.properties['Feature ID'] || 
+                                                      feature.properties.id || 
+                                                      `${index + 1}`; // Prefix with 'ft-' to distinguish from coffee shops
+                });
+    
+                // Second pass: Process features for display and create the filtered dataset
+                const footTrafficPoints = [];
+                
                 trafficData.features.forEach(feature => {
                     if (feature.geometry && feature.geometry.type === 'Point') {
                         const coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
                         const intensity = feature.properties?.intensity || 0.5;
-
-                        // Add to heatmap data
-                        heatPoints.push([coords[0], coords[1], intensity * 5]);
+                        const featureId = feature.properties['Feature ID'];
+                        
+                        // Create a point for distance calculation
+                        const point = L.latLng(coords[0], coords[1]);
+                        
+                        // Check if the point is within the radius
+                        const distanceToTimesSquare = timesSquare.distanceTo(point);
+                        
+                        // Only add points that are within the radius
+                        if (distanceToTimesSquare <= radiusInMeters) {
+                            // Add to heatmap data
+                            heatPoints.push([coords[0], coords[1], intensity * 5]);
+                            
+                            // Store the point with its Feature ID for potential lookup
+                            footTrafficPoints.push({
+                                latlng: point,
+                                featureId: featureId,
+                                properties: feature.properties
+                            });
+                        }
                     }
                 });
+                
+                // Store the foot traffic points for later reference
+                // This will allow us to highlight them when selected in the table
+                footTrafficPointsRef.current = footTrafficPoints;
             }
-
+    
             // Create heatmap layer if we have points
             if (heatPoints.length > 0 && window.L.heatLayer) {
                 const heatmap = window.L.heatLayer(heatPoints, {
-                    radius: 30,
-                    blur: 15,
+                    radius: 20,
+                    blur: 8,
                     maxZoom: 17,
                     gradient: {
                         0.2: layerColors.lowTraffic,
@@ -1328,11 +1361,11 @@ const addPulseAnimation = () => {
                         0.8: layerColors.highTraffic
                     }
                 });
-
+    
                 footTrafficHeatmapRef.current = heatmap;
                 trafficLayer.addLayer(heatmap);
             }
-
+    
             return { trafficLayer, trafficData };
         } catch (error) {
             console.error("Error fetching foot traffic data:", error);
@@ -1357,18 +1390,8 @@ const addPulseAnimation = () => {
             dashArray: '5, 5'
         });
 
-        // Add a marker at Times Square
-        const marker = L.marker(timesSquare, {
-            icon: L.divIcon({
-                html: `<div style="background-color: #4169E1; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
-                className: '',
-                iconSize: [16, 16]
-            })
-        }).bindPopup('<strong>Times Square</strong><br>Center point');
-
         radiusCircleRef.current = circle;
         circleLayer.addLayer(circle);
-        circleLayer.addLayer(marker);
 
         return { circleLayer };
     };
@@ -1396,7 +1419,7 @@ const addPulseAnimation = () => {
                 minZoom: 11,
                 maxZoom: 18,
                 doubleClickZoom: false
-            }).setView([40.7589, -73.9866], 13.5);
+            }).setView([40.7589, -73.9866], 13.8);
             leafletMap.createPane('drawPane');
             leafletMap.getPane('drawPane').style.zIndex = 100000000000;
 
@@ -1426,7 +1449,6 @@ const addPulseAnimation = () => {
                     bbox.getSouthWest()
                 ]);
                 leafletMap.fitBounds(poly.getBounds());
-                L.marker(e.geocode.center).addTo(leafletMap);
             });
 
             const [
@@ -1448,7 +1470,24 @@ const addPulseAnimation = () => {
             }
 
             if (footTrafficResult.trafficData) {
-                const footTrafficTable = convertGeoJSONToTable(footTrafficResult.trafficData, 'footTraffic');
+                // Filter the trafficData to only include points within the radius
+                const timesSquare = L.latLng(40.7589, -73.9866);
+                const radiusInMeters = radius * 1609.34;
+
+                const filteredTrafficData = {
+                    type: "FeatureCollection",
+                    features: footTrafficResult.trafficData.features.filter(feature => {
+                        if (feature.geometry && feature.geometry.type === 'Point') {
+                            const coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
+                            const point = L.latLng(coords[0], coords[1]);
+                            const distanceToTimesSquare = timesSquare.distanceTo(point);
+                            return distanceToTimesSquare <= radiusInMeters;
+                        }
+                        return false;
+                    })
+                };
+
+                const footTrafficTable = convertGeoJSONToTable(filteredTrafficData, 'footTraffic');
                 setTableData(prevData => {
                     const newData = [...prevData];
                     newData[1] = footTrafficTable;
@@ -1566,7 +1605,17 @@ const addPulseAnimation = () => {
         }, 100);
 
     }, [layerColors, map]);
-
+    useEffect(() => {
+        // Only store original data when it's first loaded
+        tableData.forEach((table, index) => {
+            if (table && table.rows && !originalData[index]) {
+                setOriginalData(prev => ({
+                    ...prev,
+                    [index]: JSON.parse(JSON.stringify(table.rows))
+                }));
+            }
+        });
+    }, [tableData]);
 
     const getLayerKeyFromLegend = (layerId, label) => {
         const clean = (str) => str.toLowerCase().replace(/[^a-z]/g, '');
@@ -2004,10 +2053,10 @@ const addPulseAnimation = () => {
                                         type: 'map',
                                         component: 'CoffeeShopMapComponent',
                                         props: {
-                                            center: [40.7589, -73.9866], 
+                                            center: [40.7589, -73.9866],
                                             radius: radius,
-                                            activeLayers: activeLayers, 
-                                            layerColors: layerColors, 
+                                            activeLayers: activeLayers,
+                                            layerColors: layerColors,
                                         },
                                         data: {
                                             conversationId: localStorage.getItem('activeConversationId') || '',
@@ -2133,50 +2182,52 @@ const addPulseAnimation = () => {
 
 
                 {showDrawTools && (
-                    <div
-                    className="absolute z-[9999] w-[150px] bg-white border border-gray-200 rounded-xl shadow-lg p-2 transition-all animate-fade-in"
-                    style={{
-                            top: isFullscreen ? '80px' : '360px',
-                            left: isFullscreen ? '80px' : '130px',
-                        }}
-                    >
-                        <div className="flex justify-between items-center mb-3">
-                        <h3 className="text-xs font-semibold text-gray-800">Drawing Tools</h3>
-                        <button onClick={() => setShowDrawTools(false)}>
-                                <X size={16} className="text-gray-500 hover:text-gray-700" />
-                            </button>
-                        </div>
-                        <div className="grid gap-1">
-
-
-                            <button
-                                onClick={() => setShowGeocoder(!showGeocoder)}
-                                title="Search Location"
-                                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
-                                style={{
-                                    color: COLORS.coral,
-                                    border: `1px solid ${COLORS.coral}`,
-                                    transition: 'all 0.2s ease-in-out'
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor = COLORS.coral;
-                                    e.currentTarget.style.color = 'white';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor = 'white';
-                                    e.currentTarget.style.color = COLORS.coral;
-                                }}
-                            >
-Search                            </button>
-                            <button
-    className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
-    onClick={() => {
-                                    if (!map) return;
-                                    setShowDrawTools(false);
-                                    // Prevent duplicate draw tools
-                                    if (map._drawControl) {
-                                        map._drawControl.disable();
-                                    }
+    <div
+        className="absolute z-[9999] w-[130px] bg-white border border-gray-200 rounded-xl shadow-lg p-2 transition-all animate-fade-in"
+        style={{
+            top: isFullscreen ? '80px' : '360px',
+            left: isFullscreen ? '80px' : '130px',
+        }}
+    >
+        <div className="flex justify-between items-center mb-3">
+            <h3 className="text-xs font-semibold text-gray-800">Drawing Tools</h3>
+            <button onClick={() => setShowDrawTools(false)}>
+                <X size={16} className="text-gray-500 hover:text-gray-700" />
+            </button>
+        </div>
+        <div className="grid gap-1">
+            <button
+                onClick={() => setShowGeocoder(!showGeocoder)}
+                title="Search Location"
+                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                style={{
+                    color: COLORS.coral,
+                    border: `1px solid ${COLORS.coral}`,
+                    transition: 'all 0.2s ease-in-out'
+                }}
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = COLORS.coral;
+                    e.currentTarget.style.color = 'white';
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'white';
+                    e.currentTarget.style.color = COLORS.coral;
+                }}
+            >
+                <div className="flex items-center">
+                    <TbMapSearch className="mr-1" size={12} style={{ minWidth: '12px' }} /> 
+                    <span>Search</span>
+                </div>
+            </button>
+            <button
+                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                onClick={() => {
+                    if (!map) return;
+                    setShowDrawTools(false);
+                    // Prevent duplicate draw tools
+                    if (map._drawControl) {
+                        map._drawControl.disable();
+                    }
 
                                     // Ensure draw handler is removed before adding a new one
                                     map.off(L.Draw.Event.CREATED);
@@ -2291,17 +2342,19 @@ Search                            </button>
                                 }}
 
                             >
-Polygon
-                            </button>
-                            <button
-    className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
-    onClick={() => {
-                                    if (!map) return;
-                                    setShowDrawTools(false);
-                                    if (map._drawControl) {
-                                        map._drawControl.disable();
-                                    }
-
+                                <div className="flex items-center">
+                    <PiPolygon className="mr-1" size={12} style={{ minWidth: '12px' }} /> 
+                    <span>Polygon</span>
+                </div>
+            </button>
+            <button
+                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                onClick={() => {
+                    if (!map) return;
+                    setShowDrawTools(false);
+                    if (map._drawControl) {
+                        map._drawControl.disable();
+                    }
                                     const drawCircle = new L.Draw.Circle(map, {
                                         shapeOptions: {
                                             color: '#008080',
@@ -2323,18 +2376,16 @@ Polygon
                                     });
                                 }}
                             >
-Circle
-                            </button>
-                            <button
-    className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
-    onClick={() => {
-                                    if (!map) return;
-                                    setShowDrawTools(false);
-                                    // Disable existing draw control if any
-                                    if (map._drawControl) {
-                                        map._drawControl.disable();
-                                    }
-
+                                <div className="flex items-center">
+                    <FaRegCircle className="mr-1" size={12} style={{ minWidth: '12px' }} /> 
+                    <span>Circle</span>
+                </div>
+            </button>
+            <button
+                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                onClick={() => {
+                    if (!map) return;
+                    setShowDrawTools(false);
                                     // Create dashed polyline draw tool
                                     const drawPolyline = new L.Draw.Polyline(map, {
                                         shapeOptions: {
@@ -2376,18 +2427,16 @@ Circle
                                     });
                                 }}
                             >
-Measure
-                            </button>
-
-                            <button
-    className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
-    onClick={() => {
-                                    if (!map) return;
-                                    setShowDrawTools(false);
-                                    // Disable any active drawing tool
-                                    if (map._drawControl) {
-                                        map._drawControl.disable();
-                                    }
+                                <div className="flex items-center">
+                    <Ruler className="mr-1" size={12} style={{ minWidth: '12px' }} /> 
+                    <span>Measure</span>
+                </div>
+            </button>
+            <button
+                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                onClick={() => {
+                    if (!map) return;
+                    setShowDrawTools(false);
 
                                     const drawPolygon = new L.Draw.Polygon(map, {
                                         allowIntersection: false,
@@ -2527,17 +2576,16 @@ Measure
                                     });
                                 }}
                             >
-Area
-                            </button>
-                            <button
-    className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
-    onClick={() => {
-                                    if (!map || !map.drawnItems) return;
-                                    setShowDrawTools(false);
-                                    // Disable previous draw tools if any
-                                    if (map._drawControl) {
-                                        map._drawControl.disable();
-                                    }
+                                <div className="flex items-center">
+                    <GiPathDistance className="mr-1" size={12} style={{ minWidth: '12px' }} /> 
+                    <span>Area</span>
+                </div>
+            </button>
+            <button
+                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                onClick={() => {
+                    if (!map || !map.drawnItems) return;
+                    setShowDrawTools(false);
 
                                     // Create a higher z-index pane specifically for editing vertices if needed
                                     if (!map.getPane('editPane')) {
@@ -2574,19 +2622,16 @@ Area
                                     });
                                 }}
                             >
-Edit
-                            </button>
-
-                            <button
-    className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
-    onClick={() => {
-                                    if (!map) return;
-                                    setShowDrawTools(false);
-
-                                    if (map._drawControl) {
-                                        map._drawControl.disable();
-                                    }
-
+                                <div className="flex items-center">
+                    <Pencil className="mr-1" size={12} style={{ minWidth: '12px' }} /> 
+                    <span>Edit Vertices</span>
+                </div>
+            </button>
+            <button
+                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                onClick={() => {
+                    if (!map) return;
+                    setShowDrawTools(false);
                                     // Set up Freehand Polyline
                                     const freehandPolyline = new L.Draw.Polyline(map, {
                                         shapeOptions: {
@@ -2609,7 +2654,11 @@ Edit
                                     });
                                 }}
                             >
-Freehand                            </button>
+                                <div className="flex items-center">
+                    <MdDraw className="mr-1" size={12} style={{ minWidth: '12px' }} /> 
+                    <span>Freehand</span>
+                </div>
+            </button>
                         </div>
                     </div>
                 )}
@@ -2634,218 +2683,32 @@ Freehand                            </button>
 
 
 
-                <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" style={{ zIndex: 0 }} />
-
-
-                {/* Drag handle */}
-                {showTable && (
-                    <div
-                        ref={dragHandleRef}
-                        className="cursor-row-resize transition-all"
-                        onMouseDown={handleMouseDown}
-                        style={{
-                            height: "4px",
-                            backgroundColor: "#e0e0e0",
-                            position: "absolute",
-                            bottom: tableHeight,
-                            left: 0,
-                            right: 0,
-                            zIndex: 21
-                        }}
-                    />
-                )}
+                <div ref={mapContainerRef} className="absolute inset-0 w-full h-full map-container" style={{ zIndex: 0 }} />
 
                 {/* Table section */}
                 {showTable && (
-                    <div
-                        className="absolute bottom-0 left-0 right-0 bg-white shadow-inner border-t border-gray-300 z-20"
-                        style={{ height: `${tableHeight}px` }}
-                    >
-                        {/* Table header with tabs */}
-                        {!isFullscreen && <Toolbar showTable={true} />}
-                        <div className="flex justify-between items-center p-1 bg-white text-gray-800 border-b border-gray-200 h-10 px-4">
-                            {/* Tabs on the left */}
-                            <div className="flex space-x-1">
-                                {tableTitles.map((title, index) => (
-                                    <button
-                                        key={index}
-                                        className={`px-2 py-1 border rounded-t-md text-xs font-medium transition-all duration-200
-          ${currentTableIndex === index
-                                                ? 'bg-[#008080] text-white border-[#008080]'
-                                                : 'bg-white text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white'}
-        `}
-                                        onClick={() => {
-                                            setCurrentTableIndex(index);
-                                            setOriginalRowsMap(prev => ({
-                                                ...prev,
-                                                [index]: JSON.parse(JSON.stringify(tableData[index].rows)) // deep clone
-                                            }));
-                                            setIsModified(false);
-                                        }}
-                                    >
-                                        {title}
-                                    </button>
-                                ))}
-                            </div>
-
-                        </div>
-
-                        {/* Table content */}
-                        <div className="h-[calc(100%-40px)] overflow-auto p-2">
-                            {tableData[currentTableIndex] && tableData[currentTableIndex].headers ? (
-                                <table className="min-w-full border-collapse">
-                                    <thead>
-                                        {/* Excel-style A/B/C header row */}
-                                        <tr key="header-row">
-                                            <th className="w-8 text-[10px] bg-gray-100"></th>
-                                            {tableData[currentTableIndex].headers.map((_, colIdx) => (
-  <th
-    key={`abc-${colIdx}`}
-    onClick={() => setSelectedColIndex((prev) => (prev === colIdx ? null : colIdx))}
-    onContextMenu={(e) => {
-      e.preventDefault();
-      setContextMenu({
-        visible: true,
-        x: e.clientX,
-        y: e.clientY,
-        type: 'column',
-        index: colIdx,
-        columnName: tableData[currentTableIndex].headers[colIdx],
-      });
-    }}
-    className={`px-3 py-1 text-center text-[10px] font-semibold text-gray-700 uppercase border border-gray-300
-      ${selectedColIndex === colIdx ? 'bg-[#ccecec]' : 'bg-gray-100'}`}
-  >
-    {String.fromCharCode(65 + colIdx)}
-  </th>
-))}
-                                        </tr>
-                                        {/* Actual column names */}
-                                        <tr key="column-names-row">
-
-                                            <th className="w-8 bg-white"></th>
-                                            {tableData[currentTableIndex].headers.map((header, idx) => (
-                                                <th
-                                                    key={`label-${idx}`}
-                                                    className="px-3 py-1 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200"
-                                                >
-                                                    <div className="flex items-center justify-between">
-                                                        <span>{header}</span>
-                                                        {showFilterIcons && (
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    const rect = e.currentTarget.getBoundingClientRect();
-                                                                    const uniqueVals = [...new Set(tableData[currentTableIndex].rows.map(row => row[header]))];
-                                                                    setFilterOptions(uniqueVals);
-                                                                    setSelectedFilters(prev => ({
-                                                                        ...prev,
-                                                                        [header]: new Set(uniqueVals) // default: all selected
-                                                                    }));
-                                                                    setFilterColumn(header);
-                                                                    setShowFilterDialog(true);
-                                                                    // Position the filter dialog near the icon
-                                                                    setFilterDialogPosition({ x: rect.right, y: rect.bottom });
-                                                                }}
-                                                                className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none"
-                                                            >
-                                                                <svg
-                                                                    xmlns="http://www.w3.org/2000/svg"
-                                                                    width="10"
-                                                                    height="10"
-                                                                    viewBox="0 0 24 24"
-                                                                    fill="none"
-                                                                    stroke="currentColor"
-                                                                    strokeWidth="2"
-                                                                    strokeLinecap="round"
-                                                                    strokeLinejoin="round"
-                                                                >
-                                                                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-                                                                </svg>
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-
-                                    <tbody>
-  {tableData[currentTableIndex].rows.map((row, rowIndex) => (
-    <tr 
-      key={`row-${rowIndex}`}
-      onClick={() => {
-        // Set the selected row index in state
-        setSelectedRowIndex(rowIndex);
-        
-        // Directly trigger the highlight function for immediate feedback
-        if (row) {
-          resetLayerHighlighting();
-          if (currentTableIndex === 0) { // Coffee Shops table
-            highlightCoffeeShop(row);
-          } else if (currentTableIndex === 1) { // Foot Traffic table
-            highlightFootTrafficArea(row);
-          }
-        }
-      }}
-      className={`cursor-pointer transition-colors duration-200 ${selectedRowIndex === rowIndex ? 'bg-[#ccecec]' : 'hover:bg-gray-50'}`}
-    >
-      <th
-        onClick={(e) => {
-          e.stopPropagation(); // Prevent row click handler
-          setSelectedRowIndex(rowIndex);
-          
-          // Also trigger highlight directly
-          if (tableData[currentTableIndex].rows[rowIndex]) {
-            resetLayerHighlighting();
-            if (currentTableIndex === 0) {
-              highlightCoffeeShop(tableData[currentTableIndex].rows[rowIndex]);
-            } else if (currentTableIndex === 1) {
-              highlightFootTrafficArea(tableData[currentTableIndex].rows[rowIndex]);
-            }
-          }
-        }}
-        onContextMenu={(e) => handleRightClick(e, 'row', rowIndex)}
-        className={`text-center text-[11px] font-semibold border border-gray-300 bg-gray-100
-          ${selectedRowIndex === rowIndex ? 'bg-[#ccecec]' : ''}`}
-      >
-        {rowIndex + 1}
-      </th>
-      {tableData[currentTableIndex].headers.map((header, colIdx) => (
-        <td
-          key={colIdx}
-          contentEditable
-          suppressContentEditableWarning
-          onClick={(e) => e.stopPropagation()} // Prevent row click handler when editing cells
-          onBlur={(e) => {
-            const value = e.target.innerText.trim();
-            handleCellEdit(rowIndex, header, value);
-          }}
-          className={`px-2 py-1 text-xs border border-gray-200 min-w-[80px] whitespace-nowrap align-top hover:bg-[#f0fdfa]
-            ${selectedRowIndex === rowIndex ? 'bg-[#ccecec]' : ''}
-            ${selectedColIndex === colIdx ? 'bg-[#ccecec]' : ''}`}
-          style={{ outline: 'none' }}
-        >
-          {tableData[currentTableIndex].rows[rowIndex][header]}
-        </td>
-      ))}
-    </tr>
-  ))}
-</tbody>
-                                </table>
-
-
-                            ) : (
-                                <div className="h-full flex flex-col items-center justify-center">
-                                    <Table className="h-8 w-8 text-coral/50 mb-2" />
-                                    <p className="text-sm text-gray-500">No data available for this layer</p>
-                                </div>
-                            )}
-                        </div>
-
-
-                    </div>
+                    <VirtualizedTable
+                        tableData={tableData}
+                        setTableData={setTableData} // Pass the setter function
+                        currentTableIndex={currentTableIndex}
+                        setCurrentTableIndex={setCurrentTableIndex}
+                        tableTitles={tableTitles}
+                        selectedRowIndex={selectedRowIndex}
+                        setSelectedRowIndex={setSelectedRowIndex}
+                        selectedColIndex={selectedColIndex}
+                        setSelectedColIndex={setSelectedColIndex}
+                        highlightFeatureByRowProperties={highlightFeatureByRowProperties}
+                        resetLayerHighlighting={resetLayerHighlighting}
+                        handleCellEdit={handleCellEdit}
+                        tableHeight={tableHeight}
+                        setTableHeight={setTableHeight}
+                        showTable={showTable}
+                        setIsModified={setIsModified} // Pass the setIsModified function
+                        originalRowsMap={originalData} // Pass this instead of originalRowsMap
+                        setOriginalRowsMap={setOriginalData}  // Pass the setter for original data
+                    />
                 )}
+                {/*
                 {contextMenu.visible && (
                     <div
                         className="fixed z-[9999] w-28 rounded-md border border-gray-200 bg-white shadow-xl text-xs font-medium"
@@ -2963,8 +2826,9 @@ Freehand                            </button>
                         </div>
                     </div>
                 )}
+*/}
 
-
+                {/*
                 {showFilterDialog && filterColumn && (
                     <div
                         className="fixed z-[9999] bg-white rounded-xl p-2"
@@ -2998,7 +2862,6 @@ Freehand                            </button>
                             />
                         </div>
 
-                        {/* Scrollable values area */}
                         <div className="space-y-0.5 overflow-y-auto flex-grow" style={{ maxHeight: '110px' }}>
                             {filterOptions
                                 .filter(option =>
@@ -3027,7 +2890,6 @@ Freehand                            </button>
                                 ))}
                         </div>
 
-                        {/* Fixed buttons at bottom, side by side */}
                         <div className="mt-1 flex justify-between space-x-1">
                             <button
                                 onClick={() => setShowFilterDialog(false)}
@@ -3056,7 +2918,7 @@ Freehand                            </button>
                     </div>
                 )}
 
-
+*/}
 
                 {activeDrawTool && (
                     <button
