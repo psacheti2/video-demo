@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 
-export default function ChatMessage({ message, isUser, onArtifactClick }) {
+export default function ChatMessage({ message, isUser, onArtifactClick, isReloading }) {
   const [displayedText, setDisplayedText] = useState(isUser ? message.text : '');
 
   useEffect(() => {
-    console.log('Message effect running, isUser:', isUser);
-    const isLive = !isUser;
-    if (!isUser && isLive) {
+    console.log('Message effect running, isUser:', isUser, 'isReloading:', isReloading);
+    
+    const isLive = !isUser && !isReloading && !message.id?.startsWith('loaded_'); 
+    
+    if (isLive) {
       let index = 0;
       const interval = setInterval(() => {
         index++;
@@ -17,9 +19,10 @@ export default function ChatMessage({ message, isUser, onArtifactClick }) {
       }, 15);
       return () => clearInterval(interval);
     } else {
-      setDisplayedText(message.text); // Instantly show full message
+      setDisplayedText(message.text); // Show instantly
     }
-  }, [message.text, isUser, message.id]);
+  }, [message.text, isUser, isReloading, message.id]);
+  
 
   return (
     <div className={`flex flex-col mb-6 px-4 md:px-2 w-full ${isUser ? 'items-end' : 'items-start'}`}>
@@ -32,17 +35,25 @@ export default function ChatMessage({ message, isUser, onArtifactClick }) {
         </div>
       )}
 
-      <div
-        className={`max-w-[75%] rounded-lg px-4 py-3 shadow-md break-words ${
-          !isUser
-            ? 'bg-[#34495E] text-white rounded-br-none'
-            : 'bg-gray-100 text-[#34495E] rounded-bl-none'
-        }`}
-      >
-        <p className="whitespace-pre-wrap leading-relaxed">
-          {isUser ? message.text : displayedText}
-        </p>
-      </div>
+<div className="max-w-[75%]">
+  {message.contextInfo && (
+    <div className="text-sm text-teal-700 mb-1 font-medium italic">
+      📍 {message.contextInfo}
+    </div>
+  )}
+  <div
+    className={`rounded-lg px-4 py-3 shadow-md break-words ${
+      !isUser
+        ? 'bg-[#34495E] text-white rounded-br-none'
+        : 'bg-gray-100 text-[#34495E] rounded-bl-none'
+    }`}
+  >
+    <p className="whitespace-pre-wrap leading-relaxed">
+      {isUser ? message.text : displayedText}
+    </p>
+  </div>
+</div>
+
 
       {!isUser && message.artifacts && message.artifacts.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-2">

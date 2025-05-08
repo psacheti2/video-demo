@@ -7,7 +7,7 @@ import { Search } from 'lucide-react'; // At the top of the file
 import { Dialog } from '@headlessui/react';
 
 // Custom sidebar component that directly integrates with the chat layout
-export default function ResponsiveChatLayout({ onArtifactGenerated }) {
+export default function ResponsiveChatLayout({ onArtifactGenerated, isReloading = false }) {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -208,9 +208,14 @@ className={`w-64 text-white flex flex-col absolute h-full left-0 top-0 transitio
         }}
       >
         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-none">
-          {messages.map((message, index) => (
-            <ChatMessage key={index} message={message} isUser={message.isUser} />
-          ))}
+        {messages.map((message, index) => (
+  <ChatMessage
+    key={index}
+    message={message}
+    isUser={message.isUser}
+    isReloading={isReloading} 
+  />
+))}
           {isLoading && (
             <div className="flex justify-start">
               <div className="bg-[#34495E] text-[#FFFFFF] rounded-lg px-4 py-2 rounded-bl-none">

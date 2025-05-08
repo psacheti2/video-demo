@@ -93,13 +93,13 @@ const PdfViewerComponent = ({ pdfFile = "/data/Vickery-data.pdf", title = 'Vicke
         <div className="flex space-x-2">
           <button 
             onClick={handleDownload}
-            title="Download PDF"
+            data-tooltip="Download PDF"
             className="text-teal-600 hover:bg-teal-600 hover:text-white p-2 rounded-full transition-all">
             <Download size={20} />
           </button>
           <button 
             onClick={handleFullscreen}
-            title="View Fullscreen"
+            data-tooltip="View Fullscreen"
             className="text-teal-600 hover:bg-teal-600 hover:text-white p-2 rounded-full transition-all">
             <Maximize2 size={20} />
           </button>
@@ -128,7 +128,7 @@ const PdfViewerComponent = ({ pdfFile = "/data/Vickery-data.pdf", title = 'Vicke
           {pdfUrl && (
             <iframe 
               src={`${pdfUrl}#toolbar=0`}
-              title="PDF Viewer"
+              data-tooltip="PDF Viewer"
               className="absolute inset-0 w-full h-full border-none"
               loading="lazy"
               style={{ overflow: 'hidden' }}

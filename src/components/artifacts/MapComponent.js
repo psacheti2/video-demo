@@ -23,7 +23,8 @@ import { MdDraw } from "react-icons/md";
 
 const MapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts, title, 
   onBack  }) => {
-
+    const [layerTypes, setLayerTypes] = useState(['flood', 'infrastructure']); // Default layers
+    const [layerRefsData, setLayerRefsData] = useState(null);
   const mapContainerRef = useRef(null);
   const [map, setMap] = useState(null);
   const infoRef = useRef(null);

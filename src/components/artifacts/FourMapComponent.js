@@ -1656,7 +1656,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts }
             }}
           >
             {/* your normal buttons here... */}
-            <button onClick={() => setShowTable(!showTable)} title="Toggle Table" className="p-2 rounded-full border" style={{
+            <button onClick={() => setShowTable(!showTable)} data-tooltip="Toggle Table" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1671,7 +1671,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts }
             }}>
               {showTable ? <Table size={20} /> : <Table size={20} />}
             </button>
-            <button onClick={() => setShowSaveDialog(true)} title="Save Map" className="p-2 rounded-full border" style={{
+            <button onClick={() => setShowSaveDialog(true)} data-tooltip="Save Map" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1688,7 +1688,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts }
             </button>
             <button
   onClick={() => setShowGeocoder(!showGeocoder)}
-  title="Search Location"
+  data-tooltip="Search Location"
   className="p-2 rounded-full border"
   style={{
     color: '#008080',
@@ -1707,7 +1707,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts }
   <TbMapSearch size={20} />
 </button>
 
-            <button onClick={() => setShowSymbologyEditor(true)} title="Symbology" className="p-2 rounded-full border" style={{
+            <button onClick={() => setShowSymbologyEditor(true)} data-tooltip="Symbology" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1722,7 +1722,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts }
             }}>
               <Palette size={20} />
             </button>
-            <button onClick={() => setShowLegend(prev => !prev)} title="Legend" className="p-2 rounded-full border" style={{
+            <button onClick={() => setShowLegend(prev => !prev)} data-tooltip="Legend" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1737,7 +1737,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts }
             }}>
               <Layers size={20} />
             </button>
-            <button onClick={() => setShowSources(prev => !prev)} title="Sources" className="p-2 rounded-full border" style={{
+            <button onClick={() => setShowSources(prev => !prev)} data-tooltip="Sources" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1752,7 +1752,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts }
             }}>
               <Info size={20} />
             </button>
-            <button onClick={() => setShowShareDialog(true)} title="Share" className="p-2 rounded-full border" style={{
+            <button onClick={() => setShowShareDialog(true)} data-tooltip="Share" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1767,7 +1767,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts }
             }}>
               <Share2 size={20} />
             </button>
-            <button onClick={() => setShowDownloadDialog(true)} title="Download" className="p-2 rounded-full border" style={{
+            <button onClick={() => setShowDownloadDialog(true)} data-tooltip="Download" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1782,7 +1782,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts }
             }}>
               <Download size={20} />
             </button>
-            <button onClick={toggleFullScreen} title="Fullscreen" className="p-2 rounded-full border" style={{
+            <button onClick={toggleFullScreen} data-tooltip="Fullscreen" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1817,7 +1817,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts }
           <button
             onClick={() => setToolbarVisible(!toolbarVisible)}
             onMouseDown={handleMouseDown}
-            title={toolbarVisible ? "Collapse tools" : "Expand tools"}
+            data-tooltip={toolbarVisible ? "Collapse tools" : "Expand tools"}
             className="p-2 rounded-full border cursor-move"
             style={{
               color: COLORS.coral,
@@ -1839,7 +1839,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts }
           {/* 👇 Render the rest only if visible */}
           {toolbarVisible && (
             <>
-              <button onClick={() => setShowTable(!showTable)} title="Toggle Table" className="p-2 rounded-full border" style={{
+              <button onClick={() => setShowTable(!showTable)} data-tooltip="Toggle Table" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1854,7 +1854,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts }
             }}>
                 {showTable ? <Table size={20} /> : <Table size={20} />}
               </button>
-              <button onClick={() => setShowSaveDialog(true)} title="Save Map" className="p-2 rounded-full border" style={{
+              <button onClick={() => setShowSaveDialog(true)} data-tooltip="Save Map" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1871,7 +1871,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts }
               </button>
               <button
   onClick={() => setShowGeocoder(!showGeocoder)}
-  title="Search Location"
+  data-tooltip="Search Location"
   className="p-2 rounded-full border"
   style={{
     color: '#008080',
@@ -1890,7 +1890,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts }
   <TbMapSearch size={20} />
 </button>
 
-              <button onClick={() => setShowSymbologyEditor(true)} title="Symbology" className="p-2 rounded-full border" style={{
+              <button onClick={() => setShowSymbologyEditor(true)} data-tooltip="Symbology" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1905,7 +1905,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts }
             }}>
                 <Palette size={20} />
               </button>
-              <button onClick={() => setShowLegend(prev => !prev)} title="Legend" className="p-2 rounded-full border" style={{
+              <button onClick={() => setShowLegend(prev => !prev)} data-tooltip="Legend" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1920,7 +1920,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts }
             }}>
                 <Layers size={20} />
               </button>
-              <button onClick={() => setShowSources(prev => !prev)} title="Sources" className="p-2 rounded-full border" style={{
+              <button onClick={() => setShowSources(prev => !prev)} data-tooltip="Sources" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1935,7 +1935,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts }
             }}>
                 <Info size={20} />
               </button>
-              <button onClick={() => setShowShareDialog(true)} title="Share" className="p-2 rounded-full border" style={{
+              <button onClick={() => setShowShareDialog(true)} data-tooltip="Share" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1950,7 +1950,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts }
             }}>
                 <Share2 size={20} />
               </button>
-              <button onClick={() => setShowDownloadDialog(true)} title="Download" className="p-2 rounded-full border" style={{
+              <button onClick={() => setShowDownloadDialog(true)} data-tooltip="Download" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1965,7 +1965,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts }
             }}>
                 <Download size={20} />
               </button>
-              <button onClick={toggleFullScreen} title="Exit Fullscreen" className="p-2 rounded-full border" style={{
+              <button onClick={toggleFullScreen} data-tooltip="Exit Fullscreen" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -2016,7 +2016,7 @@ const FourMap = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts }
         html: `<div style="
           width: 20px;
           height: 20px;
-          background-color: #008080;
+          background-color: #FF5747;
           border-radius: 50% 50% 50% 0;
           transform: rotate(-45deg);
           border: 2px solid white;

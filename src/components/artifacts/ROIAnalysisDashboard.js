@@ -74,6 +74,17 @@ const ROIAnalysisDashboard = ({ onLayersReady, setSavedArtifacts, title, onBack 
   const [searchTerm, setSearchTerm] = useState('');
   const [notificationMessage, setNotificationMessage] = useState('');
   const [showEmailNotification, setShowEmailNotification] = useState(false);
+  const [editableTitle, setEditableTitle] = useState({
+    roi: "ROI Comparison by Location",
+    breakeven: "Break-Even Timeline by Location"
+  });
+  const [editableDescription, setEditableDescription] = useState({
+    roi: "Projected ROI percentages across different NYC locations",
+    breakeven: "Projected timeline to break even on initial $200,000 investment"
+  });
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  
   const [customColors, setCustomColors] = useState({
     blue: COLORS.blue,
     green: COLORS.green,
@@ -282,16 +293,44 @@ const renderBreakEvenLineChart = () => {
       </div>
 
       <div className="bg-white rounded-b-2xl shadow-inner pt-0 px-4 pb-4 min-h-[630px]">
-  <div className="mb-4 pt-4 text-center">
-    <h2 className="text-xl font-semibold text-gray-800">
-      {activeChart === 'roi' && "ROI Comparison by Location"}
-      {activeChart === 'breakeven' && "Break-Even Timeline by Location"}
+      <div className="mb-4 pt-4 text-center">
+  {isEditingTitle ? (
+    <input
+      type="text"
+      value={editableTitle[activeChart]}
+      onChange={(e) => setEditableTitle({ ...editableTitle, [activeChart]: e.target.value })}
+      onBlur={() => setIsEditingTitle(false)}
+      autoFocus
+      className="text-xl font-semibold text-center text-gray-800 border-b border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#008080]"
+    />
+  ) : (
+    <h2
+      onDoubleClick={() => setIsEditingTitle(true)}
+      className="text-xl font-semibold text-gray-800 cursor-pointer"
+    >
+      {editableTitle[activeChart]}
     </h2>
-    <p className="text-sm text-gray-600 mt-1">
-      {activeChart === 'roi' && "Projected ROI percentages across different NYC locations"}
-      {activeChart === 'breakeven' && "Projected timeline to break even on initial $200,000 investment"}
+  )}
+
+  {isEditingDescription ? (
+    <textarea
+      value={editableDescription[activeChart]}
+      onChange={(e) => setEditableDescription({ ...editableDescription, [activeChart]: e.target.value })}
+      onBlur={() => setIsEditingDescription(false)}
+      autoFocus
+      className="mt-1 w-full text-sm text-center text-gray-600 border-b border-gray-300 resize-none focus:outline-none focus:ring-1 focus:ring-[#008080]"
+      rows={2}
+    />
+  ) : (
+    <p
+      onDoubleClick={() => setIsEditingDescription(true)}
+      className="text-sm text-gray-600 mt-1 cursor-pointer"
+    >
+      {editableDescription[activeChart]}
     </p>
-  </div>
+  )}
+</div>
+
 
   <div className="bg-white p-1 rounded-lg z-10">
     {activeChart === 'roi' && renderROIPieChart()}
@@ -305,7 +344,7 @@ const renderBreakEvenLineChart = () => {
           <div className="relative">
             <button
               onClick={() => setShowSources(prev => !prev)}
-              title="View Information"
+              data-tooltip="View Information"
               className="p-2 rounded-full border"
               style={{ 
                 color: COLORS.teal,
@@ -346,7 +385,7 @@ const renderBreakEvenLineChart = () => {
           {/* Save Button */}
           <button
             onClick={() => setShowSaveDialog(true)}
-            title="Save Chart"
+            data-tooltip="Save Chart"
             className="p-2 rounded-full border"
             style={{ 
               color: COLORS.teal,
@@ -369,7 +408,7 @@ const renderBreakEvenLineChart = () => {
           {/* Palette button */}
           <button
             onClick={() => setShowPaletteDialog(true)}
-            title="Change Colors"
+            data-tooltip="Change Colors"
             className="p-2 rounded-full border"
             style={{ 
               color: COLORS.teal,
@@ -393,7 +432,7 @@ const renderBreakEvenLineChart = () => {
           <button
             onClick={() => setShowShareDialog(true)}
             className="p-2 rounded-full border"
-            title="Share"
+            data-tooltip="Share"
             style={{ 
               color: COLORS.teal,
               backgroundColor: COLORS.white,
@@ -689,7 +728,7 @@ const renderBreakEvenLineChart = () => {
             <button
               onClick={() => setShowEmailNotification(false)}
               className="absolute top-1 right-1 w-5 h-5 rounded-full text-[#008080] hover:bg-[#008080]/10 hidden group-hover:flex items-center justify-center"
-              title="Dismiss"
+              data-tooltip="Dismiss"
             >
               ×
             </button>

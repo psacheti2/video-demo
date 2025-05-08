@@ -14,7 +14,7 @@ import ExtractComponent from '../artifacts/SevenExtract'
 import FourReport from '../artifacts/FourReport'
 import FourMap from '../artifacts/FourMap'
 import PdfViewer from '../artifacts/PdfViewerComponent'
-import CoffeeShopMap from '../artifacts/CoffeeShopMap';
+import CoffeeShopMap from '../artifacts/CoffeeShopMap'
 import AdditionalLayersMap from '../artifacts/AdditionalLayersMap';
 import CoffeeShopROIAnalysis from '../artifacts/ROIAnalysisDashboard';
 import CoffeeShopReport from '../artifacts/CoffeeShopReport';

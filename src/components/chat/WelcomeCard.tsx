@@ -85,8 +85,8 @@ export default function WelcomeCard({
             </div>
             <button
               type="submit"
-              className="p-2 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors"
-              title="Send"
+              className="p-2 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors tooltip-bottom"
+              data-tooltip="Send"
             >
               <SendHorizontal className="h-4 w-4 text-[#008080] group-hover:text-white" />
             </button>
@@ -103,9 +103,13 @@ export default function WelcomeCard({
           {/* Upload Button and Disclaimer */}
           <div className="flex justify-between items-center">
             <label htmlFor="welcome-file-upload" className="cursor-pointer group">
-              <div className="p-2 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors">
-                <Upload className="h-4 w-4 text-[#008080] group-hover:text-white" />
-              </div>
+            <div 
+  className="p-2 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors tooltip-bottom" 
+  data-tooltip="Upload file"
+>
+  <Upload className="h-4 w-4 text-[#008080] group-hover:text-white" />
+</div>
+
               <input
                 id="welcome-file-upload"
                 type="file"

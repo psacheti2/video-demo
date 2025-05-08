@@ -22,6 +22,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/components/chat/WelcomeCard.tsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/components/chat/WelcomeCard.tsx", "src/components/chat/ResponsiveChatLayout.js"],
   "exclude": ["node_modules"]
 }

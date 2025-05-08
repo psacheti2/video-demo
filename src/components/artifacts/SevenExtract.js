@@ -214,7 +214,7 @@ const SevenExtract = ({onLayersReady}) => {
       {/* Floating Buttons */}
       <div className="fixed top-20 right-6 z-50">
         <div className="flex space-x-3 bg-white px-4 py-2 rounded-full shadow-md border">
-          <button onClick={toggleSidebar} title="Toggle sidebar" style={{ 
+          <button onClick={toggleSidebar} data-tooltip="Toggle sidebar" style={{ 
               color: COLORS.coral,
               backgroundColor: 'white',
               border: 'none',
@@ -237,7 +237,7 @@ height: window.innerWidth < 640 ? '28px' : '36px',
             }}>
             <Menu size={20}  />
           </button>
-          <button onClick={() => setShowSources(prev => !prev)} title="View Sources" style={{ 
+          <button onClick={() => setShowSources(prev => !prev)} data-tooltip="View Sources" style={{ 
               color: COLORS.coral,
               backgroundColor: 'white',
               border: 'none',
@@ -260,7 +260,7 @@ height: window.innerWidth < 640 ? '28px' : '36px',
   <Info size={20} />
 </button>
 
-          <button onClick={toggleFullscreen} title="Toggle fullscreen" style={{ 
+          <button onClick={toggleFullscreen} data-tooltip="Toggle fullscreen" style={{ 
               color: COLORS.coral,
               backgroundColor: 'white',
               border: 'none',

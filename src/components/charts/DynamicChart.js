@@ -534,20 +534,6 @@ const DynamicChart = ({
   };
   
 
-  const renderChoroplethMap = () => {
-    return (
-      <div className="flex justify-center items-center h-64 bg-gray-100 rounded-lg border border-gray-300">
-        <div className="text-center p-4">
-          <p className="text-lg font-medium text-gray-700">Choropleth Map</p>
-          <p className="text-sm text-gray-500">
-Map          </p>
-          <p className="text-xs text-gray-400 mt-2">
-            {geojson ? "GeoJSON data is available" : "No GeoJSON data available"}
-          </p>
-        </div>
-      </div>
-    );
-  };
 
   const renderChart = () => {
     switch (type) {

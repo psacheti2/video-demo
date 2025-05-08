@@ -1046,7 +1046,7 @@ const highlightSubwayStation = (row) => {
                 html: `<div style="
           width: 20px;
           height: 20px;
-          background-color: #008080;
+          background-color: #FF5747;
           border-radius: 50% 50% 50% 0;
           transform: rotate(-45deg);
           border: 2px solid white;
@@ -2436,7 +2436,7 @@ if (rentalPrice < 200) {
                     }}
                 >
                     {/* your normal buttons here... */}
-                    <button onClick={() => setShowTable(!showTable)} title="Toggle Table" className="p-2 rounded-full border" style={{
+                    <button onClick={() => setShowTable(!showTable)} data-tooltip="Toggle Table" className="p-2 rounded-full border tooltip-top tooltip-top" style={{
                         color: COLORS.coral,
                         border: `1px solid ${COLORS.coral}`,
                         transition: 'all 0.2s ease-in-out'
@@ -2451,7 +2451,7 @@ if (rentalPrice < 200) {
                         }}>
                         {showTable ? <Table size={16} /> : <Table size={16} />}
                     </button>
-                    <button onClick={() => setShowSaveDialog(true)} title="Save Map" className="p-2 rounded-full border" style={{
+                    <button onClick={() => setShowSaveDialog(true)} data-tooltip="Save Map" className="p-2 rounded-full border tooltip-top tooltip-top" style={{
                         color: COLORS.coral,
                         border: `1px solid ${COLORS.coral}`,
                         transition: 'all 0.2s ease-in-out'
@@ -2469,8 +2469,8 @@ if (rentalPrice < 200) {
                     <button
                         ref={pencilRef}
                         onClick={() => setShowDrawTools(!showDrawTools)}
-                        title="Draw & Measure Tools"
-                        className="p-2 rounded-full border relative"
+                        data-tooltip="Draw & Measure Tools"
+                        className="p-2 rounded-full border tooltip-top tooltip-top relative"
                         style={{
                             color: COLORS.coral,
                             border: `1px solid ${COLORS.coral}`,
@@ -2490,7 +2490,7 @@ if (rentalPrice < 200) {
 
 
 
-                    <button onClick={() => setShowLegend(prev => !prev)} title="Legend" className="p-2 rounded-full border" style={{
+                    <button onClick={() => setShowLegend(prev => !prev)} data-tooltip="Legend" className="p-2 rounded-full border tooltip-top tooltip-top" style={{
                         color: COLORS.coral,
                         border: `1px solid ${COLORS.coral}`,
                         transition: 'all 0.2s ease-in-out'
@@ -2505,7 +2505,7 @@ if (rentalPrice < 200) {
                         }}>
                         <Layers size={16} />
                     </button>
-                    <button onClick={() => setShowSources(prev => !prev)} title="Sources" className="p-2 rounded-full border" style={{
+                    <button onClick={() => setShowSources(prev => !prev)} data-tooltip="Sources" className="p-2 rounded-full border tooltip-top tooltip-top" style={{
                         color: COLORS.coral,
                         border: `1px solid ${COLORS.coral}`,
                         transition: 'all 0.2s ease-in-out'
@@ -2520,7 +2520,7 @@ if (rentalPrice < 200) {
                         }}>
                         <Info size={16} />
                     </button>
-                    <button onClick={() => setShowShareDialog(true)} title="Share" className="p-2 rounded-full border" style={{
+                    <button onClick={() => setShowShareDialog(true)} data-tooltip="Share" className="p-2 rounded-full border tooltip-top tooltip-top" style={{
                         color: COLORS.coral,
                         border: `1px solid ${COLORS.coral}`,
                         transition: 'all 0.2s ease-in-out'
@@ -2536,7 +2536,7 @@ if (rentalPrice < 200) {
                         <Share2 size={16} />
                     </button>
 
-                    <button onClick={toggleFullscreen} title="Fullscreen" className="p-2 rounded-full border" style={{
+                    <button onClick={toggleFullscreen} data-tooltip="Fullscreen" className="p-2 rounded-full border tooltip-top tooltip-top" style={{
                         color: COLORS.coral,
                         border: `1px solid ${COLORS.coral}`,
                         transition: 'all 0.2s ease-in-out'
@@ -2571,8 +2571,8 @@ if (rentalPrice < 200) {
                 <button
                     onClick={() => setToolbarVisible(!toolbarVisible)}
                     onMouseDown={handleMouseDown}
-                    title={toolbarVisible ? "Collapse tools" : "Expand tools"}
-                    className="p-2 rounded-full border cursor-move"
+                    data-tooltip={toolbarVisible ? "Collapse tools" : "Expand tools"}
+                    className="p-2 rounded-full border tooltip-right tooltip-top cursor-move"
                     style={{
                         color: COLORS.coral,
                         border: `1px solid ${COLORS.coral}`,
@@ -2593,7 +2593,7 @@ if (rentalPrice < 200) {
                 {/* 👇 Render the rest only if visible */}
                 {toolbarVisible && (
                     <>
-                        <button onClick={() => setShowTable(!showTable)} title="Toggle Table" className="p-2 rounded-full border" style={{
+                        <button onClick={() => setShowTable(!showTable)} data-tooltip="Toggle Table" className="p-2 rounded-full border tooltip-right" style={{
                             color: COLORS.coral,
                             border: `1px solid ${COLORS.coral}`,
                             transition: 'all 0.2s ease-in-out'
@@ -2608,7 +2608,7 @@ if (rentalPrice < 200) {
                             }}>
                             {showTable ? <Table size={16} /> : <Table size={16} />}
                         </button>
-                        <button onClick={() => setShowSaveDialog(true)} title="Save Map" className="p-2 rounded-full border" style={{
+                        <button onClick={() => setShowSaveDialog(true)} data-tooltip="Save Map" className="p-2 rounded-full border tooltip-right" style={{
                             color: COLORS.coral,
                             border: `1px solid ${COLORS.coral}`,
                             transition: 'all 0.2s ease-in-out'
@@ -2626,8 +2626,8 @@ if (rentalPrice < 200) {
                         <button
                             ref={pencilRef}
                             onClick={() => setShowDrawTools(!showDrawTools)}
-                            title="Draw & Measure Tools"
-                            className="p-2 rounded-full border relative"
+                            data-tooltip="Draw & Measure Tools"
+                            className="p-2 rounded-full border tooltip-right relative"
                             style={{
                                 color: COLORS.coral,
                                 border: `1px solid ${COLORS.coral}`,
@@ -2647,7 +2647,7 @@ if (rentalPrice < 200) {
 
 
 
-                        <button onClick={() => setShowLegend(prev => !prev)} title="Legend" className="p-2 rounded-full border" style={{
+                        <button onClick={() => setShowLegend(prev => !prev)} data-tooltip="Legend" className="p-2 rounded-full border tooltip-right" style={{
                             color: COLORS.coral,
                             border: `1px solid ${COLORS.coral}`,
                             transition: 'all 0.2s ease-in-out'
@@ -2662,7 +2662,7 @@ if (rentalPrice < 200) {
                             }}>
                             <Layers size={16} />
                         </button>
-                        <button onClick={() => setShowSources(prev => !prev)} title="Sources" className="p-2 rounded-full border" style={{
+                        <button onClick={() => setShowSources(prev => !prev)} data-tooltip="Sources" className="p-2 rounded-full border tooltip-right" style={{
                             color: COLORS.coral,
                             border: `1px solid ${COLORS.coral}`,
                             transition: 'all 0.2s ease-in-out'
@@ -2677,7 +2677,7 @@ if (rentalPrice < 200) {
                             }}>
                             <Info size={16} />
                         </button>
-                        <button onClick={() => setShowShareDialog(true)} title="Share" className="p-2 rounded-full border" style={{
+                        <button onClick={() => setShowShareDialog(true)} data-tooltip="Share" className="p-2 rounded-full border tooltip-right" style={{
                             color: COLORS.coral,
                             border: `1px solid ${COLORS.coral}`,
                             transition: 'all 0.2s ease-in-out'
@@ -2693,7 +2693,7 @@ if (rentalPrice < 200) {
                             <Share2 size={16} />
                         </button>
 
-                        <button onClick={toggleFullscreen} title="Exit Fullscreen" className="p-2 rounded-full border" style={{
+                        <button onClick={toggleFullscreen} data-tooltip="Exit Fullscreen" className="p-2 rounded-full border tooltip-right" style={{
                             color: COLORS.coral,
                             border: `1px solid ${COLORS.coral}`,
                             transition: 'all 0.2s ease-in-out'
@@ -2942,7 +2942,7 @@ if (rentalPrice < 200) {
         <div className="grid gap-1">
             <button
                 onClick={() => setShowGeocoder(!showGeocoder)}
-                title="Search Location"
+                data-tooltip="Search Location"
                 className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
                 style={{
                     color: COLORS.coral,
@@ -3672,7 +3672,7 @@ if (rentalPrice < 200) {
                             if (map._drawControl && map._drawControl._enabled) {
                                 // Simulate double click by manually triggering the finish action
                                 const container = map.getContainer();
-                                const finishBtn = container.querySelector('.leaflet-draw-actions a[title="Finish Drawing"]');
+                                const finishBtn = container.querySelector('.leaflet-draw-actions a[data-tooltip="Finish Drawing"]');
                                 if (finishBtn) {
                                     finishBtn.click(); // 🟢 finalize the shape
                                 } else {

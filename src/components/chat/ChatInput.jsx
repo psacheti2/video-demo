@@ -75,8 +75,8 @@ export default function ChatInput({ onSendMessage }) {
   {/* Vertically centered send button */}
   <button
     type="submit"
-    className="self-center p-2 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors"
-    title="Send"
+    className="self-center p-2 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors tooltip-bottom"
+    data-tooltip="Send"
   >
     <SendHorizontal className="h-4 w-4 text-[#008080] group-hover:text-white" />
   </button>
@@ -93,7 +93,7 @@ export default function ChatInput({ onSendMessage }) {
               type="button"
               onClick={() => setUploadedFile(null)}
               className="hover:text-red-500 text-[#008080] transition"
-              title="Remove file"
+              data-tooltip="Remove file"
             >
               <X size={16} />
             </button>
@@ -101,9 +101,12 @@ export default function ChatInput({ onSendMessage }) {
         )}
         <div className="flex justify-between mt-2 items-center">
           <label htmlFor="file-upload" className="cursor-pointer">
-            <div className="p-2 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors">
-              <Upload className="h-4 w-4 text-[#008080] group-hover:text-white" />
-            </div>
+          <div 
+  className="p-2 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors tooltip-right" 
+  data-tooltip="Upload file"
+>
+  <Upload className="h-4 w-4 text-[#008080] group-hover:text-white" />
+</div>
             <input
               id="file-upload"
               type="file"

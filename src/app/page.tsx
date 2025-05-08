@@ -69,8 +69,10 @@ export default function Home() {
     const stored = JSON.parse(localStorage.getItem('conversations') || '{}');
     const convo = stored[id];
     if (convo) {
-      const messages: ChatMessageType[] = convo.messages || [];
-
+      const messages: ChatMessageType[] = convo.messages.map((msg: ChatMessageType) => ({
+        ...msg,
+        id: msg.id.startsWith('loaded_') ? msg.id : `loaded_${msg.id}`
+      })) || [];
       const allArtifacts: Artifact[] = [];
       messages.forEach((msg) => {
         if (msg.artifacts && msg.artifacts.length > 0) {
@@ -370,7 +372,7 @@ export default function Home() {
               setSelectedArtifact={setSelectedArtifact}
               savedArtifacts={savedArtifacts}
               setSavedArtifacts={setSavedArtifacts}
-              artifactsPanelWidth={artifactsPanelWidth}
+              
             />
           </div>
         ) : hasArtifacts || selectedArtifact ? (  
@@ -392,6 +394,7 @@ export default function Home() {
               sidebarOpen={showSidebar}
               setSidebarOpen={setShowSidebar}
               setSelectedArtifact={handleArtifactSelect}
+              isReloading={isReloading}
             />
           </div>
           
@@ -517,7 +520,7 @@ export default function Home() {
               <button
                 onClick={() => setShowAllSavedDialog(false)}
                 className="p-2 rounded-full bg-white border border-[#008080] hover:bg-[#008080] group shadow-sm transition"
-                title="Close"
+                data-tooltip="Close"
               >
                 <X className="h-4 w-4 text-[#008080] group-hover:text-white" />
               </button>
@@ -565,7 +568,7 @@ export default function Home() {
                         )
                       }
                       className="p-2 rounded-full bg-white border border-[#008080] hover:bg-[#008080] group shadow-sm transition ml-2"
-                      title="Delete"
+                      data-tooltip="Delete"
                     >
                       <Trash2 className="h-4 w-4 text-[#008080] group-hover:text-white" />
                     </button>

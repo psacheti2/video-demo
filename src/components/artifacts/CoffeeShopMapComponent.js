@@ -1,7 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import {
-    Layers, Maximize2, X, Info, ChevronDown, ChevronUp,
-    Download, Wrench, Palette, Share2, BookmarkPlus, Table, Minimize2, ChevronLeft, ArrowLeft, ChevronRight, Pencil, ListFilter, Ruler,
+import {X, ArrowLeft, MousePointerSquareDashed, TextCursorInput
 } from 'lucide-react';
 import { TbMapSearch } from "react-icons/tb";
 import html2canvas from 'html2canvas';
@@ -11,23 +9,48 @@ import L from 'leaflet';
 import 'leaflet-control-geocoder';
 import 'leaflet-draw';
 import 'leaflet-draw/dist/leaflet.draw.js';
+import MapDownloader from '../MapDownloader'
+import TextToolbar from '../TextToolbar'
 import _ from 'lodash';
-
-import { PiPolygon } from "react-icons/pi";
-import { FaRegCircle } from "react-icons/fa6";
-
-import { GiPathDistance } from "react-icons/gi";
-import { LiaShareAltSolid } from "react-icons/lia";
-import { LuMove3D, LuSquiggle } from "react-icons/lu";// {showTable && (
+import {
+    createPolygonDrawTool,
+    createFreehandTool,
+    createSelectTool,
+    setupClickToEdit,
+    createTextTool
+} from '../drawTools';
+import { IconMapPinSearch } from '@tabler/icons-react';
 import { MdDraw } from "react-icons/md";
 import VirtualizedTable from './VirtualizedTable';
+import ToolbarComponent from '../ToolbarComponent';
+import DraggableLegend from './DraggableLegend';
 
 const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts, title,
-    onBack, center = [-73.9866, 40.7589], radius = 0.8 }) => {
-
+    onBack, center = [-73.9866, 40.7589], radius = 0.8, onSendMessage }) => {
+    const [layerZIndexes, setLayerZIndexes] = useState({
+        coffeeShops: 30,
+        footTraffic: 50,
+        radius: 10
+    });
+    const [topInteractiveLayer, setTopInteractiveLayer] = useState('footTraffic');
+    const [showTextToolbar, setShowTextToolbar] = useState(false);
+    const [activeTextMarker, setActiveTextMarker] = useState(null);
+    const [textToolbarPosition, setTextToolbarPosition] = useState({ top: 50, left: 50 });
+    const [textFormat, setTextFormat] = useState({
+      fontFamily: 'Arial, sans-serif',
+      fontSize: 18,
+      fontWeight: 'normal',
+      fontStyle: 'normal',
+      textDecoration: 'none',
+      textAlign: 'center',
+      color: '#000000'
+    });
+    
     const mapContainerRef = useRef(null);
     const [map, setMap] = useState(null);
     const infoRef = useRef(null);
+    const [currentMapView, setCurrentMapView] = useState('light');
+    const [baseMapLayer, setBaseMapLayer] = useState(null);
     // Table states
     const [showTable, setShowTable] = useState(false);
     const [tableHeight, setTableHeight] = useState(300);
@@ -35,19 +58,14 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
     const [tableData, setTableData] = useState([]);
     const [tableTitles, setTableTitles] = useState(['Coffee Shops', 'Foot Traffic Data']);
     const [showShareDialog, setShowShareDialog] = useState(false);
-    const [emailSubject, setEmailSubject] = useState('');
-    const [emailBody, setEmailBody] = useState('');
     const [showEmailNotification, setShowEmailNotification] = useState(false);
-    const [emailTo, setEmailTo] = useState('');
     const addNotification = useNotificationStore((state) => state.addNotification);
-    const [showDownloadDialog, setShowDownloadDialog] = useState(false);
     const [downloadSelections, setDownloadSelections] = useState({});
     const [notificationMessage, setNotificationMessage] = useState('');
     const [showSaveDialog, setShowSaveDialog] = useState(false);
     const [customSaveName, setCustomSaveName] = useState('');
     const [toolbarVisible, setToolbarVisible] = useState(true);
-    const [toolbarPosition, setToolbarPosition] = useState({ top: 100, left: 100 });
-    const wrenchRef = useRef(null);
+    const [toolbarPosition, setToolbarPosition] = useState(null);
     const [showGeocoder, setShowGeocoder] = useState(false);
     const geocoderRef = useRef(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -60,34 +78,30 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
     const snapLayersRef = useRef([]);
     const pencilRef = useRef(null);
     const [drawDialogPos, setDrawDialogPos] = useState({ top: 0, left: 0 });
-    const [selectedRowIndex, setSelectedRowIndex] = useState(null);
+    const [selectedRowIndices, setSelectedRowIndices] = useState([]);
     const [selectedColIndex, setSelectedColIndex] = useState(null);
     const footTrafficPointsRef = useRef([]);
+    const [showMapDownloader, setShowMapDownloader] = useState(false);
+    const [scrollToRowIndex, setScrollToRowIndex] = useState(null);
     const [contextMenu, setContextMenu] = useState({
         visible: false, x: 0, y: 0, type: null, index: null,
         columnName: null,
     });
-    const [editingCell, setEditingCell] = useState(null);
-    const [cellValue, setCellValue] = useState('');
+
+    const [customLayerNames, setCustomLayerNames] = useState(() => {
+        const stored = localStorage.getItem('customLayerNames');
+        return stored ? JSON.parse(stored) : {};
+    });
+
+    useEffect(() => {
+        localStorage.setItem('customLayerNames', JSON.stringify(customLayerNames));
+    }, [customLayerNames]);
+
+    
     const [originalRowsMap, setOriginalRowsMap] = useState({});
-    const [showFilterDialog, setShowFilterDialog] = useState(false);
-    const [filterColumn, setFilterColumn] = useState(null);
-    const [filterOptions, setFilterOptions] = useState([]);
-    const [selectedFilters, setSelectedFilters] = useState({});
-    const [filterSearch, setFilterSearch] = useState('');
-    const [filterDialogPosition, setFilterDialogPosition] = useState({ x: 0, y: 0 });
-    const [showFilterIcons, setShowFilterIcons] = useState(false);
-    const [attachments, setAttachments] = useState([
-        { id: 'map', label: '📍 Vancouver Infrastructure & Flood Assessment Map.jpg' },
-        ...tableTitles.map((title, i) => ({
-            id: `table-${i}`,
-            label: `📊 ${title}.csv`
-        }))
-    ]);
+    
     const [originalData, setOriginalData] = useState({});
-    const debouncedSearch = useRef(_.debounce((query) => {
-        runGeocodeSearch(query);
-    }, 300)).current;
+    
     const coffeeShopsRef = useRef([]);
     const footTrafficHeatmapRef = useRef(null);
     const radiusCircleRef = useRef(null);
@@ -109,7 +123,9 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
     // Set showLegend to true if more than 4 layers are active
     const [showLegend, setShowLegend] = useState(initialActiveLayerCount > 4);
     const [showSources, setShowSources] = useState(false);
-    const [expandedSections, setExpandedSections] = useState({});
+    const [expandedSections, setExpandedSections] = useState({
+        drawnShapes: true 
+      });    
     const [isModified, setIsModified] = useState(false);
 
     const [showSymbologyEditor, setShowSymbologyEditor] = useState(false);
@@ -121,12 +137,119 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
         radius: true
     });
 
+    const fallbackMapStyles = {
+        light: 'https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
+        dark: 'https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png',
+        satellite: 'https://{s}.aerial.maps.ls.hereapi.com/maptile/2.1/maptile/newest/satellite.day/{z}/{x}/{y}/256/png8?apiKey=',
+        streets: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        outdoors: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+        hybrid: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}'
+    };
+
+    // Add an error handler for tile loading errors
+    const setupTileErrorHandler = (layer) => {
+        layer.on('tileerror', function (error) {
+            console.log('Tile error occurred:', error);
+
+            // If we have a fallback URL for this style, try to use it
+            if (fallbackMapStyles[currentMapView]) {
+                console.log('Attempting to use fallback tile source:', fallbackMapStyles[currentMapView]);
+
+                // Remove the failed layer
+                map.removeLayer(layer);
+
+                // Create and add the fallback layer
+                const fallbackLayer = L.tileLayer(fallbackMapStyles[currentMapView], {
+                    attribution: attributions[currentMapView],
+                    subdomains: 'abcd',
+                    maxZoom: 19
+                });
+
+                fallbackLayer.addTo(map);
+                setBaseMapLayer(fallbackLayer);
+
+                // Only try the fallback once
+                layer.off('tileerror');
+            }
+        });
+
+        return layer;
+    };
+
+    const handleMapViewChange = (viewType) => {
+        if (!map) return;
+      
+        mapContainerRef.current.style.backgroundColor = '#FFFFFF';
+        mapContainerRef.current.style.background = '#FFFFFF';
+        // First, remove the existing base layer if it exists
+        if (baseMapLayer && baseMapLayer.main) {
+            map.removeLayer(baseMapLayer.main);
+            if (baseMapLayer.labels) {
+                map.removeLayer(baseMapLayer.labels);
+            }
+        } else if (baseMapLayer) {
+            map.removeLayer(baseMapLayer);
+        }
+
+
+
+        // Define tile URLs for different map styles
+        const mapStyles = {
+            light: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+            dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', // Re-add dark map style
+            cadastral: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', // ESRI street map with property lines
+            satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+            streets: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', // Using Carto's Voyager style for better reliability
+            outdoors: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', // ESRI World Topo Map - high quality, modern terrain styling
+            hybrid: 'https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}' // USGS Imagery with Topo
+        };
+
+        // Define attribution for different map styles
+        const attributions = {
+            light: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            dark: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>', // Re-add dark map attribution
+            cadastral: '&copy; <a href="https://www.esri.com/">Esri</a> &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community',
+            satellite: '&copy; <a href="https://www.esri.com/">Esri</a>',
+            streets: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            outdoors: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community',
+            hybrid: 'Tiles &copy; USGS National Map'
+        };
+
+        // Create and add the new base layer
+        const newBaseLayer = L.tileLayer(mapStyles[viewType], {
+            attribution: attributions[viewType],
+            subdomains: 'abcd',
+            maxZoom: 19
+        });
+        
+        newBaseLayer.addTo(map);
+        setBaseMapLayer(newBaseLayer);
+
+        // Update the current map view state
+        setCurrentMapView(viewType);
+
+        // Force a refresh of the map
+        setTimeout(() => {
+            if (map) map.invalidateSize();
+        }, 100);
+    };
+
+    const [drawnLayers, setDrawnLayers] = useState({});
+const [drawnLayersOrder, setDrawnLayersOrder] = useState([]);
+const drawnLayersRef = useRef([]);
+
+const [nextShapeIds, setNextShapeIds] = useState({
+  polygon: 1,
+  circle: 1,
+  polyline: 1,
+  marker: 1,
+  triangle: 1,
+  text: 1
+});
+
     const COLORS = {
         // Coffee shops
         existingShop: '#D2691E',
-        highPotential: '#006400',
-        mediumPotential: '#FFA500',
-        lowPotential: '#DC143C',
 
         // Foot traffic
         highTraffic: '#8B0000',
@@ -150,27 +273,58 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
 
     const [layerColors, setLayerColors] = useState({
         existingShop: COLORS.existingShop,
-        highPotential: COLORS.highPotential,
-        mediumPotential: COLORS.mediumPotential,
-        lowPotential: COLORS.lowPotential,
         highTraffic: COLORS.highTraffic,
         mediumTraffic: COLORS.mediumTraffic,
         lowTraffic: COLORS.lowTraffic
     });
 
-    const evaluateCell = (value, table) => {
-        if (typeof value !== 'string' || !value.startsWith('=')) return value;
 
-        const match = value.match(/^=(SUM|AVERAGE)\(([^)]+)\)$/i);
-        if (!match) return value;
+    const getTrafficColor = (intensity) => {
+        if (intensity > 0.7) return layerColors.highTraffic;
+        if (intensity > 0.4) return layerColors.mediumTraffic;
+        return layerColors.lowTraffic;
+    };
 
-        const [, fn, colName] = match;
-        const nums = table.rows.map(row => parseFloat(row[colName])).filter(n => !isNaN(n));
-        if (nums.length === 0) return 0;
+    // 3. Add CSS for custom popups - Add this to your component or a separate CSS file
+    useEffect(() => {
+        // Add custom CSS for popups
+        const style = document.createElement('style');
+        style.textContent = `
+            .custom-popup .leaflet-popup-content-wrapper {
+                background-color: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            }
+            .custom-popup .leaflet-popup-tip {
+                background-color: white;
+            }
+            .custom-popup .leaflet-popup-content {
+                margin: 10px;
+            }
+        `;
+        document.head.appendChild(style);
 
-        if (fn.toUpperCase() === 'SUM') return nums.reduce((a, b) => a + b, 0).toFixed(2);
-        if (fn.toUpperCase() === 'AVERAGE') return (nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(2);
-        return value;
+        return () => {
+            document.head.removeChild(style);
+        };
+    }, []);
+
+    const updateLayerInteractivity = (layer, layerId) => {
+        if (!layer) return;
+
+        const isTopLayer = topInteractiveLayer === layerId;
+
+        if (layer.eachLayer) {
+            // For layer groups
+            layer.eachLayer(subLayer => {
+                if (subLayer.options) {
+                    subLayer.options.interactive = isTopLayer;
+                }
+            });
+        } else if (layer.options) {
+            // For individual layers
+            layer.options.interactive = isTopLayer;
+        }
     };
 
     const resetLayerHighlighting = () => {
@@ -187,29 +341,16 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
             if (marker.isPopupOpen()) {
                 marker.closePopup();
             }
-        });
-
-        // Remove any pulse markers that might be on the map
-        if (map) {
-            map.eachLayer(layer => {
-                if (layer._icon && layer._icon.innerHTML && layer._icon.innerHTML.includes('pulse-animation')) {
-                    map.removeLayer(layer);
-                }
-            });
-        }
+        });        
     };
 
-    const handleCellEdit = (selectedRowIndex, columnName, newValue) => {
+      
+    const handleCellEdit = (selectedRowIndices, columnName, newValue) => {
         setTableData(prev => {
             const updated = [...prev];
-            updated[currentTableIndex].rows[selectedRowIndex][columnName] = newValue;
+            updated[currentTableIndex].rows[selectedRowIndices][columnName] = newValue;
             return updated;
         });
-    };
-
-    const handleRightClick = (e, type, index) => {
-        e.preventDefault();
-        setContextMenu({ visible: true, x: e.clientX, y: e.clientY, type, index });
     };
 
     const closeContextMenu = () => {
@@ -268,7 +409,7 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
             if (properties.id || properties['Feature ID']) {
                 const featureId = properties.id || properties['Feature ID'];
                 rowIndex = tableData[i]?.rows?.findIndex(row =>
-                    row['Feature ID'] === featureId || row.id === featureId
+                    row['Feature ID']?.toString() === featureId?.toString()
                 );
             }
 
@@ -280,133 +421,219 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
             }
 
             if (rowIndex >= 0) {
-                // Set the correct table view and show table
-                setCurrentTableIndex(i);
-                setShowTable(true);
-                setSelectedRowIndex(rowIndex);
+                console.log(`Found matching row at index ${rowIndex} in table ${i}`);
 
-                // Delay scroll slightly after table is visible
+                // Important: First make the table visible before any scrolling attempts
+                setShowTable(true);
+
+                // Delay other operations to ensure the table is fully rendered
                 setTimeout(() => {
-                    const tableElement = document.querySelector('table');
-                    if (tableElement) {
-                        const rowElement = tableElement.querySelector(`tbody tr:nth-child(${rowIndex + 1})`);
-                        if (rowElement) {
-                            rowElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }
-                    }
-                }, 200);
+                    // Set the correct table view
+                    setCurrentTableIndex(i);
+
+                    // Set selected row
+                    setSelectedRowIndices([rowIndex]);
+
+                    // Clear any previous scrollToRowIndex value first
+                    // This ensures the effect will trigger even if selecting the same row again
+                    setScrollToRowIndex(null);
+
+                    // Then set the new value in the next render cycle
+                    setTimeout(() => {
+                        setScrollToRowIndex(rowIndex);
+                        console.log(`Set scrollToRowIndex to ${rowIndex}`);
+                    }, 50);
+                }, 100);
 
                 break;
             }
         }
     };
 
-    const highlightFeatureByRowProperties = (rowIndex) => {
-        if (rowIndex === null || !map) return;
+const highlightMultipleFeatures = (rowIndices) => {
+    if (!rowIndices || rowIndices.length === 0 || !map) return;
     
+    // Reset any previous highlighting
+    resetLayerHighlighting();
+    
+    // Highlight each selected row's corresponding feature
+    rowIndices.forEach(rowIndex => {
+      const row = tableData[currentTableIndex]?.rows[rowIndex];
+      if (!row) return;
+      
+      // Check which table we're on and highlight the appropriate feature
+      switch (currentTableIndex) {
+        case 0: // Coffee Shops
+          highlightCoffeeShop(row, true); // Add 'isMultiSelect' parameter
+          break;
+        case 1: // Foot Traffic
+          highlightFootTrafficArea(row, true); // Add 'isMultiSelect' parameter
+          break;
+      }
+    });
+    
+    // If we have multiple points selected, fit the map to show all of them
+    if (rowIndices.length > 1) {
+      const bounds = L.latLngBounds([]);
+      const markers = [];
+      
+      // Collect all marker positions for bounds calculation
+      rowIndices.forEach(rowIndex => {
         const row = tableData[currentTableIndex]?.rows[rowIndex];
-        if (!row) return;
+        if (!row || !row['Feature ID']) return;
+        
+        if (currentTableIndex === 0) { // Coffee Shops
+          const shop = coffeeShopsRef.current.find(s => s.featureId === row['Feature ID']);
+          if (shop && shop.marker) {
+            markers.push(shop.marker);
+            bounds.extend(shop.marker.getLatLng());
+          }
+        } else if (currentTableIndex === 1) { // Foot Traffic
+          const point = footTrafficPointsRef.current.find(p => p.featureId === row['Feature ID']);
+          if (point) {
+            bounds.extend(point.latlng);
+          }
+        }
+      });
+      
+      // Only fit bounds if we found valid markers
+      if (!bounds.isValid()) return;
+      
+      // Fit the map to show all selected points with some padding
+      map.fitBounds(bounds, {
+        padding: [50, 50],
+        maxZoom: 16,
+        animate: true
+      });
+    }
+  };
+
     
+    const highlightFeatureByRowProperties = (rowIndices) => {
+        if (!rowIndices || (Array.isArray(rowIndices) && rowIndices.length === 0) || !map) return;
+        
         // Reset any previous highlighting
         resetLayerHighlighting();
-    
-        // Check which table we're on and highlight the appropriate feature
-        switch (currentTableIndex) {
-            case 0: // Coffee Shops
-                highlightCoffeeShop(row);
-                break;
-            case 1: // Foot Traffic
-                highlightFootTrafficArea(row);
-                break;
-        }
-    };
-    
-    const highlightCoffeeShop = (row) => {
-        if (!row || !map) return;
         
+        // Handle both single index and array of indices
+        if (Array.isArray(rowIndices)) {
+          highlightMultipleFeatures(rowIndices);
+        } else {
+          // Single selection case - use existing behavior
+          const row = tableData[currentTableIndex]?.rows[rowIndices];
+          if (!row) return;
+          
+          // Check which table we're on and highlight the appropriate feature
+          switch (currentTableIndex) {
+            case 0: // Coffee Shops
+              highlightCoffeeShop(row);
+              break;
+            case 1: // Foot Traffic
+              highlightFootTrafficArea(row);
+              break;
+          }
+        }
+      };
+
+    const highlightCoffeeShop = (row, isMultiSelect = false) => {        if (!row || !map) return;
+
         // Look for the Feature ID first - this is the most reliable way to match
         const featureId = row['Feature ID'];
-        
+
         if (featureId) {
             // Try to find a direct match by feature ID
             const matchedShop = coffeeShopsRef.current.find(shop => shop.featureId === featureId);
-            
+
             if (matchedShop) {
                 // Direct match found - highlight this marker
                 highlightMarker(matchedShop.marker);
                 return;
             }
         }
-        
+
         // Fallback to other matching methods if feature ID didn't match
         let foundMarker = false;
-        
+
         // Try to match by name or other properties
         coffeeShopsRef.current.forEach(({ marker }) => {
             const popupContent = marker.getPopup()?.getContent() || '';
-            
+
             // Match by name/dba if available
             const nameMatch = row.name && popupContent.includes(row.name);
             const dbaMatch = row.dba && popupContent.includes(row.dba);
-            
+
             if (nameMatch || dbaMatch) {
                 highlightMarker(marker);
                 foundMarker = true;
             }
         });
-        
+
         // Last resort: try using coordinates
         if (!foundMarker) {
             highlightByCoordinates(row);
         }
     };
 
-    // Extract the marker highlighting logic into a separate function
-    const highlightMarker = (marker) => {
+    const highlightMarker = (marker, isMultiSelect = false) => {
         // Change the marker's icon to make it stand out
         marker.setIcon(L.divIcon({
-            html: `<div style="background-color: #ffff00; width: 14px; height: 14px; border-radius: 50%; border: 2px solid black; box-shadow: 0 0 4px white;"></div>`,
+            html: `
+              <div style="
+                position: relative;
+                width: 28px;
+                height: 28px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              ">
+                <div style="
+                  position: absolute;
+                  width: 24px;
+                  height: 24px;
+                  border: 3px solid #008080;
+                  border-radius: 50%;
+                  background-color: transparent;
+                  box-sizing: border-box;
+                "></div>
+                <div style="
+                  width: 12px;
+                  height: 12px;
+                  background-color: #CC6600;
+                  border-radius: 50%;
+                  z-index: 2;
+                "></div>
+              </div>
+            `,
             className: '',
-            iconSize: [18, 18]
-        }));
-
-        // Calculate visible map area when table is showing
-        const containerHeight = mapContainerRef.current.clientHeight;
-        const visibleMapHeight = showTable ? containerHeight - tableHeight : containerHeight;
-
-        // Get marker position and calculate offset to center it in the visible area
-        const markerLatLng = marker.getLatLng();
-
-        // Create a point that will be centered in the visible map area
-        // The offset calculation moves the point up to account for the table
-        const targetPoint = showTable ?
-            map.project(markerLatLng).subtract([0, visibleMapHeight * 0.5]) :
-            map.project(markerLatLng);
-
-        // Convert back to LatLng and pan the map to center on this point
-        const targetLatLng = map.unproject(targetPoint);
-
-        // Zoom and pan to the adjusted center
-        map.setView(targetLatLng, 16, {
-            animate: true,
-            duration: 0.5
-        });
-
-        // Add a pulsing animation effect around the marker
-        const pulseMarker = L.marker(markerLatLng, {
-            icon: L.divIcon({
-                html: `<div class="pulse-animation" style="width: 30px; height: 30px; border-radius: 50%; border: 3px solid #ffff00; box-shadow: 0 0 8px #ffff00;"></div>`,
-                className: '',
-                iconSize: [30, 30]
-            })
-        }).addTo(map);
-
-        // Remove the pulse animation after 3 seconds
-        setTimeout(() => {
-            if (map) map.removeLayer(pulseMarker);
-        }, 3000);
-    };
-
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
+          }));
+          
+          
+        if (!isMultiSelect) {
+            // Calculate visible map area when table is showing
+            const containerHeight = mapContainerRef.current.clientHeight;
+        
+            // Get marker position and calculate offset to center it in the visible area
+            const markerLatLng = marker.getLatLng();
+        
+            // Create a point that will be centered in the visible map area
+            // The offset calculation moves the point up to account for the table
+            const targetPoint = showTable
+              ? map.project(markerLatLng).add([0, tableHeight/1.6])
+              : map.project(markerLatLng);
+        
+            // Convert back to LatLng and pan the map to center on this point
+            const targetLatLng = map.unproject(targetPoint);
+        
+            // Zoom and pan to the adjusted center
+            map.setView(targetLatLng, 16, {
+              animate: true,
+              duration: 0.5
+            });
+          }
+        };
+        
     // Extract the coordinate-based highlighting into a separate function
     const highlightByCoordinates = (row) => {
         // Try to extract coordinates from the row data
@@ -444,10 +671,9 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
 
             // Get projected point and calculate offset
             const point = map.project(latlng);
-            const offsetPoint = showTable ?
-                point.subtract([0, visibleMapHeight * 0.1]) :
-                point;
-
+            const offsetPoint = showTable
+                ? point.add([0, tableHeight / 1.6])
+                : point;
             // Convert back to LatLng and pan the map
             const targetLatLng = map.unproject(offsetPoint);
 
@@ -457,41 +683,28 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
                 duration: 0.5
             });
 
-            // Create a temporary highlight marker
-            const pulseMarker = L.marker(latlng, {
-                icon: L.divIcon({
-                    html: `<div class="pulse-animation" style="width: 30px; height: 30px; border-radius: 50%; border: 3px solid #ffff00; box-shadow: 0 0 8px #ffff00;"></div>`,
-                    className: '',
-                    iconSize: [30, 30]
-                })
-            }).addTo(map);
-
-            // Remove after 3 seconds
-            setTimeout(() => {
-                if (map) map.removeLayer(pulseMarker);
-            }, 3000);
         }
     };
 
-    const highlightFootTrafficArea = (row) => {
+    const highlightFootTrafficArea = (row, isMultiSelect = false) => {
         if (!row) return;
-        
+
         // First try to match by Feature ID
         const featureId = row['Feature ID'];
-        
+
         if (featureId) {
             // Try to find the point with the matching Feature ID
             const matchedPoint = footTrafficPointsRef.current.find(point => point.featureId === featureId);
-            
+
             if (matchedPoint) {
                 highlightFootTrafficPoint(matchedPoint.latlng);
                 return;
             }
         }
-        
+
         // Fallback: Try to highlight by coordinates from row
         let lat, lng;
-        
+
         // Try to get coordinates from various properties
         if (row.location) {
             const [rowLat, rowLng] = row.location.split(',').map(coord => parseFloat(coord.trim()));
@@ -509,87 +722,192 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
             lat = parseFloat(row.y);
             lng = parseFloat(row.x);
         }
-        
+
         if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
-            highlightFootTrafficPoint(L.latLng(lat, lng));
-        }
+            highlightFootTrafficPoint(L.latLng(lat, lng), isMultiSelect);
+          }
     };
-    
-    // Helper function to highlight a foot traffic point
-    const highlightFootTrafficPoint = (latlng) => {
-        if (!map || !latlng) return;
-        
-        // Calculate visible map area when table is showing
-        const containerHeight = mapContainerRef.current.clientHeight;
-        const visibleMapHeight = showTable ? containerHeight - tableHeight : containerHeight;
-        
-        // Get projected point and calculate offset
-        const point = map.project(latlng);
-        const offsetPoint = showTable ? 
-            point.subtract([0, visibleMapHeight * 0.25]) : 
-            point;
-        
-        // Convert back to LatLng and pan the map
-        const targetLatLng = map.unproject(offsetPoint);
-        
-        // Set view with animation
-        map.setView(targetLatLng, 16, {
-            animate: true,
-            duration: 0.5
-        });
-        
-        // Add a pulsing highlight marker
-        const highlightMarker = L.marker(latlng, {
-            icon: L.divIcon({
-                html: `<div class="pulse-animation" style="width: 30px; height: 30px; border-radius: 50%; border: 3px solid #ffff00; box-shadow: 0 0 8px #ffff00;"></div>`,
-                className: '',
-                iconSize: [30, 30]
-            })
+
+    const highlightFootTrafficPoint = (feature, isMultiSelect = false) => {
+        if (!map || !feature) return;
+      
+        // Parse latlng from various possible formats
+        let latlng;
+        if (feature.geometry?.coordinates) {
+          latlng = L.latLng(feature.geometry.coordinates[1], feature.geometry.coordinates[0]);
+        } else if (feature.lat && feature.lng) {
+          latlng = L.latLng(feature.lat, feature.lng);
+        } else if (typeof feature.getLatLng === 'function') {
+          latlng = feature.getLatLng();
+        } else {
+          console.error('Invalid feature format in highlightFootTrafficPoint:', feature);
+          return;
+        }
+      
+        const coralColor = '#008080';
+      
+        // Create simple coral dot
+        const tempCircle = L.circleMarker(latlng, {
+          radius: 10,
+          color: coralColor,
+          fillColor: coralColor,
+          fillOpacity: 1,
+          weight: 1,
         }).addTo(map);
-        
-        // Remove after 3 seconds
-        setTimeout(() => {
-            if (map) map.removeLayer(highlightMarker);
-        }, 3000);
-    };
-
-    const addPulseAnimation = () => {
-        // Check if the style already exists
-        if (document.getElementById('pulse-animation-style')) return;
-
-        const styleElement = document.createElement('style');
-        styleElement.id = 'pulse-animation-style';
-        styleElement.textContent = `
-      @keyframes pulse {
-        0% { transform: scale(0.8); opacity: 1; }
-        70% { transform: scale(1.2); opacity: 0.7; }
-        100% { transform: scale(0.8); opacity: 1; }
-      }
-      .pulse-animation {
-        animation: pulse 1.5s infinite;
-      }
-    `;
-        document.head.appendChild(styleElement);
-
-        return () => {
-            const existingStyle = document.getElementById('pulse-animation-style');
-            if (existingStyle) document.head.removeChild(existingStyle);
-        };
-    };
-
-    useEffect(() => {
-        const cleanup = addPulseAnimation();
-        return () => {
-            if (cleanup) cleanup();
-        };
-    }, []);
-
-
-    useEffect(() => {
-        if (selectedRowIndex !== null) {
-            highlightFeatureByRowProperties(selectedRowIndex);
+      
+        // Pan the map if not in multi-select
+        if (!isMultiSelect) {
+          const containerHeight = mapContainerRef.current.clientHeight;
+          const point = map.project(latlng);
+          const offsetPoint = showTable ? point.add([0, tableHeight / 1.6]) : point;
+          const targetLatLng = map.unproject(offsetPoint);
+          map.setView(targetLatLng, 16, { animate: true, duration: 0.5 });
         }
-    }, [selectedRowIndex, currentTableIndex]);
+      
+        // Remove after 2s
+        setTimeout(() => {
+          if (map && tempCircle) map.removeLayer(tempCircle);
+        }, 2000);
+      };
+      
+
+    // Add this effect to properly clean up map styles when component unmounts
+    useEffect(() => {
+        // This cleanup function will run when the component unmounts
+        return () => {
+            if (map && baseMapLayer) {
+                // Check if baseMapLayer is a composite layer (for hybrid view)
+                if (baseMapLayer.main && baseMapLayer.labels) {
+                    map.removeLayer(baseMapLayer.main);
+                    map.removeLayer(baseMapLayer.labels);
+                } else {
+                    // Single layer case
+                    map.removeLayer(baseMapLayer);
+                }
+            }
+        };
+    }, [map, baseMapLayer]);
+
+    // Add a useEffect to handle changes to the currentMapView
+    useEffect(() => {
+        if (map && currentMapView) {
+            // You could add any additional logic here that needs to run
+            // when the map style changes, such as adjusting other visual elements
+
+            // For example, for dark mode you might want to adjust some UI colors
+            if (currentMapView === 'dark') {
+                // Adjust any UI elements that need to change for dark backgrounds
+                // Example: change popup styling for better contrast
+                const style = document.createElement('style');
+                style.id = 'dark-map-adjustments';
+                style.textContent = `
+          .custom-popup .leaflet-popup-content-wrapper {
+            background-color: rgba(40, 40, 40, 0.9);
+            color: white;
+          }
+          .custom-popup .leaflet-popup-tip {
+            background-color: rgba(40, 40, 40, 0.9);
+          }
+        `;
+                document.head.appendChild(style);
+
+                return () => {
+                    // Clean up when view changes
+                    const styleElement = document.getElementById('dark-map-adjustments');
+                    if (styleElement) document.head.removeChild(styleElement);
+                };
+            }
+        }
+    }, [map, currentMapView]);
+
+ 
+    useEffect(() => {
+        if (!map) return;
+      
+        // Assign callback functions for showing/hiding the text toolbar
+        map._showTextToolbar = ({ marker, format }) => {
+          setActiveTextMarker(marker);
+          setTextFormat(format);
+          // Position is now fixed at the top center of the map, regardless of where the marker is
+          setTextToolbarPosition({ 
+            top: 16, 
+            left: mapContainerRef.current ? mapContainerRef.current.clientWidth / 2 : window.innerWidth / 2 
+          });
+          setShowTextToolbar(true);
+        };
+      
+        map._hideTextToolbar = () => {
+          setShowTextToolbar(false);
+          setActiveTextMarker(null);
+        };
+      
+        return () => {
+          // Clean up when component unmounts
+          if (map) {
+            map._showTextToolbar = null;
+            map._hideTextToolbar = null;
+          }
+        };
+      }, [map]);
+
+      useEffect(() => {
+        if (Array.isArray(selectedRowIndices) && selectedRowIndices.length > 0) {
+          highlightFeatureByRowProperties(selectedRowIndices);
+        }
+      }, [selectedRowIndices, currentTableIndex]);
+      
+    useEffect(() => {
+        console.log("drawnLayersOrder changed:", drawnLayersOrder);
+        console.log("drawnLayers state:", drawnLayers);
+      }, [drawnLayersOrder, drawnLayers]);
+    useEffect(() => {
+        if (map) {
+            // Set up click-to-edit for automatically editing shapes when clicked
+            const cleanup = setupClickToEdit(
+                map,
+                editControlRef,
+                setIsEditing,
+                setActiveDrawTool
+            );
+
+            // Debug listener to verify clicks are being detected
+            map.on('click', function (e) {
+                console.log('Map clicked at:', e.latlng);
+                console.log('Map has drawnItems:', !!map.drawnItems);
+                console.log('Number of drawn items:', map.drawnItems ? map.drawnItems.getLayers().length : 0);
+            });
+            if (map.drawControl) {
+                // Add listener for delete events
+                const originalOnDeleted = L.EditToolbar.Delete.prototype._removeLayer;
+                
+                L.EditToolbar.Delete.prototype._removeLayer = function(e) {
+                  const layer = e.layer || e;
+                  
+                  // Call original method
+                  originalOnDeleted.call(this, e);
+                  
+                  // Check if this is one of our tracked layers
+                  if (layer.layerId) {
+                    // Remove from drawn layers state
+                    setDrawnLayers(prev => {
+                      const updated = { ...prev };
+                      delete updated[layer.layerId];
+                      return updated;
+                    });
+                    
+                    setDrawnLayersOrder(prev => {
+                        // Ensure prev is an array
+                        const prevArray = Array.isArray(prev) ? prev : [];
+                        const newOrder = [...prevArray, layer.layerId];
+                        drawnLayersRef.current = newOrder; // Store in a ref for debugging
+                        console.log("Updated drawn layers order:", newOrder);
+                        return newOrder;
+                      });         }
+                };
+              }
+            return cleanup;
+        }
+    }, [map]);
 
     const handleResultClick = (result) => {
         setSearchResults([]);
@@ -602,7 +920,7 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
                 html: `<div style="
           width: 20px;
           height: 20px;
-          background-color: #008080;
+          background-color: #FF5747;
           border-radius: 50% 50% 50% 0;
           transform: rotate(-45deg);
           border: 2px solid white;
@@ -615,6 +933,17 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
         }).addTo(map);
     };
 
+    
+    const sendQuestionToChat = (question) => {
+        if (typeof onSendMessage === 'function') {
+            onSendMessage({ text: question, file: null });
+        } else {
+            console.warn('No onSendMessage function available to send question to chat');
+            // Fallback: Alert the user their question can't be sent
+            alert(`Unable to send question: "${question}" to chat. The chat functionality may not be available.`);
+        }
+    };
+
     const handleMouseMove = (e) => {
         if (!dragState.current.isDragging) return;
         e.preventDefault();
@@ -624,7 +953,66 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
             dragState.current.rafId = requestAnimationFrame(updateDragPosition);
         }
     };
-
+    const handleTextFormatChange = (formatChanges) => {
+        if (!activeTextMarker) return;
+      
+        // Update the text format state
+        const newFormat = { ...textFormat, ...formatChanges };
+        setTextFormat(newFormat);
+      
+        // Apply formatting to the marker
+        if (activeTextMarker._textContent) {
+          // Apply font properties
+          if (formatChanges.fontFamily) {
+            activeTextMarker._textContent.style.fontFamily = formatChanges.fontFamily;
+          }
+          
+          if (formatChanges.fontSize) {
+            activeTextMarker._textContent.style.fontSize = `${formatChanges.fontSize}px`;
+          }
+          
+          if (formatChanges.fontWeight) {
+            activeTextMarker._textContent.style.fontWeight = formatChanges.fontWeight;
+          }
+          
+          if (formatChanges.fontStyle) {
+            activeTextMarker._textContent.style.fontStyle = formatChanges.fontStyle;
+          }
+          
+          if (formatChanges.textDecoration) {
+            activeTextMarker._textContent.style.textDecoration = formatChanges.textDecoration;
+          }
+          
+          if (formatChanges.textAlign) {
+            activeTextMarker._textContent.style.textAlign = formatChanges.textAlign;
+          }
+          
+          if (formatChanges.color) {
+            activeTextMarker._textContent.style.color = formatChanges.color;
+          }
+      
+          // Update marker state
+          activeTextMarker._state = { ...activeTextMarker._state, ...formatChanges };
+      
+          // Update marker icon to refresh display
+          if (activeTextMarker._icon && activeTextMarker.setIcon) {
+            const el = activeTextMarker._textElement;
+            const state = activeTextMarker._state;
+            
+            const width = el.offsetWidth || state.width || 100;
+            const height = el.offsetHeight || state.height || 40;
+            
+            const icon = L.divIcon({
+              html: el,
+              className: '',
+              iconSize: [width, height],
+              iconAnchor: [width / 2, height / 2]
+            });
+            
+            activeTextMarker.setIcon(icon);
+          }
+        }
+      };
     const updateDragPosition = () => {
         dragState.current.rafId = null;
 
@@ -721,13 +1109,72 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
             setTimeout(() => map.invalidateSize(), 300);
         }
     };
+    
+    const toggleDrawnLayer = (layerId) => {
+        // First, check if we have the layer
+        if (!drawnLayers || !drawnLayers[layerId] || !map) return;
+        
+        const layerInfo = drawnLayers[layerId];
+        const layer = layerInfo.layer;
+        const newVisibility = !layerInfo.visible;
+        
+        // Directly manipulate the visibility immediately
+        if (newVisibility) {
+          // Show the layer
+          if (map.drawnItems && !map.drawnItems.hasLayer(layer)) {
+            map.drawnItems.addLayer(layer);
+          }
+        } else {
+          // Hide the layer
+          if (map.drawnItems && map.drawnItems.hasLayer(layer)) {
+            map.drawnItems.removeLayer(layer);
+          }
+        }
+        
+        // Then update the state
+        setDrawnLayers(prev => {
+          const updated = { ...prev };
+          if (updated[layerId]) {
+            updated[layerId] = {
+              ...updated[layerId],
+              visible: newVisibility
+            };
+          }
+          return updated;
+        });
+      };
 
     const toggleLayer = (layerName) => {
-        setActiveLayers(prev => ({
-            ...prev,
-            [layerName]: !prev[layerName]
-        }));
+        console.log('Toggling layer:', layerName, 'Current state:', activeLayers[layerName]);
+    
+        setActiveLayers(prev => {
+            const newActiveLayers = {
+                ...prev,
+                [layerName]: !prev[layerName]
+            };
+    
+            console.log('New active layers state:', newActiveLayers);
+    
+            // If we're turning this layer on, make it the top interactive layer
+            if (!prev[layerName] && newActiveLayers[layerName]) {
+                console.log('Setting new top layer after toggle on:', layerName);
+                setTopInteractiveLayer(layerName);
+            } else if (prev[layerName] && !newActiveLayers[layerName] && topInteractiveLayer === layerName) {
+                // If we're turning off the top layer, find a new top layer
+                const sorted = Object.entries(layerZIndexes)
+                    .filter(([key]) => newActiveLayers[key]) // Only consider active layers
+                    .sort(([, a], [, b]) => b - a); // Sort by Z-index, highest first
+    
+                if (sorted.length > 0) {
+                    console.log('Setting new top layer after toggle off:', sorted[0][0]);
+                    setTopInteractiveLayer(sorted[0][0]);
+                }
+            }
+    
+            return newActiveLayers;
+        });
     };
+    
 
     const toggleSection = (section) => {
         setExpandedSections(prev => ({
@@ -736,11 +1183,81 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
         }));
     };
 
+    
+    useEffect(() => {
+    if (!map) return;
+
+    // Toggle coffee shops layer
+    if (map.coffeeShopsLayer) {
+        if (activeLayers.coffeeShops) {
+            map.addLayer(map.coffeeShopsLayer);
+            // Set z-index based on current order
+            map.coffeeShopsLayer.setZIndex(layerZIndexes.coffeeShops);
+
+            // Ensure interactivity is set correctly when adding the layer
+            coffeeShopsRef.current.forEach(({ marker }) => {
+                marker.options.interactive = (topInteractiveLayer === 'coffeeShops');
+                // Make sure popups are bound even if not initially interactive
+                if (!marker.getPopup() && marker.featureId) {
+                    let popupContent = '<strong>Coffee Shop</strong>';
+                    popupContent += `<br>Feature ID: ${marker.featureId}`;
+                    marker.bindPopup(popupContent);
+                }
+            });
+        } else {
+            map.removeLayer(map.coffeeShopsLayer);
+        }
+    }
+
+    // Toggle foot traffic layer
+    if (map.footTrafficLayer) {
+        if (activeLayers.footTraffic) {
+            map.addLayer(map.footTrafficLayer);
+            // Set z-index based on current order
+            map.footTrafficLayer.setZIndex(layerZIndexes.footTraffic);
+
+            // Ensure interactivity is set correctly when adding the layer
+            if (footTrafficHeatmapRef.current) {
+                footTrafficHeatmapRef.current.options.interactive = (topInteractiveLayer === 'footTraffic');
+                
+                // For heatmap layers, we need to set the CSS pointer-events property
+                if (footTrafficHeatmapRef.current._heatmap) {
+                    footTrafficHeatmapRef.current._heatmap.style.pointerEvents = 
+                        (topInteractiveLayer === 'footTraffic') ? 'auto' : 'none';
+                }
+            }
+        } else {
+            map.removeLayer(map.footTrafficLayer);
+        }
+    }
+
+    // Toggle radius circle layer
+    if (map.radiusCircleLayer) {
+        if (activeLayers.radius) {
+            map.addLayer(map.radiusCircleLayer);
+            // Set z-index based on current order
+            map.radiusCircleLayer.setZIndex(layerZIndexes.radius);
+
+            // Ensure interactivity is set correctly when adding the layer
+            if (radiusCircleRef.current) {
+                radiusCircleRef.current.options.interactive = (topInteractiveLayer === 'radius');
+            }
+        } else {
+            map.removeLayer(map.radiusCircleLayer);
+        }
+    }
+
+    // Force a refresh of the map
+    setTimeout(() => {
+        if (map) map.invalidateSize();
+    }, 10);
+}, [map, activeLayers, layerZIndexes, topInteractiveLayer]);
+
     useEffect(() => {
         const handleClickOutside = (e) => {
             // Prevent deselect if clicking on context menu or header
             if (e.target.closest('th') || e.target.closest('.context-menu')) return;
-            setSelectedRowIndex(null);
+            setSelectedRowIndices([]);
             setSelectedColIndex(null);
         };
 
@@ -781,11 +1298,37 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
         if (!map) return;
 
         map.on(L.Draw.Event.CREATED, function (e) {
+            
             const layer = e.layer;
             map.drawnItems.addLayer(layer);
         });
     }, [map]);
 
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                setSelectedRowIndices([]);
+                setSelectedColIndex(null);
+
+                // Clear selection highlights from the map
+                if (map) {
+                    map.eachLayer(layer => {
+                        if (layer._icon) {
+                            layer._icon.style.backgroundColor = '';
+                            layer._icon.style.border = '';
+                            layer._icon.style.boxShadow = '';
+                        }
+                    });
+
+                    // Also close any open popups
+                    map.closePopup();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [map]);
 
 
     useEffect(() => {
@@ -805,7 +1348,7 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
 
     const convertGeoJSONToTable = (data, layerType) => {
         if (!data || !data.features || !data.features.length) return { headers: [], rows: [] };
-    
+
         // Get all possible properties across features
         const allProperties = new Set();
         data.features.forEach(feature => {
@@ -813,22 +1356,22 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
                 Object.keys(feature.properties).forEach(key => allProperties.add(key));
             }
         });
-    
+
         // Create table headers - put Feature ID first for clarity
         const headers = ["Feature ID", "Geometry Type", ...Array.from(allProperties).filter(prop => prop !== 'Feature ID')];
-    
+
         // Create table rows
         const rows = data.features.map((feature) => {
             // Use the same Feature ID that was set on the feature
-            const featureId = feature.properties && feature.properties['Feature ID'] 
-                ? feature.properties['Feature ID'] 
+            const featureId = feature.properties && feature.properties['Feature ID']
+                ? feature.properties['Feature ID']
                 : null;
-            
+
             const row = {
                 "Feature ID": featureId, // Use the consistent Feature ID
                 "Geometry Type": feature.geometry?.type || "Unknown"
             };
-    
+
             // Add all properties
             allProperties.forEach(prop => {
                 if (prop !== 'Feature ID') { // Skip Feature ID since we already added it
@@ -838,16 +1381,19 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
                         : value ?? "";
                 }
             });
-    
+
             return row;
         });
-    
+
         return { headers, rows };
     };
 
     const handleDownloadAll = () => {
         const downloadedFiles = [];
-
+        // Add at the beginning of your handleDownloadAll function
+        console.log('Debug - footTrafficPointsRef:', footTrafficPointsRef);
+        console.log('Debug - footTrafficPointsRef?.current:', footTrafficPointsRef?.current);
+        console.log('Debug - Selected layers:', selectedLayers);
         Object.entries(downloadSelections).forEach(([key, { filename, format }]) => {
             const fullName = `${filename}${format}`;
             downloadedFiles.push(fullName);
@@ -1076,7 +1622,12 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
             addNotification(`Downloaded ${downloadedFiles.length} file${downloadedFiles.length > 1 ? 's' : ''}: ${fileList}`);
         }
     };
-
+    const safeSetDrawnLayersOrder = (value) => {
+        if (value !== null && typeof value !== 'undefined') {
+          setDrawnLayersOrder(value);
+        }
+      };
+      
     useEffect(() => {
         if (tableData.length > 0 && !isModified &&
             tableData[currentTableIndex] &&
@@ -1091,78 +1642,108 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
     useEffect(() => {
         if (!map) return;
 
-        const drawnItems = new L.FeatureGroup();
-        drawnItems.setZIndex(1000);
-        map.addLayer(drawnItems);
-        map.drawnItems = drawnItems;
+        // ✅ Only create and add drawnItems if it doesn't already exist
+        if (!map.drawnItems) {
+            const drawnItems = new L.FeatureGroup();
+            drawnItems.setZIndex(1000);
+            map.addLayer(drawnItems);
+            map.drawnItems = drawnItems;
+
+            const drawControl = new L.Control.Draw({
+                draw: {
+                    polygon: false,
+                    polyline: false,
+                    rectangle: false,
+                    circle: false,
+                    marker: false,
+                    circlemarker: false
+                },
+                edit: {
+                    featureGroup: drawnItems
+                }
+            });
+
+            map.drawControl = drawControl;
+        }
+    }, [map]);
 
 
-        const drawControl = new L.Control.Draw({
-            draw: {
-                polygon: false, // we'll enable it manually per tool
-                polyline: false,
-                rectangle: false,
-                circle: false,
-                marker: false,
-                circlemarker: false
-            },
-            edit: {
-                featureGroup: drawnItems
+    useEffect(() => {
+        if (!map) return;
+
+        // Set z-index for all layers to ensure proper stacking
+        Object.entries(layerZIndexes).forEach(([layerId, zIndex]) => {
+            // Get the appropriate layer based on ID
+            let layer;
+            if (layerId === 'coffeeShops') layer = map.coffeeShopsLayer;
+            else if (layerId === 'footTraffic') layer = map.footTrafficLayer;
+            else if (layerId === 'radius') layer = map.radiusCircleLayer;
+
+            if (layer) {
+                // Set z-index properly
+                layer.setZIndex(zIndex);
+
+                // Also update individual markers for coffee shops
+                if (layerId === 'coffeeShops') {
+                    coffeeShopsRef.current.forEach(({ marker }) => {
+                        // For markers, we need to set z-index on their icons
+                        if (marker._icon) {
+                            marker._icon.style.zIndex = zIndex + 10; // Add offset to ensure they're above the layer
+                        }
+                    });
+                }
             }
         });
 
-        map.drawControl = drawControl;
-        map.drawnItems = drawnItems;
-    }, [map]);
-
-    const insertCellReferenceIntoFormula = (cellRef) => {
-        if (!formulaInputRef.current) return;
-
-        // Force focus into the formula cell
-        formulaInputRef.current.focus();
-
+        // Force a refresh of the map
         setTimeout(() => {
-            const selection = window.getSelection();
-            const formulaDiv = formulaInputRef.current;
+            if (map) map.invalidateSize();
+        }, 10);
+    }, [map, layerZIndexes]);
 
-            // If no child, insert a text node
-            if (!formulaDiv.firstChild) {
-                formulaDiv.innerText = editingFormula;
-            }
+    // For debugging: Add this function and call it in your useEffect after map initialization
+    const addDebugClickHandler = () => {
+        if (!map) return;
 
-            const textNode = formulaDiv.firstChild;
-            if (!textNode || !selection) return;
+        // Add a click handler to log all events
+        map.on('click', function (e) {
+            console.log('Map clicked at:', e.latlng);
+            console.log('Current topInteractiveLayer:', topInteractiveLayer);
 
-            let range;
-            try {
-                range = selection.getRangeAt(0);
-            } catch (err) {
-                // If there's no range (e.g., no caret yet), set one at the end
-                range = document.createRange();
-                range.setStart(textNode, textNode.textContent?.length || 0);
-                range.collapse(true);
-                selection.removeAllRanges();
-                selection.addRange(range);
-            }
+            // Get all layers at this point
+            const clickedPoint = e.latlng;
+            let clickableLayers = [];
 
-            const startOffset = range.startOffset;
-            const before = editingFormula.slice(0, startOffset);
-            const after = editingFormula.slice(startOffset);
+            map.eachLayer(function (layer) {
+                // For markers
+                if (layer.getLatLng) {
+                    const distance = clickedPoint.distanceTo(layer.getLatLng());
+                    if (distance < 20) { // Within 20 pixels
+                        clickableLayers.push({
+                            type: 'marker',
+                            distance: distance,
+                            interactive: layer.options.interactive,
+                            layer: layer
+                        });
+                    }
+                }
 
-            const newFormula = `${before}${cellRef}${after}`;
-            setEditingFormula(newFormula);
+                // For circles
+                if (layer.getRadius) {
+                    const distance = clickedPoint.distanceTo(layer.getLatLng());
+                    if (distance < layer.getRadius()) {
+                        clickableLayers.push({
+                            type: 'circle',
+                            distance: distance,
+                            interactive: layer.options.interactive,
+                            layer: layer
+                        });
+                    }
+                }
+            });
 
-            // Update innerText manually
-            formulaDiv.innerText = newFormula;
-
-            // Restore caret position after inserted ref
-            const newPos = startOffset + cellRef.length;
-            const newRange = document.createRange();
-            newRange.setStart(formulaDiv.firstChild, newPos);
-            newRange.setEnd(formulaDiv.firstChild, newPos);
-            selection.removeAllRanges();
-            selection.addRange(newRange);
-        }, 0);
+            console.log('Clickable layers at this point:', clickableLayers);
+        });
     };
 
     const fetchCoffeeShops = async () => {
@@ -1170,35 +1751,34 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
             const res = await fetch('/data/coffeeshop-data.geojson');
             const shopData = await res.json();
             const coffeeLayer = L.layerGroup();
-    
+
             // Times Square coordinates
             const timesSquare = L.latLng(40.7589, -73.9866);
             const radiusInMeters = radius * 1609.34;
-            
+
             // Create a filtered version of the shop data for the table
             const filteredShopData = {
                 type: "FeatureCollection",
                 features: []
             };
-    
+
             if (shopData.features && shopData.features.length > 0) {
                 // First pass: Ensure all features have a consistent Feature ID
                 shopData.features.forEach((feature, index) => {
                     if (!feature.properties) {
                         feature.properties = {};
                     }
-                    
+
                     // Create a consistent Feature ID that will be used in both map and table
-                    // If there's already an ID, use it; otherwise, create a new one
-                    feature.properties['Feature ID'] = feature.properties['Feature ID'] || 
-                                                      feature.properties.id || 
-                                                      `${index + 1}`;
+                    feature.properties['Feature ID'] = feature.properties['Feature ID'] ||
+                        feature.properties.id ||
+                        `${index + 1}`;
                 });
-    
+
                 // Second pass: Create markers and populate filtered data
                 shopData.features.forEach((feature) => {
                     let coords;
-    
+
                     // Get coordinates either from geometry or from properties
                     if (feature.geometry && feature.geometry.type === 'Point') {
                         coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
@@ -1211,44 +1791,46 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
                         // Skip features without coordinates
                         return;
                     }
-    
+
                     // Create a Leaflet LatLng object for distance calculation
                     const shopLocation = L.latLng(coords[0], coords[1]);
-    
+
                     // Calculate distance from Times Square
                     const distanceToTimesSquare = timesSquare.distanceTo(shopLocation);
-    
+
                     // Skip shops outside the radius
                     if (distanceToTimesSquare > radiusInMeters) {
                         return;
                     }
-    
+
                     // Get the consistent Feature ID
                     const featureId = feature.properties['Feature ID'];
-                    
+
                     // Add this feature to our filtered data for the table
                     filteredShopData.features.push(feature);
-    
+
                     // Determine the coffee shop type and potential
                     let color = layerColors.existingShop;
                     let potential = feature.properties?.potential || 'existing';
-    
+
                     // Create marker with appropriate styling
                     const marker = L.marker(coords, {
                         icon: L.divIcon({
                             html: `<div style="background-color: ${color}; width: 10px; height: 10px; border-radius: 50%; border: 2px solid white;"></div>`,
                             className: '',
                             iconSize: [14, 14]
-                        })
+                        }),
+                        // IMPORTANT: Set interactive based on topInteractiveLayer rather than hard-coding it
+                        interactive: topInteractiveLayer === 'coffeeShops'
                     });
-    
+
                     // Store the Feature ID directly on the marker for easy access
                     marker.featureId = featureId;
-    
+
                     // Create popup content with Feature ID prominently displayed
                     let popupContent = '<strong>Coffee Shop</strong>';
                     popupContent += `<br>Feature ID: ${featureId}`;
-                    
+
                     if (feature.properties) {
                         if (feature.properties.dba || feature.properties.name) {
                             popupContent += `<br>Name: ${feature.properties.dba || feature.properties.name}`;
@@ -1266,20 +1848,23 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
                             popupContent += `<br>Type: ${feature.properties.cuisine_description}`;
                         }
                     }
-    
-                    marker.bindPopup(popupContent);
-                    
-                    // When marker is clicked, select the corresponding row
-                    marker.on('click', () => {
+
+                    // IMPORTANT: Always bind the popup, not conditionally
+                    marker.bindPopup(popupContent, { className: 'custom-popup' });
+
+                    // IMPORTANT: Clicking a marker should always work if it's interactive
+                    marker.on('click', function (e) {
+                        console.log('Coffee shop clicked:', featureId);
+                        if (e) L.DomEvent.stopPropagation(e); // Prevent event bubbling
                         selectRowByFeatureProperties(feature.properties);
                     });
-    
+
                     // Store reference to marker with its feature ID for easier lookup
                     coffeeShopsRef.current.push({ marker, potential, featureId });
                     coffeeLayer.addLayer(marker);
                 });
             }
-    
+
             return { coffeeLayer, shopData: filteredShopData };
         } catch (error) {
             console.error("Error fetching coffee shop data:", error);
@@ -1287,19 +1872,247 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
         }
     };
 
+
+useEffect(() => {
+    if (!map) return;
+
+    console.log('Top interactive layer changed to:', topInteractiveLayer);
+
+    // First make all layers non-interactive
+    map.eachLayer(layer => {
+        if (layer._icon || layer._path || (layer.options && !layer._url)) {
+            // Skip tile layers (they have _url)
+            layer.options.interactive = false;
+
+            // For leaflet-heat layers, we need special handling
+            if (layer._heat && layer._heatmap) {
+                layer._heatmap.style.pointerEvents = 'none';
+            }
+
+            // Close any open popups
+            if (layer.closePopup && layer.isPopupOpen && layer.isPopupOpen()) {
+                layer.closePopup();
+            }
+        }
+    });
+
+    // Coffee shops layer - make only these interactive if they're the top layer
+    if (topInteractiveLayer === 'coffeeShops') {
+        coffeeShopsRef.current.forEach(({ marker }) => {
+            // Make the marker interactive
+            marker.options.interactive = true;
+
+            // Ensure popups are correctly bound
+            if (!marker._popup && marker.featureId) {
+                let popupContent = '<strong>Coffee Shop</strong>';
+                popupContent += `<br>Feature ID: ${marker.featureId}`;
+                marker.bindPopup(popupContent);
+            }
+
+            // Make sure click events are properly bound
+            marker.off('click');
+            marker.on('click', function (e) {
+                console.log('Coffee shop clicked:', marker.featureId);
+                if (e) L.DomEvent.stopPropagation(e);
+                selectRowByFeatureProperties({ 'Feature ID': marker.featureId });
+            });
+        });
+    }
+
+    // Foot traffic layer - special handling for heatmap
+    if (topInteractiveLayer === 'footTraffic') {
+        if (footTrafficHeatmapRef.current) {
+            // Direct DOM manipulation for heatmap layers
+            if (footTrafficHeatmapRef.current._heatmap) {
+                footTrafficHeatmapRef.current._heatmap.style.pointerEvents = 'auto';
+            }
+
+            // Ensure click handler is set
+            footTrafficHeatmapRef.current.off('click');
+            footTrafficHeatmapRef.current.on('click', function (e) {
+                console.log('Foot traffic heatmap clicked', e.latlng);
+
+                let nearest = null;
+                let minDist = Infinity;
+
+                footTrafficPointsRef.current.forEach(point => {
+                    const dist = e.latlng.distanceTo(point.latlng);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        nearest = point;
+                    }
+                });
+
+                // Create popup content
+                let popupContent;
+
+                if (nearest && minDist < 50) {
+                    popupContent = `
+                  <div class="p-2">
+                    <h3 class="text-sm font-semibold">Foot Traffic Point</h3>
+                    <p class="text-xs text-gray-700">ID: ${nearest.featureId}</p>
+                    <p class="text-xs text-gray-700">Intensity: ${(nearest.properties.intensity * 10 || 5).toFixed(1)}/10</p>
+                    ${nearest.properties.time ? `<p class="text-xs text-gray-700">Time: ${nearest.properties.time}</p>` : ''}
+                    ${nearest.properties.count ? `<p class="text-xs text-gray-700">Count: ${nearest.properties.count} people/hour</p>` : ''}
+                  </div>
+                `;
+                }
+
+                // Create and open a popup at the clicked location
+                L.popup({ className: 'custom-popup' })
+                    .setLatLng(e.latlng)
+                    .setContent(popupContent)
+                    .openOn(map);
+            });
+        }
+
+        // Also make individual foot traffic points interactive
+        footTrafficPointsRef.current.forEach(point => {
+            if (point.marker) {
+                point.marker.options.interactive = true;
+
+                // Ensure popups are bound
+                if (!point.marker._popup) {
+                    const popupContent = `
+                  <div class="p-2">
+                    <h3 class="text-sm font-semibold">Foot Traffic Point</h3>
+                    <p class="text-xs text-gray-700">ID: ${point.featureId}</p>
+                    <p class="text-xs text-gray-700">Intensity: ${(point.properties.intensity * 10 || 5).toFixed(1)}/10</p>
+                    ${point.properties.time ? `<p class="text-xs text-gray-700">Time: ${point.properties.time}</p>` : ''}
+                    ${point.properties.count ? `<p class="text-xs text-gray-700">Count: ${point.properties.count} people/hour</p>` : ''}
+                  </div>
+                `;
+                    point.marker.bindPopup(popupContent);
+                }
+
+                // Ensure click handler is bound
+                point.marker.off('click');
+                point.marker.on('click', function (e) {
+                    console.log('Foot traffic point clicked:', point.featureId);
+                    if (e) L.DomEvent.stopPropagation(e);
+                    selectRowByFeatureProperties({ 'Feature ID': point.featureId });
+                });
+            }
+        });
+    }
+
+    // Radius circle layer
+    if (topInteractiveLayer === 'radius' && radiusCircleRef.current) {
+        radiusCircleRef.current.options.interactive = true;
+
+        // Ensure popup is bound
+        if (!radiusCircleRef.current._popup) {
+            radiusCircleRef.current.bindPopup(`
+              <div class="p-2">
+                <h3 class="text-lg font-semibold text-[#4169E1] mb-2">Times Square Area</h3>
+                <p class="text-sm text-gray-700 mb-1">Center: Times Square, New York</p>
+                <p class="text-sm text-gray-700 mb-1">Radius: ${radius} miles</p>
+                <p class="text-sm text-gray-700">This area represents the primary zone of analysis for coffee shop potential.</p>
+              </div>
+            `, {
+                maxWidth: 250,
+                className: 'custom-popup'
+            });
+        }
+
+        // Ensure click handler is bound
+        radiusCircleRef.current.off('click');
+        radiusCircleRef.current.on('click', function (e) {
+            console.log('Radius circle clicked');
+            if (e) L.DomEvent.stopPropagation(e);
+        });
+    }
+
+    // Force Leaflet to update by invalidating size
+    setTimeout(() => {
+        if (map) map.invalidateSize();
+    }, 10);
+
+}, [map, topInteractiveLayer, radius]);
+
+
+    useEffect(() => {
+        const sorted = Object.entries(layerZIndexes)
+            .filter(([key]) => activeLayers[key]) // Only consider active layers
+            .sort(([, a], [, b]) => b - a); // Sort by Z-index, highest first
+
+        if (sorted.length > 0) {
+            setTopInteractiveLayer(sorted[0][0]);
+        }
+    }, [layerZIndexes, activeLayers]);
+
+    // Add this function in your CoffeeShopMapComponent
+const updateDrawnLayerColor = (layerId, newColor) => {
+    // First update the state
+    setDrawnLayers(prev => {
+      const updated = { ...prev };
+      if (updated[layerId]) {
+        updated[layerId] = {
+          ...updated[layerId],
+          color: newColor
+        };
+      }
+      return updated;
+    });
+    
+    // Then apply the color to the actual layer
+    if (map && drawnLayers[layerId] && drawnLayers[layerId].layer) {
+      const layer = drawnLayers[layerId].layer;
+      const layerType = drawnLayers[layerId].type;
+      
+      // Apply color based on layer type
+      if (layerType === 'polygon' || layerType === 'triangle') {
+        layer.setStyle({
+          color: newColor,
+          fillColor: newColor,
+          fillOpacity: 0.3
+        });
+      } else if (layerType === 'polyline') {
+        layer.setStyle({
+          color: newColor
+        });
+      } else if (layerType === 'circle') {
+        layer.setStyle({
+          color: newColor,
+          fillColor: newColor,
+          fillOpacity: 0.2
+        });
+      } else if (layerType === 'marker') {
+        // For markers with icons, we may need custom handling
+        if (layer._icon) {
+          const icon = layer._icon;
+          // Apply color to the marker's icon if it has a background color
+          const iconElement = icon.querySelector('div');
+          if (iconElement) {
+            iconElement.style.backgroundColor = newColor;
+          }
+        }
+      } else if (layerType === 'text') {
+        // For text markers
+        if (layer._textContent) {
+          // Store the new color in the marker's state
+          if (layer._state) {
+            layer._state.color = newColor;
+          }
+          // Apply the color to the text content
+          layer._textContent.style.color = newColor;
+        }
+      }
+    }
+  };
     const fetchFootTraffic = async () => {
         try {
             const res = await fetch('/data/pedestrian-data.geojson');
             const trafficData = await res.json();
             const trafficLayer = L.layerGroup();
-    
+
             // Process for heatmap
             const heatPoints = [];
-            
+
             // Times Square coordinates for distance calculation
             const timesSquare = L.latLng(40.7589, -73.9866);
             const radiusInMeters = radius * 1609.34; // Convert miles to meters
-    
+
             // Ensure all features have Feature IDs
             if (trafficData.features && trafficData.features.length > 0) {
                 // First pass: Assign Feature IDs to all features
@@ -1307,48 +2120,71 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
                     if (!feature.properties) {
                         feature.properties = {};
                     }
-                    
+
                     // Create a consistent Feature ID
-                    feature.properties['Feature ID'] = feature.properties['Feature ID'] || 
-                                                      feature.properties.id || 
-                                                      `${index + 1}`; // Prefix with 'ft-' to distinguish from coffee shops
+                    feature.properties['Feature ID'] = feature.properties['Feature ID'] ||
+                        feature.properties.id ||
+                        `ft-${index + 1}`; // Prefix with 'ft-' to distinguish from coffee shops
                 });
-    
+
                 // Second pass: Process features for display and create the filtered dataset
                 const footTrafficPoints = [];
-                
+
                 trafficData.features.forEach(feature => {
                     if (feature.geometry && feature.geometry.type === 'Point') {
                         const coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
                         const intensity = feature.properties?.intensity || 0.5;
                         const featureId = feature.properties['Feature ID'];
-                        
+
                         // Create a point for distance calculation
                         const point = L.latLng(coords[0], coords[1]);
-                        
+
                         // Check if the point is within the radius
                         const distanceToTimesSquare = timesSquare.distanceTo(point);
-                        
+
                         // Only add points that are within the radius
                         if (distanceToTimesSquare <= radiusInMeters) {
                             // Add to heatmap data
                             heatPoints.push([coords[0], coords[1], intensity * 5]);
-                            
+
+                            // Create individual markers for foot traffic points with popups
+                            const marker = L.circleMarker(point, {
+                                radius: 4,
+                                fillColor: getTrafficColor(intensity),
+                                color: '#fff',
+                                weight: 1,
+                                opacity: 0.8,
+                                fillOpacity: 0.8
+                            });
+
+                            // Add popup with information
+                            const popupContent = `
+                                <div class="p-2">
+                                    <h3 class="text-sm font-semibold">Foot Traffic Point</h3>
+                                    <p class="text-xs text-gray-700">ID: ${featureId}</p>
+                                    <p class="text-xs text-gray-700">Intensity: ${(intensity * 10).toFixed(1)}/10</p>
+                                    ${feature.properties.time ? `<p class="text-xs text-gray-700">Time: ${feature.properties.time}</p>` : ''}
+                                    ${feature.properties.count ? `<p class="text-xs text-gray-700">Count: ${feature.properties.count} people/hour</p>` : ''}
+                                </div>
+                            `;
+
+                            marker.bindPopup(popupContent);
+
                             // Store the point with its Feature ID for potential lookup
                             footTrafficPoints.push({
                                 latlng: point,
                                 featureId: featureId,
-                                properties: feature.properties
+                                properties: feature.properties,
+                                marker // Store reference to the marker
                             });
                         }
                     }
                 });
-                
+
                 // Store the foot traffic points for later reference
-                // This will allow us to highlight them when selected in the table
                 footTrafficPointsRef.current = footTrafficPoints;
             }
-    
+
             // Create heatmap layer if we have points
             if (heatPoints.length > 0 && window.L.heatLayer) {
                 const heatmap = window.L.heatLayer(heatPoints, {
@@ -1361,11 +2197,54 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
                         0.8: layerColors.highTraffic
                     }
                 });
-    
+
+                if (topInteractiveLayer === 'footTraffic') {
+                    heatmap.options.interactive = true;
+
+                    // Use 'on' method properly and handle all events correctly
+                    heatmap.on('click', function (e) {
+                        let nearest = null;
+                        let minDist = Infinity;
+
+                        footTrafficPointsRef.current.forEach(point => {
+                            const dist = e.latlng.distanceTo(point.latlng);
+                            if (dist < minDist) {
+                                minDist = dist;
+                                nearest = point;
+                            }
+                        });
+
+                        // Create popup content based on nearest point or general info
+                        let popupContent;
+
+                        if (nearest && minDist < 50) {
+                            // Create custom popup for the nearest point
+                            popupContent = `
+                                <div class="p-2">
+                                    <h3 class="text-sm font-semibold">Foot Traffic Point</h3>
+                                    <p class="text-xs text-gray-700">ID: ${nearest.featureId}</p>
+                                    <p class="text-xs text-gray-700">Intensity: ${(nearest.properties.intensity * 10 || 5).toFixed(1)}/10</p>
+                                    ${nearest.properties.time ? `<p class="text-xs text-gray-700">Time: ${nearest.properties.time}</p>` : ''}
+                                    ${nearest.properties.count ? `<p class="text-xs text-gray-700">Count: ${nearest.properties.count} people/hour</p>` : ''}
+                                </div>
+                            `;
+                        }
+
+                        // Display the popup at the clicked location with the right options
+                        L.popup({ className: 'custom-popup' })
+                            .setLatLng(e.latlng)
+                            .setContent(popupContent)
+                            .openOn(map);
+                    });
+                } else {
+                    heatmap.options.interactive = false;
+                }
+
+
                 footTrafficHeatmapRef.current = heatmap;
                 trafficLayer.addLayer(heatmap);
             }
-    
+
             return { trafficLayer, trafficData };
         } catch (error) {
             console.error("Error fetching foot traffic data:", error);
@@ -1374,20 +2253,33 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
     };
 
     const createRadiusCircle = () => {
-        // Times Square coordinates
         const timesSquare = L.latLng(40.7589, -73.9866);
         const radiusInMeters = radius * 1609.34;
 
         const circleLayer = L.layerGroup();
 
-        // Create the circle
+        // Create the circle with interactive property set based on topInteractiveLayer
         const circle = L.circle(timesSquare, {
             radius: radiusInMeters,
             color: '#4169E1',
             fillColor: '#4169E1',
             fillOpacity: 0.05,
             weight: 2,
-            dashArray: '5, 5'
+            dashArray: '5, 5',
+            interactive: topInteractiveLayer === 'radius' // Set based on current top layer
+        });
+
+        // Add a popup to the circle
+        circle.bindPopup(`
+        <div class="p-2">
+            <h3 class="text-lg font-semibold text-[#4169E1] mb-2">Times Square Area</h3>
+            <p class="text-sm text-gray-700 mb-1">Center: Times Square, New York</p>
+            <p class="text-sm text-gray-700 mb-1">Radius: ${radius} miles (${Math.round(radiusInMeters)} meters)</p>
+            <p class="text-sm text-gray-700">This area represents the primary zone of analysis for coffee shop potential.</p>
+        </div>
+    `, {
+            maxWidth: 250,
+            className: 'custom-popup'
         });
 
         radiusCircleRef.current = circle;
@@ -1396,10 +2288,20 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
         return { circleLayer };
     };
 
+
+    useEffect(() => {
+        const sorted = Object.entries(layerZIndexes)
+            .filter(([key]) => activeLayers[key] && key !== 'radius') // ignore radius
+            .sort(([, a], [, b]) => b - a); // highest zIndex first
+
+        if (sorted.length > 0) {
+            setTopInteractiveLayer(sorted[0][0]);
+        }
+    }, [layerZIndexes, activeLayers]);
+
+
     useEffect(() => {
         const initializeMap = async () => {
-
-
             const L = await import('leaflet');
             await import('leaflet/dist/leaflet.css');
 
@@ -1411,27 +2313,164 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
             document.head.appendChild(script);
             await new Promise(resolve => script.onload = resolve);
 
-
             // Initialize base map
             const leafletMap = L.map(mapContainerRef.current, {
                 zoomControl: false,
                 attributionControl: false,
-                minZoom: 11,
+                minZoom: 5,
                 maxZoom: 18,
                 doubleClickZoom: false
             }).setView([40.7589, -73.9866], 13.8);
+
+            mapContainerRef.current.style.backgroundColor = '#FFFFFF';
+mapContainerRef.current.style.background = '#FFFFFF';
+
+// Optional: Add a white background tile layer
+const whiteBackground = L.tileLayer('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=', {
+  attribution: '',
+  minZoom: 0,
+  maxZoom: 22
+});
+whiteBackground.addTo(leafletMap);
+whiteBackground.setZIndex(-1000);
+
+            // Initialize drawnItems and other setup code...
+            const drawnItems = new L.FeatureGroup();
+            drawnItems.setZIndex(650);
+            leafletMap.addLayer(drawnItems);
+            leafletMap.drawnItems = drawnItems;
             leafletMap.createPane('drawPane');
             leafletMap.getPane('drawPane').style.zIndex = 100000000000;
 
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            const drawControl = new L.Control.Draw({
+                draw: {
+                    polygon: false,
+                    polyline: false,
+                    rectangle: false,
+                    circle: false,
+                    marker: false,
+                    circlemarker: false
+                },
+                edit: {
+                    featureGroup: drawnItems,
+                    remove: true
+                }
+            });
+
+            leafletMap.drawControl = drawControl;
+// Set up event handlers for layer deletion
+leafletMap.on(L.Draw.Event.DELETED, function(e) {
+    const layers = e.layers;
+    
+    layers.eachLayer(layer => {
+      if (layer.layerId) {
+        // Remove from drawn layers state
+        setDrawnLayers(prev => {
+          const updated = { ...prev };
+          delete updated[layer.layerId];
+          return updated;
+        });
+        
+        // Remove from order array instead of adding
+        setDrawnLayersOrder(prev => {
+          // Ensure prev is an array
+          const prevArray = Array.isArray(prev) ? prev : [];
+          const newOrder = prevArray.filter(id => id !== layer.layerId);
+          drawnLayersRef.current = newOrder; // Store in a ref for debugging
+          console.log("Updated drawn layers order:", newOrder);
+          return newOrder;
+        });
+      }
+    });
+  });
+            // In the main map event handler:
+leafletMap.on(L.Draw.Event.CREATED, function(e) {
+    const layer = e.layer;
+    const layerType = e.layerType || (layer.layerType || 'shape');
+    
+    // Generate a unique ID for this shape if not already present
+    if (!layer.layerId) {
+      const nextId = nextShapeIds[layerType] || 1;
+      const layerId = `${layerType}-${nextId}`;
+      layer.layerId = layerId;
+      
+      // Update next IDs
+      setNextShapeIds(prev => ({
+        ...prev,
+        [layerType]: nextId + 1
+      }));
+    }
+    
+    // Safely add to drawn items if available
+    if (leafletMap.drawnItems) {
+      if (!leafletMap.drawnItems.hasLayer(layer)) {
+        leafletMap.drawnItems.addLayer(layer);
+      }
+    }
+    
+    console.log("Shape created:", {
+      layerId: layer.layerId,
+      layerType: layerType,
+      shape: layer
+    });
+  
+    // Update drawn layers state
+    setDrawnLayers(prev => {
+      const updated = { ...prev };
+      updated[layer.layerId] = {
+        layer: layer,
+        type: layerType,
+        visible: true,
+        name: `${layerType.charAt(0).toUpperCase() + layerType.slice(1)} ${nextShapeIds[layerType] || 1}`
+      };
+      return updated;
+    });
+    
+    // Add to the order array
+    setDrawnLayersOrder(prev => {
+      // Ensure prev is an array
+      const prevArray = Array.isArray(prev) ? prev : [];
+      const newOrder = [...prevArray, layer.layerId];
+      return newOrder;
+    });
+  });
+  
+  // Add handler for when layers are removed
+  leafletMap.on(L.Draw.Event.DELETED, function(e) {
+    const layers = e.layers;
+    
+    layers.eachLayer(layer => {
+      if (layer.layerId) {
+        // Remove from drawn layers state
+        setDrawnLayers(prev => {
+          const updated = { ...prev };
+          delete updated[layer.layerId];
+          return updated;
+        });
+        
+        // Remove from order array instead of adding
+        setDrawnLayersOrder(prev => {
+          // Ensure prev is an array
+          const prevArray = Array.isArray(prev) ? prev : [];
+          const newOrder = prevArray.filter(id => id !== layer.layerId);
+          drawnLayersRef.current = newOrder; // Store in a ref for debugging
+          console.log("Updated drawn layers order:", newOrder);
+          return newOrder;
+        });
+      }
+    });
+  });
+  
+
+            // Add the initial base tile layer - light theme by default
+            const initialBaseLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
                 subdomains: 'abcd',
                 maxZoom: 19
             }).addTo(leafletMap);
 
-            L.control.zoom({ position: 'topright' }).addTo(leafletMap);
-            L.control.attribution({ position: 'bottomright' }).addTo(leafletMap);
-
+            // Store the base layer reference for later replacement
+            setBaseMapLayer(initialBaseLayer)
             setMap(leafletMap);
 
             // Initialize geocoder
@@ -1459,6 +2498,7 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
                 fetchFootTraffic()
             ]);
             const radiusCircleResult = createRadiusCircle();
+
 
             if (coffeeShopsResult.shopData) {
                 const coffeeShopsTable = convertGeoJSONToTable(coffeeShopsResult.shopData, 'coffeeShops');
@@ -1500,7 +2540,9 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
 
 
             const allLayers = L.layerGroup();
-
+            coffeeShopsResult.coffeeLayer.setZIndex(layerZIndexes.coffeeShops);
+            footTrafficResult.trafficLayer.setZIndex(layerZIndexes.footTraffic);
+            radiusCircleResult.circleLayer.setZIndex(layerZIndexes.radius)
             // Add all layers to the group
             allLayers.addLayer(coffeeShopsResult.coffeeLayer);
             allLayers.addLayer(footTrafficResult.trafficLayer);
@@ -1525,40 +2567,255 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
 
         initializeMap();
 
+
         return () => map?.remove();
     }, []);
 
+    // Add this code immediately after your map initialization
     useEffect(() => {
         if (!map) return;
 
-        // Toggle coffee shops layer
-        if (map.coffeeShopsLayer) {
-            if (activeLayers.coffeeShops) {
-                map.addLayer(map.coffeeShopsLayer);
-            } else {
-                map.removeLayer(map.coffeeShopsLayer);
-            }
-        }
+        // Add a global click handler to the map to catch all clicks
+        map.on('click', function (e) {
+            console.log('Map clicked at:', e.latlng);
 
-        // Toggle foot traffic layer
-        if (map.footTrafficLayer) {
-            if (activeLayers.footTraffic) {
-                map.addLayer(map.footTrafficLayer);
-            } else {
-                map.removeLayer(map.footTrafficLayer);
-            }
-        }
+            // Determine which layer is top based on current state
+            const currentTopLayer = topInteractiveLayer;
+            console.log('Current top layer:', currentTopLayer);
 
-        // Toggle radius circle layer
-        if (map.radiusCircleLayer) {
-            if (activeLayers.radius) {
-                map.addLayer(map.radiusCircleLayer);
-            } else {
-                map.removeLayer(map.radiusCircleLayer);
-            }
-        }
-    }, [map, activeLayers]);
+            if (currentTopLayer === 'coffeeShops') {
+                // Find the nearest coffee shop marker within 20 pixels
+                let nearestMarker = null;
+                let minDistance = Infinity;
 
+                coffeeShopsRef.current.forEach(({ marker }) => {
+                    const distance = e.latlng.distanceTo(marker.getLatLng());
+                    if (distance < 20 && distance < minDistance) {
+                        minDistance = distance;
+                        nearestMarker = marker;
+                    }
+                });
+
+                if (nearestMarker) {
+                    console.log('Nearest coffee shop found:', nearestMarker.featureId);
+                    // Force open the popup
+                    nearestMarker.openPopup();
+                    // Select the corresponding row
+                    selectRowByFeatureProperties({ 'Feature ID': nearestMarker.featureId });
+                    return; // Prevent further processing
+                }
+            }
+
+            if (currentTopLayer === 'footTraffic') {
+                // For foot traffic, check if we're clicking on the heatmap
+                let nearestPoint = null;
+                let minDistance = 50; // Use a larger radius for heatmap (50 pixels)
+
+                footTrafficPointsRef.current.forEach(point => {
+                    const distance = e.latlng.distanceTo(point.latlng);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        nearestPoint = point;
+                    }
+                });
+
+                if (nearestPoint) {
+                    console.log('Near a foot traffic point:', nearestPoint.featureId);
+                    // Create and show a popup manually
+                    const popupContent = `
+            <div class="p-2">
+              <h3 class="text-sm font-semibold">Foot Traffic Point</h3>
+              <p class="text-xs text-gray-700">ID: ${nearestPoint.featureId}</p>
+              <p class="text-xs text-gray-700">Intensity: ${(nearestPoint.properties.intensity * 10 || 5).toFixed(1)}/10</p>
+              ${nearestPoint.properties.time ? `<p class="text-xs text-gray-700">Time: ${nearestPoint.properties.time}</p>` : ''}
+              ${nearestPoint.properties.count ? `<p class="text-xs text-gray-700">Count: ${nearestPoint.properties.count} people/hour</p>` : ''}
+            </div>
+          `;
+
+                    L.popup({ className: 'custom-popup' })
+                        .setLatLng(nearestPoint.latlng)
+                        .setContent(popupContent)
+                        .openOn(map);
+
+                    // Select the corresponding row if possible
+                    selectRowByFeatureProperties({ 'Feature ID': nearestPoint.featureId });
+                    return; // Prevent further processing
+                } else {
+
+
+                    return; // Prevent further processing
+                }
+            }
+
+            if (currentTopLayer === 'radius') {
+                // For radius layer, check if we're clicking inside the circle
+                if (radiusCircleRef.current) {
+                    const distance = e.latlng.distanceTo(radiusCircleRef.current.getLatLng());
+                    if (distance < radiusCircleRef.current.getRadius()) {
+                        console.log('Clicked inside radius circle');
+                        // Create and show a popup manually
+                        const popupContent = `
+              <div class="p-2">
+                <h3 class="text-lg font-semibold text-[#4169E1] mb-2">Times Square Area</h3>
+                <p class="text-sm text-gray-700 mb-1">Center: Times Square, New York</p>
+                <p class="text-sm text-gray-700 mb-1">Radius: ${radius} miles</p>
+                <p class="text-sm text-gray-700">This area represents the primary zone of analysis for coffee shop potential.</p>
+              </div>
+            `;
+
+                        L.popup({ className: 'custom-popup', maxWidth: 250 })
+                            .setLatLng(e.latlng)
+                            .setContent(popupContent)
+                            .openOn(map);
+
+                        return; // Prevent further processing
+                    }
+                }
+            }
+        });
+    }, [map, topInteractiveLayer, radius]);
+
+    // Add this at the start of your component to ensure custom popups are styled
+    useEffect(() => {
+        // First, let's make sure the custom-popup class exists and is properly styled
+        if (!document.getElementById('custom-popup-style')) {
+            const style = document.createElement('style');
+            style.id = 'custom-popup-style';
+            style.textContent = `
+        .custom-popup .leaflet-popup-content-wrapper {
+          background-color: white;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+          padding: 5px;
+        }
+        .custom-popup .leaflet-popup-tip {
+          background-color: white;
+        }
+        .custom-popup .leaflet-popup-content {
+          margin: 5px;
+          min-width: 150px;
+        }
+      `;
+            document.head.appendChild(style);
+        }
+    }, []);
+
+    
+    const classifyShape = (layer) => {
+        if (layer instanceof L.Polygon) {
+          // Check if it's a triangle (3 vertices)
+          const latlngs = layer.getLatLngs()[0];
+          if (latlngs.length === 4 && latlngs[0].equals(latlngs[latlngs.length-1])) {
+            // Polygon with 3 points plus closing point
+            return 'triangle';
+          }
+          return 'polygon';
+        } else if (layer instanceof L.Circle) {
+          return 'circle';
+        } else if (layer instanceof L.Polyline && !(layer instanceof L.Polygon)) {
+          return 'polyline';
+        } else if (layer instanceof L.Marker) {
+          if (layer._textContent) {
+            return 'text';
+          }
+          return 'marker';
+        }
+        return 'shape';
+      };
+    useEffect(() => {
+        // Expose function to global scope so it can be called from map selection
+        window.selectRowsByFeatureIds = (featureIds) => {
+            if (!featureIds || featureIds.length === 0) return;
+
+            // First, make sure the table is visible
+            setShowTable(true);
+
+            // Process tables sequentially to find all matching rows
+            const matchingRows = {};
+            let totalFound = 0;
+            let firstTable = null;
+            let firstIndex = -1;
+
+            // Search through each table for matching rows
+            tableData.forEach((table, tableIndex) => {
+                if (!table || !table.rows) return;
+
+                const tableMatches = [];
+
+                // Find all rows that match any of the feature IDs
+                table.rows.forEach((row, rowIndex) => {
+                    if (row['Feature ID'] && featureIds.includes(row['Feature ID'].toString())) {
+                        tableMatches.push(rowIndex);
+                        totalFound++;
+
+                        // Keep track of first match for initial focus
+                        if (firstTable === null) {
+                            firstTable = tableIndex;
+                            firstIndex = rowIndex;
+                        }
+                    }
+                });
+
+                if (tableMatches.length > 0) {
+                    matchingRows[tableIndex] = tableMatches;
+                }
+            });
+
+            // If we found matches, process them
+            if (totalFound > 0) {
+                // Switch to the table with the first match
+                setCurrentTableIndex(firstTable);
+
+                // Create sorted table data with matching rows at the top
+                const updatedTableData = [...tableData];
+
+                // For each table with matches, move those rows to the top
+                Object.entries(matchingRows).forEach(([tableIndex, rowIndices]) => {
+                    const tableIdx = parseInt(tableIndex);
+                    const table = { ...updatedTableData[tableIdx] };
+
+                    // Extract the matching rows
+                    const matchedRows = rowIndices.map(idx => table.rows[idx]);
+
+                    // Remove the matched rows from their original positions
+                    const remainingRows = table.rows.filter((_, idx) => !rowIndices.includes(idx));
+
+                    // Combine matched rows at the top with remaining rows
+                    table.rows = [...matchedRows, ...remainingRows];
+
+                    // Update the table data
+                    updatedTableData[tableIdx] = table;
+                });
+
+                // Update table data with new ordering
+                setTableData(updatedTableData);
+
+                // Update selectedRowIndices to highlight the rows
+                // Since we've moved them to the top, their indices are now 0 to matchedRows.length-1
+                const selectedIndices = Array.from(
+                    { length: matchingRows[firstTable]?.length || 0 },
+                    (_, i) => i
+                );
+
+                setSelectedRowIndices(selectedIndices);
+
+                // Ensure the table scrolls to show the first selected row
+                setScrollToRowIndex(0);
+            }
+        };
+
+        return () => {
+            // Clean up global function when component unmounts
+            delete window.selectRowsByFeatureIds;
+        };
+    }, [tableData, setShowTable, setCurrentTableIndex, setTableData, setSelectedRowIndices, setScrollToRowIndex]);
+
+
+    useEffect(() => {
+        if (map) {
+            addDebugClickHandler();
+        }
+    }, [map]);
     useEffect(() => {
         if (!map) return;
 
@@ -1616,358 +2873,6 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
             }
         });
     }, [tableData]);
-
-    const getLayerKeyFromLegend = (layerId, label) => {
-        const clean = (str) => str.toLowerCase().replace(/[^a-z]/g, '');
-
-        if (layerId === 'coffeeShops') {
-            if (label.includes('Existing')) return 'existingShop';
-            if (label.includes('High Potential')) return 'highPotential';
-            if (label.includes('Medium Potential')) return 'mediumPotential';
-            if (label.includes('Low Potential')) return 'lowPotential';
-        }
-
-        if (layerId === 'footTraffic') {
-            if (label.includes('High')) return 'highTraffic';
-            if (label.includes('Medium')) return 'mediumTraffic';
-            if (label.includes('Low')) return 'lowTraffic';
-        }
-
-        return '';
-    };
-
-
-
-    const Toolbar = ({
-        isFullscreen,
-        showTable,
-        setShowTable,
-        onSaveMap,
-        savedMaps,
-        captureAndDownload,
-        setShowLegend,
-        setShowSources,
-        toggleFullscreen,
-        toolbarVisible,
-        setToolbarVisible,
-        toolbarPosition,
-        setToolbarPosition
-    }) => {
-        const toolbarRef = useRef(null);
-        const dragStart = useRef({ x: 0, y: 0 });
-
-        const handleMouseDown = (e) => {
-            e.preventDefault();
-            dragStart.current = {
-                x: e.clientX - toolbarPosition.left,
-                y: e.clientY - toolbarPosition.top
-            };
-            document.addEventListener("mousemove", handleMouseMove);
-            document.addEventListener("mouseup", handleMouseUp);
-        };
-
-        const handleMouseMove = (e) => {
-            setToolbarPosition({
-                top: e.clientY - dragStart.current.y,
-                left: e.clientX - dragStart.current.x
-            });
-        };
-
-        const handleMouseUp = () => {
-            document.removeEventListener("mousemove", handleMouseMove);
-            document.removeEventListener("mouseup", handleMouseUp);
-        };
-
-        // 🌐 REGULAR VIEW TOOLBAR
-        if (!isFullscreen) {
-            return (
-                <div
-                    className="flex justify-center items-center space-x-2 bg-white bg-opacity-70 backdrop-blur-sm p-2 shadow-sm z-30 rounded-full transition-all duration-300"
-                    style={{
-                        position: 'absolute',
-                        bottom: showTable ? `${tableHeight + 4}px` : '0px',
-                        left: '50%',
-                        transform: 'translateX(-50%)'
-                    }}
-                >
-                    {/* your normal buttons here... */}
-                    <button onClick={() => setShowTable(!showTable)} title="Toggle Table" className="p-2 rounded-full border" style={{
-                        color: COLORS.coral,
-                        border: `1px solid ${COLORS.coral}`,
-                        transition: 'all 0.2s ease-in-out'
-                    }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = COLORS.coral;
-                            e.currentTarget.style.color = 'white';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'white';
-                            e.currentTarget.style.color = COLORS.coral;
-                        }}>
-                        {showTable ? <Table size={16} /> : <Table size={16} />}
-                    </button>
-                    <button onClick={() => setShowSaveDialog(true)} title="Save Map" className="p-2 rounded-full border" style={{
-                        color: COLORS.coral,
-                        border: `1px solid ${COLORS.coral}`,
-                        transition: 'all 0.2s ease-in-out'
-                    }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = COLORS.coral;
-                            e.currentTarget.style.color = 'white';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'white';
-                            e.currentTarget.style.color = COLORS.coral;
-                        }}>
-                        <BookmarkPlus size={16} />
-                    </button>
-                    <button
-                        ref={pencilRef}
-                        onClick={() => setShowDrawTools(!showDrawTools)}
-                        title="Draw & Measure Tools"
-                        className="p-2 rounded-full border relative"
-                        style={{
-                            color: COLORS.coral,
-                            border: `1px solid ${COLORS.coral}`,
-                            transition: 'all 0.2s ease-in-out'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = COLORS.coral;
-                            e.currentTarget.style.color = 'white';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'white';
-                            e.currentTarget.style.color = COLORS.coral;
-                        }}
-                    >
-                        <Wrench size={16} />
-                    </button>
-
-
-
-                    <button onClick={() => setShowLegend(prev => !prev)} title="Legend" className="p-2 rounded-full border" style={{
-                        color: COLORS.coral,
-                        border: `1px solid ${COLORS.coral}`,
-                        transition: 'all 0.2s ease-in-out'
-                    }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = COLORS.coral;
-                            e.currentTarget.style.color = 'white';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'white';
-                            e.currentTarget.style.color = COLORS.coral;
-                        }}>
-                        <Layers size={16} />
-                    </button>
-                    <button onClick={() => setShowSources(prev => !prev)} title="Sources" className="p-2 rounded-full border" style={{
-                        color: COLORS.coral,
-                        border: `1px solid ${COLORS.coral}`,
-                        transition: 'all 0.2s ease-in-out'
-                    }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = COLORS.coral;
-                            e.currentTarget.style.color = 'white';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'white';
-                            e.currentTarget.style.color = COLORS.coral;
-                        }}>
-                        <Info size={16} />
-                    </button>
-                    <button onClick={() => setShowShareDialog(true)} title="Share" className="p-2 rounded-full border" style={{
-                        color: COLORS.coral,
-                        border: `1px solid ${COLORS.coral}`,
-                        transition: 'all 0.2s ease-in-out'
-                    }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = COLORS.coral;
-                            e.currentTarget.style.color = 'white';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'white';
-                            e.currentTarget.style.color = COLORS.coral;
-                        }}>
-                        <Share2 size={16} />
-                    </button>
-
-                    <button onClick={toggleFullscreen} title="Fullscreen" className="p-2 rounded-full border" style={{
-                        color: COLORS.coral,
-                        border: `1px solid ${COLORS.coral}`,
-                        transition: 'all 0.2s ease-in-out'
-                    }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = COLORS.coral;
-                            e.currentTarget.style.color = 'white';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'white';
-                            e.currentTarget.style.color = COLORS.coral;
-                        }}>
-                        <Maximize2 size={16} />
-                    </button>
-                </div>
-            );
-        }
-
-        // 🧰 FULLSCREEN TOOLBAR WITH WRENCH
-        return (
-            <div
-                ref={toolbarRef}
-                className="flex flex-col items-center space-y-2 bg-white bg-opacity-80 backdrop-blur-sm p-2 shadow-lg rounded-full z-50 transition-all duration-300"
-                style={{
-                    position: 'absolute',
-                    top: `${toolbarPosition.top}px`,
-                    left: `${toolbarPosition.left}px`,
-                    cursor: 'grab'
-                }}
-            >
-                {/* 🛠️ Wrench (toggle + drag) */}
-                <button
-                    onClick={() => setToolbarVisible(!toolbarVisible)}
-                    onMouseDown={handleMouseDown}
-                    title={toolbarVisible ? "Collapse tools" : "Expand tools"}
-                    className="p-2 rounded-full border cursor-move"
-                    style={{
-                        color: COLORS.coral,
-                        border: `1px solid ${COLORS.coral}`,
-                        transition: 'all 0.2s ease-in-out'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = COLORS.coral;
-                        e.currentTarget.style.color = 'white';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'white';
-                        e.currentTarget.style.color = COLORS.coral;
-                    }}
-                >
-                    {toolbarVisible ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </button>
-
-                {/* 👇 Render the rest only if visible */}
-                {toolbarVisible && (
-                    <>
-                        <button onClick={() => setShowTable(!showTable)} title="Toggle Table" className="p-2 rounded-full border" style={{
-                            color: COLORS.coral,
-                            border: `1px solid ${COLORS.coral}`,
-                            transition: 'all 0.2s ease-in-out'
-                        }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = COLORS.coral;
-                                e.currentTarget.style.color = 'white';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'white';
-                                e.currentTarget.style.color = COLORS.coral;
-                            }}>
-                            {showTable ? <Table size={16} /> : <Table size={16} />}
-                        </button>
-                        <button onClick={() => setShowSaveDialog(true)} title="Save Map" className="p-2 rounded-full border" style={{
-                            color: COLORS.coral,
-                            border: `1px solid ${COLORS.coral}`,
-                            transition: 'all 0.2s ease-in-out'
-                        }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = COLORS.coral;
-                                e.currentTarget.style.color = 'white';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'white';
-                                e.currentTarget.style.color = COLORS.coral;
-                            }}>
-                            <BookmarkPlus size={16} />
-                        </button>
-                        <button
-                            ref={pencilRef}
-                            onClick={() => setShowDrawTools(!showDrawTools)}
-                            title="Draw & Measure Tools"
-                            className="p-2 rounded-full border relative"
-                            style={{
-                                color: COLORS.coral,
-                                border: `1px solid ${COLORS.coral}`,
-                                transition: 'all 0.2s ease-in-out'
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = COLORS.coral;
-                                e.currentTarget.style.color = 'white';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'white';
-                                e.currentTarget.style.color = COLORS.coral;
-                            }}
-                        >
-                            <Wrench size={16} />
-                        </button>
-
-
-
-                        <button onClick={() => setShowLegend(prev => !prev)} title="Legend" className="p-2 rounded-full border" style={{
-                            color: COLORS.coral,
-                            border: `1px solid ${COLORS.coral}`,
-                            transition: 'all 0.2s ease-in-out'
-                        }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = COLORS.coral;
-                                e.currentTarget.style.color = 'white';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'white';
-                                e.currentTarget.style.color = COLORS.coral;
-                            }}>
-                            <Layers size={16} />
-                        </button>
-                        <button onClick={() => setShowSources(prev => !prev)} title="Sources" className="p-2 rounded-full border" style={{
-                            color: COLORS.coral,
-                            border: `1px solid ${COLORS.coral}`,
-                            transition: 'all 0.2s ease-in-out'
-                        }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = COLORS.coral;
-                                e.currentTarget.style.color = 'white';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'white';
-                                e.currentTarget.style.color = COLORS.coral;
-                            }}>
-                            <Info size={16} />
-                        </button>
-                        <button onClick={() => setShowShareDialog(true)} title="Share" className="p-2 rounded-full border" style={{
-                            color: COLORS.coral,
-                            border: `1px solid ${COLORS.coral}`,
-                            transition: 'all 0.2s ease-in-out'
-                        }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = COLORS.coral;
-                                e.currentTarget.style.color = 'white';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'white';
-                                e.currentTarget.style.color = COLORS.coral;
-                            }}>
-                            <Share2 size={16} />
-                        </button>
-
-                        <button onClick={toggleFullscreen} title="Exit Fullscreen" className="p-2 rounded-full border" style={{
-                            color: COLORS.coral,
-                            border: `1px solid ${COLORS.coral}`,
-                            transition: 'all 0.2s ease-in-out'
-                        }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = COLORS.coral;
-                                e.currentTarget.style.color = 'white';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'white';
-                                e.currentTarget.style.color = COLORS.coral;
-                            }}>
-                            <Minimize2 size={16} />
-                        </button>
-                    </>
-                )}
-            </div>
-        );
-    };
 
 
 
@@ -2085,6 +2990,15 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
                         </div>
                     </div>
                 )}
+{showTextToolbar && (
+    <TextToolbar
+    position={textToolbarPosition}
+    currentTextFormat={textFormat}
+      onFormatChange={handleTextFormatChange}
+      onClose={() => map._hideTextToolbar?.()}
+      isFullscreen={isFullscreen}
+    />
+)}
 
                 {showSymbologyEditor && (
                     <div className="absolute top-16 right-4 z-[1000]">
@@ -2134,531 +3048,172 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
                         </div>
                     </div>
                 )}
+                
                 {showGeocoder && (
-                    <div className="absolute top-6 left-6 z-[999999] w-[300px] overflow-visible">
-                        <div className="relative w-full max-w-xs z-10">
-                            <input
-                                type="text"
-                                placeholder="Search a location..."
-                                value={searchQuery}
-                                onChange={(e) => {
-                                    setSearchQuery(e.target.value);
-                                    runGeocodeSearch(e.target.value);
-                                }}
-                                className="w-full px-4 pr-10 py-2 text-sm rounded-full shadow-md border"
-                                style={{
-                                    backgroundColor: 'white',
-                                    borderColor: '#008080',
-                                    outline: 'none',
-                                    boxShadow: '0 0 0 2px rgba(0,128,128,0.1)',
-                                    transition: 'border 0.2s ease-in-out'
-                                }}
-                                onFocus={(e) => (e.target.style.boxShadow = '0 0 0 3px rgba(0,128,128,0.3)')}
-                                onBlur={(e) => (e.target.style.boxShadow = '0 0 0 2px rgba(0,128,128,0.1)')}
-
-                            />
-
-
-
-
-                        </div>
-                        {searchResults.length > 0 && (
-                            <div className="bg-white border border-gray-200 rounded-lg shadow-md mt-1 max-h-48 overflow-y-auto divide-y divide-gray-100">
-                                {searchResults.map((result, idx) => (
-                                    <div
-                                        key={idx}
-                                        onClick={() => handleResultClick(result)}
-                                        className="px-4 py-2 hover:bg-[#008080]/10 cursor-pointer text-sm transition-colors duration-150"
-                                    >
-                                        <div className="font-medium text-gray-800">{result.name}</div>
-                                        <div className="text-xs text-gray-500 truncate">{result.fullName}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
-
-
-
-                {showDrawTools && (
-    <div
-        className="absolute z-[9999] w-[130px] bg-white border border-gray-200 rounded-xl shadow-lg p-2 transition-all animate-fade-in"
-        style={{
-            top: isFullscreen ? '80px' : '360px',
-            left: isFullscreen ? '80px' : '130px',
+  <div className="absolute top-6 left-6 z-[999999] w-[300px] overflow-visible">
+    <div className="relative w-full max-w-xs z-10">
+      <input
+        type="text"
+        placeholder="Search a location..."
+        value={searchQuery}
+        onChange={(e) => {
+          setSearchQuery(e.target.value);
+          runGeocodeSearch(e.target.value);
         }}
-    >
-        <div className="flex justify-between items-center mb-3">
-            <h3 className="text-xs font-semibold text-gray-800">Drawing Tools</h3>
-            <button onClick={() => setShowDrawTools(false)}>
-                <X size={16} className="text-gray-500 hover:text-gray-700" />
-            </button>
-        </div>
-        <div className="grid gap-1">
-            <button
-                onClick={() => setShowGeocoder(!showGeocoder)}
-                title="Search Location"
-                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
-                style={{
-                    color: COLORS.coral,
-                    border: `1px solid ${COLORS.coral}`,
-                    transition: 'all 0.2s ease-in-out'
-                }}
-                onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = COLORS.coral;
-                    e.currentTarget.style.color = 'white';
-                }}
-                onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'white';
-                    e.currentTarget.style.color = COLORS.coral;
-                }}
-            >
-                <div className="flex items-center">
-                    <TbMapSearch className="mr-1" size={12} style={{ minWidth: '12px' }} /> 
-                    <span>Search</span>
-                </div>
-            </button>
-            <button
-                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
-                onClick={() => {
-                    if (!map) return;
-                    setShowDrawTools(false);
-                    // Prevent duplicate draw tools
-                    if (map._drawControl) {
-                        map._drawControl.disable();
-                    }
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') {
+            setShowGeocoder(false);
+            setSearchQuery('');
+            setSearchResults([]);
+          }
+        }}
+        className="w-full px-4 pr-10 py-2 text-sm rounded-full shadow-md border"
+        style={{
+          backgroundColor: 'white',
+          borderColor: '#008080',
+          outline: 'none',
+          boxShadow: '0 0 0 2px rgba(0,128,128,0.1)',
+          transition: 'border 0.2s ease-in-out'
+        }}
+        onFocus={(e) => (e.target.style.boxShadow = '0 0 0 3px rgba(0,128,128,0.3)')}
+        onBlur={(e) => (e.target.style.boxShadow = '0 0 0 2px rgba(0,128,128,0.1)')}
+      />
+<button
+  onClick={() => {
+    setShowGeocoder(false);
+    setSearchQuery('');
+    setSearchResults([]);
+  }}
+  className="absolute right-2 top-1/2 transform -translate-y-1/2"
+  aria-label="Close search"
+>
+  <X size={16} className="text-gray-500 hover:text-[#008080] transition-colors" />
+</button>
 
-                                    // Ensure draw handler is removed before adding a new one
-                                    map.off(L.Draw.Event.CREATED);
+    </div>
 
-                                    const drawPolygon = new L.Draw.Polygon(map, {
-                                        allowIntersection: false,
-                                        showArea: true,
-                                        repeatMode: false,
-                                        finishOnDoubleClick: true,
-                                        shapeOptions: {
-                                            color: '#008080',
-                                            weight: 2,
-                                            opacity: 0.8,
-                                            fillOpacity: 0.3
-                                        }
-                                    });
-
-                                    // Enable the tool after configuration
-                                    drawPolygon.enable();
-                                    const handleSnap = (e) => {
-                                        if (!map._drawControl || !map._drawControl._shape) return;
-
-                                        const drawnShape = map._drawControl._shape;
-                                        const latlngs = drawnShape.getLatLngs()[0]; // For polygon
-                                        if (!latlngs || latlngs.length === 0) return;
-
-                                        const currentPoint = e.latlng;
-
-                                        let closestPoint = null;
-                                        let minDistance = Infinity;
-
-                                        snapLayersRef.current.forEach(layer => {
-                                            if (typeof layer.getLatLngs !== 'function') return;
-                                            const points = layer.getLatLngs().flat(Infinity);
-
-                                            points.forEach(pt => {
-                                                const dist = currentPoint.distanceTo(pt);
-                                                if (dist < 20 && dist < minDistance) {
-                                                    minDistance = dist;
-                                                    closestPoint = pt;
-                                                }
-                                            });
-                                        });
-
-                                        if (closestPoint) {
-                                            latlngs[latlngs.length - 1] = closestPoint;
-                                            drawnShape.setLatLngs([latlngs]);
-                                        }
-                                    };
-
-                                    map.on('mousemove', handleSnap);
-
-                                    // Clean up after drawing
-                                    map.once(L.Draw.Event.CREATED, function (e) {
-                                        map.drawnItems.addLayer(e.layer);
-                                        map.off('mousemove', handleSnap); // remove snap listener
-                                        map._drawControl = null;
-                                        setActiveDrawTool(null);
-                                    });
-
-                                    map._drawControl = drawPolygon;
-                                    setActiveDrawTool('polygon');
-                                    map.on('draw:drawvertex', function (e) {
-                                        const layer = e.layers?.getLayers?.()?.[0];
-                                        if (!layer) return;
-
-                                        const latlngs = layer.getLatLngs?.()?.[0];
-                                        if (!latlngs || latlngs.length === 0) return;
-
-                                        const lastIndex = latlngs.length - 1;
-                                        const currentPoint = latlngs[lastIndex];
-
-                                        let closestPoint = null;
-                                        let minDistance = Infinity;
-
-                                        snapLayersRef.current.forEach((snapLayer) => {
-                                            if (typeof snapLayer.getLatLngs !== 'function') return;
-                                            const snapPoints = snapLayer.getLatLngs().flat(Infinity);
-
-                                            snapPoints.forEach((pt) => {
-                                                const dist = currentPoint.distanceTo(pt);
-                                                if (dist < 20 && dist < minDistance) {
-                                                    minDistance = dist;
-                                                    closestPoint = pt;
-                                                }
-                                            });
-                                        });
-
-                                        if (closestPoint) {
-                                            latlngs[lastIndex] = closestPoint;
-                                            layer.setLatLngs([latlngs]);
-                                        }
-                                    });
-
-                                    // Add explicit double click handler to the map
-                                    const mapContainer = map.getContainer();
-                                    mapContainer.addEventListener('dblclick', function (e) {
-                                        if (map._drawControl && map._drawControl instanceof L.Draw.Polygon) {
-                                            // This will trigger the finishShape method internally
-                                            map._drawControl._finishShape();
-                                            e.stopPropagation();
-                                        }
-                                    }, { once: true });
-
-                                    // Handle when polygon drawing is completed
-                                    map.on(L.Draw.Event.CREATED, function (e) {
-                                        const layer = e.layer;
-                                        map.drawnItems.addLayer(layer);
-                                        map._drawControl = null; // reset for future draws
-                                        setActiveDrawTool(null);
-                                    });
+    {searchResults.length > 0 && (
+      <div className="bg-white border border-gray-200 rounded-lg shadow-md mt-1 max-h-48 overflow-y-auto divide-y divide-gray-100">
+        {searchResults.map((result, idx) => (
+          <div
+            key={idx}
+            onClick={() => handleResultClick(result)}
+            className="px-4 py-2 hover:bg-[#008080]/10 cursor-pointer text-sm transition-colors duration-150"
+          >
+            <div className="font-medium text-gray-800">{result.name}</div>
+            <div className="text-xs text-gray-500 truncate">{result.fullName}</div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
+                {showDrawTools && (
+                    <div
+                        className="absolute z-[9999] w-[130px] bg-white border border-gray-200 rounded-xl shadow-lg p-2 transition-all animate-fade-in"
+                        style={{
+                            top: isFullscreen ? '80px' : '360px',
+                            left: isFullscreen ? '80px' : '130px',
+                        }}
+                    >
+                        <div className="flex justify-between items-center mb-3">
+                            <h3 className="text-xs font-semibold text-gray-800">Drawing Tools</h3>
+                            <button onClick={() => setShowDrawTools(false)}>
+                                <X size={16} className=" text-gray-500 hover:text-[#008080]" />
+                            </button>
+                        </div>
+                        <div className="grid gap-1">
+                            <button
+                                onClick={() => { 
+                                    setShowDrawTools(false); 
+                                    setShowGeocoder(!showGeocoder)
                                 }}
-
-                            >
-                                <div className="flex items-center">
-                    <PiPolygon className="mr-1" size={12} style={{ minWidth: '12px' }} /> 
-                    <span>Polygon</span>
-                </div>
-            </button>
-            <button
-                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
-                onClick={() => {
-                    if (!map) return;
-                    setShowDrawTools(false);
-                    if (map._drawControl) {
-                        map._drawControl.disable();
-                    }
-                                    const drawCircle = new L.Draw.Circle(map, {
-                                        shapeOptions: {
-                                            color: '#008080',
-                                            weight: 2,
-                                            opacity: 0.8,
-                                            fillColor: '#008080',
-                                            fillOpacity: 0.2,
-                                            pane: 'drawPane',
-                                        }
-                                    });
-
-                                    drawCircle.enable();
-                                    map._drawControl = drawCircle;
-
-                                    map.on(L.Draw.Event.CREATED, function (e) {
-                                        const layer = e.layer;
-                                        map.drawnItems.addLayer(layer);
-                                        map._drawControl = null;
-                                    });
+                                data-tooltip="Search Location"
+                                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                                style={{
+                                    color: COLORS.coral,
+                                    border: `1px solid ${COLORS.coral}`,
+                                    transition: 'all 0.2s ease-in-out'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = COLORS.coral;
+                                    e.currentTarget.style.color = 'white';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'white';
+                                    e.currentTarget.style.color = COLORS.coral;
                                 }}
                             >
                                 <div className="flex items-center">
-                    <FaRegCircle className="mr-1" size={12} style={{ minWidth: '12px' }} /> 
-                    <span>Circle</span>
-                </div>
-            </button>
-            <button
-                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
-                onClick={() => {
-                    if (!map) return;
-                    setShowDrawTools(false);
-                                    // Create dashed polyline draw tool
-                                    const drawPolyline = new L.Draw.Polyline(map, {
-                                        shapeOptions: {
-                                            color: '#008080',
-                                            weight: 3,
-                                            opacity: 0.8,
-                                            dashArray: '6, 6', // <-- dashed line
-                                        },
-                                        repeatMode: false,
-                                    });
-
-                                    drawPolyline.enable();
-                                    map._drawControl = drawPolyline;
-
-                                    // Handle completed line
-                                    map.once(L.Draw.Event.CREATED, function (e) {
-                                        const layer = e.layer;
-                                        const latlngs = layer.getLatLngs();
-
-                                        let totalDistance = 0;
-                                        for (let i = 0; i < latlngs.length - 1; i++) {
-                                            totalDistance += latlngs[i].distanceTo(latlngs[i + 1]);
-                                        }
-
-                                        const popup = L.popup()
-                                            .setLatLng(latlngs[Math.floor(latlngs.length / 2)])
-                                            .setContent(`<strong>Total Distance:</strong> ${totalDistance.toFixed(2)} meters`)
-                                            .openOn(map);
-
-                                        // Add the line to map temporarily
-                                        layer.addTo(map);
-
-                                        // Remove line after popup shows (1.5s delay for smoother UX)
-                                        setTimeout(() => {
-                                            map.removeLayer(layer);
-                                        }, 1500);
-
-                                        map._drawControl = null;
-                                    });
+                                    <TbMapSearch className="mr-1" size={12} style={{ minWidth: '12px' }} />
+                                    <span>Search</span>
+                                </div>
+                            </button>
+                            <button
+                                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                                onClick={() => {
+                                    setShowDrawTools(false);
+                                    createSelectTool(map, setActiveDrawTool, nextShapeIds, setNextShapeIds, setDrawnLayers, setDrawnLayersOrder);
                                 }}
                             >
                                 <div className="flex items-center">
-                    <Ruler className="mr-1" size={12} style={{ minWidth: '12px' }} /> 
-                    <span>Measure</span>
-                </div>
-            </button>
-            <button
-                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
-                onClick={() => {
-                    if (!map) return;
-                    setShowDrawTools(false);
+                                    <MousePointerSquareDashed className="mr-1" size={12} style={{ minWidth: '12px' }} />
+                                    <span>Select</span>
+                                </div>
+                            </button>
+                            <button
+                                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                                onClick={() => {
+                                    setShowDrawTools(false);
+                                    createPolygonDrawTool(
+                                        map,
+                                        snapLayersRef,
+                                        setActiveDrawTool,
+                                        sendQuestionToChat,
+                                        nextShapeIds,
+                                        setNextShapeIds,
+                                        setDrawnLayers,
+                                        setDrawnLayersOrder
+                                      );                                }}
+                            >
+                                <div className="flex items-center">
+                                    <IconMapPinSearch className="mr-1" size={12} style={{ minWidth: '12px' }} />
+                                    <span>Insights</span>
+                                </div>
+                            </button>
+                            {/* Replace the existing Measurement button onClick handler with this: */}
+                          
 
-                                    const drawPolygon = new L.Draw.Polygon(map, {
-                                        allowIntersection: false,
-                                        showArea: true,
-                                        repeatMode: false,
-                                        finishOnDoubleClick: true, // ✅ ADD THIS LINE
-                                        shapeOptions: {
-                                            pane: 'drawPane',
-                                            color: '#008080'
-                                        },
-                                        guideLayers: [],
-                                        metric: true
-                                    });
-                                    const mapContainer = map.getContainer();
-                                    mapContainer.addEventListener('dblclick', function (e) {
-                                        if (map._drawControl && map._drawControl instanceof L.Draw.Polygon) {
-                                            // This will trigger the finishShape method internally
-                                            map._drawControl._finishShape();
-                                            e.stopPropagation();
-                                        }
-                                    }, { once: true });
-
-                                    drawPolygon.enable();
-                                    const handleSnap = (e) => {
-                                        if (!map._drawControl || !map._drawControl._shape) return;
-
-                                        const drawnShape = map._drawControl._shape;
-                                        const latlngs = drawnShape.getLatLngs()[0]; // For polygon
-                                        if (!latlngs || latlngs.length === 0) return;
-
-                                        const currentPoint = e.latlng;
-
-                                        let closestPoint = null;
-                                        let minDistance = Infinity;
-
-                                        snapLayersRef.current.forEach(layer => {
-                                            if (typeof layer.getLatLngs !== 'function') return;
-                                            const points = layer.getLatLngs().flat(Infinity);
-
-                                            points.forEach(pt => {
-                                                const dist = currentPoint.distanceTo(pt);
-                                                if (dist < 20 && dist < minDistance) {
-                                                    minDistance = dist;
-                                                    closestPoint = pt;
-                                                }
-                                            });
-                                        });
-
-                                        if (closestPoint) {
-                                            latlngs[latlngs.length - 1] = closestPoint;
-                                            drawnShape.setLatLngs([latlngs]);
-                                        }
-                                    };
-
-                                    map.on('mousemove', handleSnap);
-
-                                    // Clean up after drawing
-                                    map.once(L.Draw.Event.CREATED, function (e) {
-                                        map.drawnItems.addLayer(e.layer);
-                                        map.off('mousemove', handleSnap); // remove snap listener
-                                        map._drawControl = null;
-                                        setActiveDrawTool(null);
-                                    });
-
-                                    map._drawControl = drawPolygon;
-                                    map.on('mousemove', function (e) {
-                                        if (!map._drawControl || !map._drawControl._shape) return;
-
-                                        const drawnShape = map._drawControl._shape;
-                                        const currentPoint = e.latlng;
-
-                                        let closestPoint = null;
-                                        let minDistance = Infinity;
-
-                                        snapLayersRef.current.forEach(layer => {
-                                            if (typeof layer.getLatLngs !== 'function') return;
-
-                                            const latlngs = layer.getLatLngs().flat(Infinity); // flatten nested arrays
-                                            latlngs.forEach(pt => {
-                                                const dist = currentPoint.distanceTo(pt);
-                                                if (dist < 20 && dist < minDistance) { // Snap threshold: 20 meters
-                                                    minDistance = dist;
-                                                    closestPoint = pt;
-                                                }
-                                            });
-                                        });
-
-                                        if (closestPoint) {
-                                            const shape = drawnShape.getLatLngs();
-                                            if (shape.length > 0) {
-                                                shape[shape.length - 1] = closestPoint;
-                                                drawnShape.setLatLngs(shape);
-                                            }
-                                        }
-                                    });
-
-                                    map.once(L.Draw.Event.CREATED, function (e) {
-                                        const layer = e.layer;
-                                        const latlngs = layer.getLatLngs()[0];
-
-                                        let area = 0;
-
-                                        // Option 1: Leaflet.GeometryUtil
-                                        if (L.GeometryUtil && L.GeometryUtil.geodesicArea) {
-                                            area = L.GeometryUtil.geodesicArea(latlngs);
-                                        }
-
-                                        // Option 2: Turf.js
-                                        else if (window.turf && window.turf.polygon && window.turf.area) {
-                                            const coords = latlngs.map(p => [p.lng, p.lat]);
-                                            const polygon = window.turf.polygon([[...coords, coords[0]]]);
-                                            area = window.turf.area(polygon);
-                                        }
-
-                                        // Option 3: Approximate planar method (not geodesic, fallback)
-                                        else {
-                                            for (let i = 0, len = latlngs.length, j = len - 1; i < len; j = i++) {
-                                                const p1 = latlngs[i];
-                                                const p2 = latlngs[j];
-                                                area += (p2.lng + p1.lng) * (p2.lat - p1.lat);
-                                            }
-                                            area = Math.abs(area / 2) * 12365; // Rough multiplier to convert to m²
-                                        }
-
-                                        const readable =
-                                            area > 1_000_000
-                                                ? `${(area / 1_000_000).toFixed(2)} km²`
-                                                : `${area.toFixed(0)} m²`;
-
-                                        const popup = L.popup()
-                                            .setLatLng(layer.getBounds().getCenter())
-                                            .setContent(`<strong>Area:</strong> ${readable}`)
-                                            .openOn(map);
-
-                                        layer.addTo(map);
-                                        map._drawControl = null;
-                                    });
+                            <button
+                                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                                onClick={() => {
+                                    setShowDrawTools(false);
+                                    createFreehandTool(map, setActiveDrawTool, nextShapeIds, setNextShapeIds, setDrawnLayers, setDrawnLayersOrder);
                                 }}
                             >
                                 <div className="flex items-center">
-                    <GiPathDistance className="mr-1" size={12} style={{ minWidth: '12px' }} /> 
-                    <span>Area</span>
-                </div>
-            </button>
-            <button
-                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
-                onClick={() => {
-                    if (!map || !map.drawnItems) return;
-                    setShowDrawTools(false);
+                                    <MdDraw className="mr-1" size={12} style={{ minWidth: '12px' }} />
+                                    <span>Freehand</span>
+                                </div></button>
 
-                                    // Create a higher z-index pane specifically for editing vertices if needed
-                                    if (!map.getPane('editPane')) {
-                                        map.createPane('editPane');
-                                        map.getPane('editPane').style.zIndex = 700; // Even higher than drawPane
-                                    }
-
-                                    // Configure the edit options with high z-index for vertices
-                                    const editControl = new L.EditToolbar.Edit(map, {
-                                        featureGroup: map.drawnItems,
-                                        edit: {
-                                            selectedPathOptions: {
-                                                pane: 'editPane',
-                                                maintainColor: true,
-                                                opacity: 0.8,
-                                                fillOpacity: 0.3,
-                                                dashArray: null
-                                            }
-                                        }
-                                    });
-
-                                    // Force the edit markers to appear on top
-                                    editControl.options.editLayer = new L.LayerGroup(null, { pane: 'editPane' });
-
-                                    editControl.enable();
-                                    map._drawControl = editControl;
-                                    editControlRef.current = editControl;
-                                    setIsEditing(true);
-
-                                    // When editing is complete
-                                    map.once('draw:edited', () => {
-                                        map._drawControl = null;
-                                        setIsEditing(false);
-                                    });
-                                }}
-                            >
+                            <button
+                                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
+                                onClick={() => {
+                                    setShowDrawTools(false);
+                                    createTextTool(
+                                        map, 
+                                        setActiveDrawTool, 
+                                        nextShapeIds, 
+                                        setNextShapeIds, 
+                                        setDrawnLayers, 
+                                        setDrawnLayersOrder
+                                      );                                }}>
                                 <div className="flex items-center">
-                    <Pencil className="mr-1" size={12} style={{ minWidth: '12px' }} /> 
-                    <span>Edit Vertices</span>
-                </div>
-            </button>
-            <button
-                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
-                onClick={() => {
-                    if (!map) return;
-                    setShowDrawTools(false);
-                                    // Set up Freehand Polyline
-                                    const freehandPolyline = new L.Draw.Polyline(map, {
-                                        shapeOptions: {
-                                            color: '#ff6600',
-                                            weight: 3,
-                                            opacity: 0.8,
-                                        },
-                                        freehand: true // ✅ key setting
-                                    });
+                                    <TextCursorInput className="mr-1" size={12} style={{ minWidth: '12px' }} />
+                                    <span>Text</span>
+                                </div>
+                            </button>
 
-                                    freehandPolyline.enable();
-                                    map._drawControl = freehandPolyline;
-                                    setActiveDrawTool('freehand');
-
-                                    map.once(L.Draw.Event.CREATED, function (e) {
-                                        const layer = e.layer;
-                                        map.drawnItems.addLayer(layer);
-                                        map._drawControl = null;
-                                        setActiveDrawTool(null);
-                                    });
-                                }}
-                            >
-                                <div className="flex items-center">
-                    <MdDraw className="mr-1" size={12} style={{ minWidth: '12px' }} /> 
-                    <span>Freehand</span>
-                </div>
-            </button>
                         </div>
                     </div>
                 )}
@@ -2693,8 +3248,8 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
                         currentTableIndex={currentTableIndex}
                         setCurrentTableIndex={setCurrentTableIndex}
                         tableTitles={tableTitles}
-                        selectedRowIndex={selectedRowIndex}
-                        setSelectedRowIndex={setSelectedRowIndex}
+                        selectedRowIndices={selectedRowIndices}
+                        setSelectedRowIndices={setSelectedRowIndices}
                         selectedColIndex={selectedColIndex}
                         setSelectedColIndex={setSelectedColIndex}
                         highlightFeatureByRowProperties={highlightFeatureByRowProperties}
@@ -2706,241 +3261,23 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
                         setIsModified={setIsModified} // Pass the setIsModified function
                         originalRowsMap={originalData} // Pass this instead of originalRowsMap
                         setOriginalRowsMap={setOriginalData}  // Pass the setter for original data
+                        scrollToRowIndex={scrollToRowIndex}
+
                     />
                 )}
-                {/*
-                {contextMenu.visible && (
-                    <div
-                        className="fixed z-[9999] w-28 rounded-md border border-gray-200 bg-white shadow-xl text-xs font-medium"
-                        style={{ top: contextMenu.y, left: contextMenu.x }}
-                    >
-                        <div className="py-1 text-gray-800">
-                            {contextMenu.type === 'row' && (
-                                <button
-                                    onClick={() => {
-                                        setTableData(prev => {
-                                            const updated = [...prev];
-                                            updated[currentTableIndex].rows.splice(contextMenu.index, 1);
-                                            return updated;
-                                        });
-                                        setSelectedRowIndex(null);
-                                        closeContextMenu();
-                                    }}
-                                    className="w-full text-left px-3 py-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
-                                >
-                                    Delete Row
-                                </button>
-                            )}
-
-                            {contextMenu.type === 'column' && (
-                                <>
-                                    <button
-                                        onClick={() => {
-                                            setTableData(prev => {
-                                                const updated = [...prev];
-                                                const table = { ...updated[currentTableIndex] };
-                                                table.headers = table.headers.filter(h => h !== contextMenu.columnName);
-                                                table.rows = table.rows.map(row => {
-                                                    const { [contextMenu.columnName]: _, ...rest } = row;
-                                                    return rest;
-                                                });
-                                                updated[currentTableIndex] = table;
-                                                return updated;
-                                            });
-                                            closeContextMenu();
-                                        }}
-                                        className="w-full text-left px-3 py-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
-                                    >
-                                        Delete Column
-                                    </button>
-
-                                    <hr className="my-1 border-gray-200" />
-
-                                    <button
-                                        onClick={() => {
-                                            setShowFilterIcons(true);
-                                            closeContextMenu();
-                                        }}
-                                        className="w-full text-left px-3 py-1.5 hover:bg-gray-100 rounded transition-colors"
-                                    >
-                                        Filter
-                                    </button>
-
-                                    <button
-                                        onClick={() => {
-                                            setTableData(prev => {
-                                                const updated = [...prev];
-                                                updated[currentTableIndex].rows.sort((a, b) =>
-                                                    String(a[contextMenu.columnName] || '').localeCompare(String(b[contextMenu.columnName] || ''))
-                                                );
-                                                return updated;
-                                            });
-                                            setIsModified(true);
-                                            closeContextMenu();
-                                        }}
-                                        className="w-full text-left px-3 py-1.5 hover:bg-gray-100 rounded transition-colors"
-                                    >
-                                        Sort A → Z
-                                    </button>
-
-                                    <button
-                                        onClick={() => {
-                                            setTableData(prev => {
-                                                const updated = [...prev];
-                                                updated[currentTableIndex].rows.sort((a, b) =>
-                                                    String(b[contextMenu.columnName] || '').localeCompare(String(a[contextMenu.columnName] || ''))
-                                                );
-                                                return updated;
-                                            });
-                                            setIsModified(true);
-                                            closeContextMenu();
-                                        }}
-                                        className="w-full text-left px-3 py-1.5 hover:bg-gray-100 rounded transition-colors"
-                                    >
-                                        Sort Z → A
-                                    </button>
-
-                                    {isModified && (
-                                        <>
-                                            <hr className="my-1 border-gray-200" />
-                                            <button
-                                                onClick={() => {
-                                                    const original = originalRowsMap[currentTableIndex];
-                                                    if (!original) return;
-                                                    setTableData(prev => {
-                                                        const updated = [...prev];
-                                                        updated[currentTableIndex].rows = JSON.parse(JSON.stringify(original));
-                                                        return updated;
-                                                    });
-                                                    setIsModified(false);
-                                                    closeContextMenu();
-                                                }}
-                                                className="w-full text-left px-3 py-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
-                                            >
-                                                Reset
-                                            </button>
-                                        </>
-                                    )}
-                                </>
-                            )}
-                        </div>
-                    </div>
-                )}
-*/}
-
-                {/*
-                {showFilterDialog && filterColumn && (
-                    <div
-                        className="fixed z-[9999] bg-white rounded-xl p-2"
-                        style={{
-                            top: `${filterDialogPosition.y}px`,
-                            left: `${filterDialogPosition.x}px`,
-                            transform: 'translate(-90%, 10px)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            maxHeight: '220px',
-                            width: '140px',
-                            border: 'none',
-                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.05)'
-                        }}
-                    >
-                        <div className="flex justify-between items-center mb-1">
-                            <h3 className="text-[10px] font-semibold text-gray-800">Filter: {filterColumn}</h3>
-                            <button onClick={() => setShowFilterDialog(false)} className="text-gray-500 hover:text-gray-700">
-                                <X size={14} />
-                            </button>
-                        </div>
-
-                        <div className="mb-1">
-                            <input
-                                type="text"
-                                placeholder="Search..."
-                                value={filterSearch}
-                                onChange={(e) => setFilterSearch(e.target.value)}
-                                className="w-full px-1 py-0.5 border border-gray-300 rounded-md text-[9px]"
-                                style={{ fontSize: '10px' }}
-                            />
-                        </div>
-
-                        <div className="space-y-0.5 overflow-y-auto flex-grow" style={{ maxHeight: '110px' }}>
-                            {filterOptions
-                                .filter(option =>
-                                    String(option).toLowerCase().includes(filterSearch.toLowerCase())
-                                )
-                                .map((option, idx) => (
-                                    <label key={idx} className="flex items-center space-x-1 text-xs text-gray-700">
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedFilters[filterColumn]?.has(option)}
-                                            onChange={() => {
-                                                setSelectedFilters(prev => {
-                                                    const updated = new Set(prev[filterColumn]);
-                                                    if (updated.has(option)) {
-                                                        updated.delete(option);
-                                                    } else {
-                                                        updated.add(option);
-                                                    }
-                                                    return { ...prev, [filterColumn]: updated };
-                                                });
-                                            }}
-                                            className="h-2 w-2"
-                                        />
-                                        <span className="truncate text-[10px]">{String(option)}</span>
-                                    </label>
-                                ))}
-                        </div>
-
-                        <div className="mt-1 flex justify-between space-x-1">
-                            <button
-                                onClick={() => setShowFilterDialog(false)}
-                                className="py-0.5 px-1 rounded-md bg-gray-200 text-gray-700 text-[10px] font-medium hover:bg-gray-300 flex-1"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setTableData(prev => {
-                                        const updated = [...prev];
-                                        const original = originalRowsMap[currentTableIndex];
-                                        updated[currentTableIndex].rows = original.filter(row =>
-                                            selectedFilters[filterColumn]?.has(row[filterColumn])
-                                        );
-                                        return updated;
-                                    });
-                                    setIsModified(true);
-                                    setShowFilterDialog(false);
-                                }}
-                                className="py-0.5 px-1 rounded-md bg-[#008080] text-white text-[10px] font-medium hover:bg-teal-700 flex-1"
-                            >
-                                Apply
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-*/}
-
-                {activeDrawTool && (
-                    <button
-                        className="block w-full text-left font-semibold text-[#008080] border-t border-gray-200 pt-2 mt-2"
-                        onClick={() => {
-                            if (map._drawControl && map._drawControl._enabled) {
-                                // Simulate double click by manually triggering the finish action
-                                const container = map.getContainer();
-                                const finishBtn = container.querySelector('.leaflet-draw-actions a[title="Finish Drawing"]');
-                                if (finishBtn) {
-                                    finishBtn.click(); // 🟢 finalize the shape
-                                } else {
-                                    // fallback: just disable if no button found
-                                    map._drawControl.disable();
-                                }
-                            }
-                            map._drawControl = null;
-                            setActiveDrawTool(null);
-                        }}
-                    >
-                        ✅ Done Drawing
-                    </button>
+                {showMapDownloader && (
+                    <MapDownloader
+                        isOpen={showMapDownloader}
+                        onClose={() => setShowMapDownloader(false)}
+                        mapContainerRef={mapContainerRef}
+                        coffeeShopsRef={coffeeShopsRef}
+                        footTrafficPointsRef={footTrafficPointsRef}
+                        radiusCircleRef={radiusCircleRef}
+                        radius={radius}
+                        activeLayers={activeLayers}
+                        layerColors={layerColors}
+                        addNotification={addNotification}
+                    />
                 )}
                 {showShareDialog && (
                     <div className="absolute bottom-[20px] right-6 z-[1000]">
@@ -3014,223 +3351,80 @@ const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setS
                             </button>
 
                             {/* Divider */}
-                            <div className="border-t border-gray-200 mb-6" />
-
-                            {/* Download Section */}
-                            <h3 className="text-sm font-semibold text-gray-700 mb-3">Download This Map</h3>
-
-                            <div className="flex space-x-2 mb-3">
-                                <input
-                                    type="text"
-                                    className="border px-3 py-2 rounded-lg w-[160px] text-sm focus:outline-none focus:ring-2 focus:ring-[#008080]"
-                                    value={downloadSelections['map']?.filename || 'nyc_coffee_map'}
-                                    onChange={(e) =>
-                                        setDownloadSelections(prev => ({
-                                            ...prev,
-                                            map: {
-                                                filename: e.target.value,
-                                                format: prev['map']?.format || '.jpg'
-                                            }
-                                        }))
-                                    }
-                                    placeholder="File name"
-                                />
-                                <select
-                                    value={downloadSelections['map']?.format || '.jpg'}
-                                    onChange={(e) =>
-                                        setDownloadSelections(prev => ({
-                                            ...prev,
-                                            map: {
-                                                filename: prev['map']?.filename || 'vancouver_flood_map',
-                                                format: e.target.value
-                                            }
-                                        }))
-                                    }
-                                    className="border px-2 py-2 rounded-lg text-sm focus:outline-none"
-                                >
-                                    <option value=".jpg">.jpg</option>
-                                    <option value=".png">.png</option>
-                                    <option value=".shp">.shp</option>
-                                    <option value=".gdb">.gdb</option>
-                                    <option value=".csv">.csv</option>
-                                    <option value=".pdf">.pdf</option>
-                                </select>
-                            </div>
-
                             <button
                                 onClick={() => {
-                                    if (!downloadSelections['map']) {
-                                        setDownloadSelections(prev => ({
-                                            ...prev,
-                                            map: { filename: 'vancouver_flood_map', format: '.jpg' }
-                                        }));
-                                    }
-                                    handleDownloadAll();
                                     setShowShareDialog(false);
+                                    setShowMapDownloader(true);
                                 }}
                                 className="w-full py-2 rounded-md text-sm font-semibold bg-[#008080] text-white hover:bg-teal-700"
                             >
                                 Download Map
                             </button>
+
+
                         </div>
                     </div>
                 )}
 
 
-
-
-                {isFullscreen ? (
-                    <Toolbar
-                        isFullscreen={true}
-                        showTable={showTable}
-                        setShowTable={setShowTable}
-                        onSaveMap={onSaveMap}
-                        savedMaps={savedMaps}
-                        captureAndDownload={captureAndDownload}
-                        setShowLegend={setShowLegend}
-                        setShowSources={setShowSources}
-                        toggleFullscreen={toggleFullscreen}
-                        toolbarVisible={toolbarVisible}
-                        setToolbarVisible={setToolbarVisible}
-                        toolbarPosition={toolbarPosition}
-                        setToolbarPosition={setToolbarPosition}
-                    />
-                ) : (
-                    <Toolbar
-                        isFullscreen={false}
-                        showTable={showTable}
-                        setShowTable={setShowTable}
-                        onSaveMap={onSaveMap}
-                        savedMaps={savedMaps}
-                        captureAndDownload={captureAndDownload}
-                        setShowLegend={setShowLegend}
-                        setShowSources={setShowSources}
-                        toggleFullscreen={toggleFullscreen}
-                        toolbarVisible={true}
-                        setToolbarVisible={() => { }}
-                        toolbarPosition={{ top: 0, left: 0 }}
-                        setToolbarPosition={() => { }}
-                    />
-                )}
-
+                <ToolbarComponent
+                    isFullscreen={isFullscreen}
+                    showTable={showTable}
+                    setShowTable={setShowTable}
+                    onSaveMap={onSaveMap}
+                    savedMaps={savedMaps}
+                    captureAndDownload={() => setShowMapDownloader(true)}
+                    setShowLegend={setShowLegend}
+                    setShowSources={setShowSources}
+                    toggleFullscreen={toggleFullscreen}
+                    toolbarVisible={toolbarVisible}
+                    setToolbarVisible={setToolbarVisible}
+                    toolbarPosition={toolbarPosition}
+                    setToolbarPosition={setToolbarPosition}
+                    setShowSaveDialog={setShowSaveDialog}
+                    setShowGeocoder={setShowGeocoder}
+                    showGeocoder={showGeocoder}
+                    setShowDrawTools={setShowDrawTools}
+                    showDrawTools={showDrawTools}
+                    pencilRef={pencilRef}
+                    setShowShareDialog={setShowShareDialog}
+                    setMapView={handleMapViewChange}
+                    activeMapView={currentMapView}
+                    showTextToolbar={showTextToolbar}
+                />
 
 
                 {showLegend && (
-                    <div className="absolute bottom-4 left-4 w-[300px] bg-white border border-gray-200 rounded-xl shadow-xl p-4 z-[1000] overflow-y-auto max-h-[70vh]">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-base font-semibold text-[#2C3E50] flex items-center">
-                                <Layers className="mr-2 text-[#008080]" size={18} /> Layers & Legend
-                            </h3>
-                            <button
-                                onClick={() => setShowLegend(false)}
-                                className="text-gray-400 hover:text-gray-600"
-                            >
-                                <X size={18} />
-                            </button>
-                        </div>
-                        <div className="space-y-4">
-                            {[
-                                {
-                                    id: 'coffeeShops',
-                                    name: 'Coffee Shops',
-                                    icon: <div className="w-4 h-4 rounded-full" style={{ backgroundColor: layerColors.existingShop }} />,
-                                    legend: [
-                                        { label: 'Existing Shops', color: layerColors.existingShop },
-                                        { label: 'High Potential', color: layerColors.highPotential },
-                                        { label: 'Medium Potential', color: layerColors.mediumPotential },
-                                        { label: 'Low Potential', color: layerColors.lowPotential }
-                                    ]
-                                },
-                                {
-                                    id: 'footTraffic',
-                                    name: 'Foot Traffic',
-                                    icon: <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: layerColors.highTraffic }} />,
-                                    legend: [
-                                        {
-                                            label: 'Heatmap Intensity',
-                                            gradient: [layerColors.lowTraffic, layerColors.mediumTraffic, layerColors.highTraffic]
-                                        }
-                                    ]
-                                },
-                                {
-                                    id: 'radius',
-                                    name: '1-Mile Radius',
-                                    icon: <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-dashed" style={{ backgroundColor: 'transparent' }} />,
-                                    legend: [
-                                        { label: 'Times Square Radius', color: '#4169E1', dashed: true }
-                                    ]
-                                }
-                            ].map(section => (
-                                <div key={section.id} className="border-t border-gray-200 pt-3 first:border-none first:pt-0">
-                                    <div
-                                        onClick={() => toggleSection(section.id)}
-                                        className="flex justify-between items-center cursor-pointer"
-                                    >
-                                        <label className="flex items-center space-x-2 text-sm font-medium text-[#2C3E50]">
-                                            <input
-                                                type="checkbox"
-                                                checked={activeLayers[section.id]}
-                                                onChange={() => toggleLayer(section.id)}
-                                                onClick={(e) => e.stopPropagation()}
-                                            />
-                                            <span>{section.name}</span>
-                                        </label>
-                                        {expandedSections[section.id] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                                    </div>
-
-                                    {expandedSections[section.id] && (
-                                        <div className="mt-2 pl-6 text-xs space-y-2">
-                                            {section.legend.map((item, idx) =>
-                                                item.gradient ? (
-                                                    <div key={idx}>
-                                                        <div
-                                                            className="h-2 rounded"
-                                                            style={{
-                                                                background: `linear-gradient(to right, ${item.gradient.join(', ')})`
-                                                            }}
-                                                        />
-                                                        <div className="flex justify-between text-[10px] mt-1 text-gray-500">
-                                                            <span>Low</span>
-                                                            <span>High</span>
-                                                        </div>
-                                                    </div>
-                                                ) : item.markers ? (
-                                                    <div key={idx} className="flex space-x-3">
-                                                        {item.markers.map((m, i) => (
-                                                            <div key={i} className="flex items-center space-x-2">
-                                                                <div
-                                                                    className="w-3 h-3 rounded-full"
-                                                                    style={{ backgroundColor: m.color }}
-                                                                ></div>
-                                                                <span>{m.label}</span>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <div key={idx} className="flex items-center space-x-2">
-                                                        <input
-                                                            type="color"
-                                                            value={item.color}
-                                                            onChange={(e) => {
-                                                                const newColor = e.target.value;
-                                                                setLayerColors((prev) => ({
-                                                                    ...prev,
-                                                                    [getLayerKeyFromLegend(section.id, item.label)]: newColor
-                                                                }));
-                                                            }}
-                                                            className="w-6 h-4 border rounded cursor-pointer"
-                                                        />
-                                                        <span>{item.label}</span>
-                                                    </div>
-                                                )
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
+                    <DraggableLegend
+                    showLegend={showLegend}
+                    setShowLegend={setShowLegend}
+                    activeLayers={activeLayers}
+                    toggleLayer={toggleLayer}
+                    expandedSections={expandedSections}
+                    toggleSection={toggleSection}
+                    layerColors={layerColors}
+                    setLayerColors={setLayerColors}
+                    layerZIndexes={layerZIndexes}
+                    setLayerZIndexes={setLayerZIndexes}
+                    customLayerNames={customLayerNames}
+                    setCustomLayerNames={setCustomLayerNames}
+                    setTopInteractiveLayer={setTopInteractiveLayer}
+                    currentMapView={currentMapView}
+                    handleMapViewChange={handleMapViewChange}
+                    baseMapLayer={baseMapLayer}
+                    toggleBaseMap={(visible) => {
+                        if (visible && map && !map.hasLayer(baseMapLayer)) {
+                            map.addLayer(baseMapLayer);
+                        } else if (!visible && map && map.hasLayer(baseMapLayer)) {
+                            map.removeLayer(baseMapLayer);
+                        }
+                    }}
+                    drawnLayers={drawnLayers || {}}
+                    drawnLayersOrder={drawnLayersOrder || []}
+                    toggleDrawnLayer={toggleDrawnLayer}    
+                    setDrawnLayers={setDrawnLayers} 
+                    updateDrawnLayerColor={updateDrawnLayerColor}
+                />
                 )}
             </div>
 

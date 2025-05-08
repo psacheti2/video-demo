@@ -521,7 +521,7 @@ const BenefitCostAnalysisDashboard = () => {
     {/* Info Button */}
     <button
       onClick={() => setShowInfo(prev => !prev)}
-      title="View Information"
+      data-tooltip="View Information"
       className="p-2 rounded-full border"
       style={{ 
         color: COLORS.teal,
@@ -563,7 +563,7 @@ const BenefitCostAnalysisDashboard = () => {
     <button
   onClick={() => setShowShareDialog(true)}
   className="p-2 rounded-full border"
-  title="Share"
+  data-tooltip="Share"
   style={{ 
     color: COLORS.teal,
     backgroundColor: COLORS.white,
@@ -802,7 +802,7 @@ const BenefitCostAnalysisDashboard = () => {
       <button
         onClick={() => setShowEmailNotification(false)}
         className="absolute top-1 right-1 w-5 h-5 rounded-full text-[#008080] hover:bg-[#008080]/10 hidden group-hover:flex items-center justify-center"
-        title="Dismiss"
+        data-tooltip="Dismiss"
       >
         ×
       </button>

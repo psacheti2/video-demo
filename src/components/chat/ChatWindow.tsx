@@ -32,7 +32,8 @@ interface ChatWindowProps {
   isCentered?: boolean;
   sidebarOpen: boolean;
   setSidebarOpen?: React.Dispatch<React.SetStateAction<boolean>>;
-  setSelectedArtifact: (artifact: Artifact) => void; // 👈 Add this
+  setSelectedArtifact: (artifact: Artifact) => void; 
+  isReloading?: React.RefObject<boolean>; 
 }
 
 export default function ChatWindow({ 
@@ -43,7 +44,8 @@ export default function ChatWindow({
   isCentered = false,
   sidebarOpen,
   setSidebarOpen,
-  setSelectedArtifact 
+  setSelectedArtifact,
+  isReloading
 }: ChatWindowProps) {
  
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -130,6 +132,7 @@ useEffect(() => {
         key={index}
         message={message}
         isUser={message.isUser}
+        isReloading={isReloading?.current || false} 
         onArtifactClick={(artifact: Artifact) => setSelectedArtifact(artifact)}
       />
     ))}

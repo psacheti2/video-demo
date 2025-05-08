@@ -1738,7 +1738,7 @@ const InfrastructureIndexMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) =>
             }}
           >
             {/* your normal buttons here... */}
-            <button onClick={() => setShowTable(!showTable)} title="Toggle Table" className="p-2 rounded-full border" style={{
+            <button onClick={() => setShowTable(!showTable)} data-tooltip="Toggle Table" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1753,7 +1753,7 @@ const InfrastructureIndexMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) =>
             }}>
               {showTable ? <Table size={20} /> : <Table size={20} />}
             </button>
-            <button onClick={() => setShowSaveDialog(true)} title="Save Map" className="p-2 rounded-full border" style={{
+            <button onClick={() => setShowSaveDialog(true)} data-tooltip="Save Map" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1770,7 +1770,7 @@ const InfrastructureIndexMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) =>
             </button>
             <button
   onClick={() => setShowGeocoder(!showGeocoder)}
-  title="Search Location"
+  data-tooltip="Search Location"
   className="p-2 rounded-full border"
   style={{
     color: '#008080',
@@ -1789,7 +1789,7 @@ const InfrastructureIndexMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) =>
   <TbMapSearch size={20} />
 </button>
 
-            <button onClick={() => setShowSymbologyEditor(true)} title="Symbology" className="p-2 rounded-full border" style={{
+            <button onClick={() => setShowSymbologyEditor(true)} data-tooltip="Symbology" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1804,7 +1804,7 @@ const InfrastructureIndexMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) =>
             }}>
               <Palette size={20} />
             </button>
-            <button onClick={() => setShowLegend(prev => !prev)} title="Legend" className="p-2 rounded-full border" style={{
+            <button onClick={() => setShowLegend(prev => !prev)} data-tooltip="Legend" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1819,7 +1819,7 @@ const InfrastructureIndexMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) =>
             }}>
               <Layers size={20} />
             </button>
-            <button onClick={() => setShowSources(prev => !prev)} title="Sources" className="p-2 rounded-full border" style={{
+            <button onClick={() => setShowSources(prev => !prev)} data-tooltip="Sources" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1834,7 +1834,7 @@ const InfrastructureIndexMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) =>
             }}>
               <Info size={20} />
             </button>
-            <button onClick={() => setShowShareDialog(true)} title="Share" className="p-2 rounded-full border" style={{
+            <button onClick={() => setShowShareDialog(true)} data-tooltip="Share" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1849,7 +1849,7 @@ const InfrastructureIndexMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) =>
             }}>
               <Share2 size={20} />
             </button>
-            <button onClick={() => setShowDownloadDialog(true)} title="Download" className="p-2 rounded-full border" style={{
+            <button onClick={() => setShowDownloadDialog(true)} data-tooltip="Download" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1864,7 +1864,7 @@ const InfrastructureIndexMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) =>
             }}>
               <Download size={20} />
             </button>
-            <button onClick={toggleFullScreen} title="Fullscreen" className="p-2 rounded-full border" style={{
+            <button onClick={toggleFullScreen} data-tooltip="Fullscreen" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1897,7 +1897,7 @@ const InfrastructureIndexMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) =>
           <button
             onClick={() => setToolbarVisible(!toolbarVisible)}
             onMouseDown={handleMouseDown}
-            title={toolbarVisible ? "Collapse tools" : "Expand tools"}
+            data-tooltip={toolbarVisible ? "Collapse tools" : "Expand tools"}
             className="p-2 rounded-full border cursor-move"
             style={{
               color: COLORS.coral,
@@ -1923,7 +1923,7 @@ const InfrastructureIndexMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) =>
               toolbarVisible ? 'opacity-100 max-w-[1000px] ml-2' : 'opacity-0 max-w-0 overflow-hidden'
             }`}
           >
-              <button onClick={() => setShowTable(!showTable)} title="Toggle Table" className="p-2 rounded-full border" style={{
+              <button onClick={() => setShowTable(!showTable)} data-tooltip="Toggle Table" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1938,7 +1938,7 @@ const InfrastructureIndexMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) =>
             }}>
                 {showTable ? <Table size={20} /> : <Table size={20} />}
               </button>
-              <button onClick={() => setShowSaveDialog(true)} title="Save Map" className="p-2 rounded-full border" style={{
+              <button onClick={() => setShowSaveDialog(true)} data-tooltip="Save Map" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1955,7 +1955,7 @@ const InfrastructureIndexMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) =>
               </button>
               <button
   onClick={() => setShowGeocoder(!showGeocoder)}
-  title="Search Location"
+  data-tooltip="Search Location"
   className="p-2 rounded-full border"
   style={{
     color: '#008080',
@@ -1974,7 +1974,7 @@ const InfrastructureIndexMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) =>
   <TbMapSearch size={20} />
 </button>
 
-              <button onClick={() => setShowSymbologyEditor(true)} title="Symbology" className="p-2 rounded-full border" style={{
+              <button onClick={() => setShowSymbologyEditor(true)} data-tooltip="Symbology" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -1989,7 +1989,7 @@ const InfrastructureIndexMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) =>
             }}>
                 <Palette size={20} />
               </button>
-              <button onClick={() => setShowLegend(prev => !prev)} title="Legend" className="p-2 rounded-full border" style={{
+              <button onClick={() => setShowLegend(prev => !prev)} data-tooltip="Legend" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -2004,7 +2004,7 @@ const InfrastructureIndexMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) =>
             }}>
                 <Layers size={20} />
               </button>
-              <button onClick={() => setShowSources(prev => !prev)} title="Sources" className="p-2 rounded-full border" style={{
+              <button onClick={() => setShowSources(prev => !prev)} data-tooltip="Sources" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -2019,7 +2019,7 @@ const InfrastructureIndexMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) =>
             }}>
                 <Info size={20} />
               </button>
-              <button onClick={() => setShowShareDialog(true)} title="Share" className="p-2 rounded-full border" style={{
+              <button onClick={() => setShowShareDialog(true)} data-tooltip="Share" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -2034,7 +2034,7 @@ const InfrastructureIndexMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) =>
             }}>
                 <Share2 size={20} />
               </button>
-              <button onClick={() => setShowDownloadDialog(true)} title="Download" className="p-2 rounded-full border" style={{
+              <button onClick={() => setShowDownloadDialog(true)} data-tooltip="Download" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'
@@ -2049,7 +2049,7 @@ const InfrastructureIndexMap = ({ onLayersReady, onSaveMap, savedMaps = [] }) =>
             }}>
                 <Download size={20} />
               </button>
-              <button onClick={toggleFullScreen} title="Exit Fullscreen" className="p-2 rounded-full border" style={{
+              <button onClick={toggleFullScreen} data-tooltip="Exit Fullscreen" className="p-2 rounded-full border" style={{
               color: COLORS.coral,
               border: `1px solid ${COLORS.coral}`,
               transition: 'all 0.2s ease-in-out'

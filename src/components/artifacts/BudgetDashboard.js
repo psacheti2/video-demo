@@ -318,7 +318,7 @@ const BudgetDashboard = ({ onLayersReady, setSavedArtifacts, title, onBack }) =>
           <div className="relative">
             <button
               onClick={() => setShowSources(prev => !prev)}
-              title="View Information"
+              data-tooltip="View Information"
               className="p-2 rounded-full border"
               style={{ 
                 color: COLORS.teal,
@@ -360,7 +360,7 @@ const BudgetDashboard = ({ onLayersReady, setSavedArtifacts, title, onBack }) =>
           {/* Save Button */}
           <button
             onClick={() => setShowSaveDialog(true)}
-            title="Save Chart"
+            data-tooltip="Save Chart"
             className="p-2 rounded-full border"
             style={{ 
               color: COLORS.teal,
@@ -382,7 +382,7 @@ const BudgetDashboard = ({ onLayersReady, setSavedArtifacts, title, onBack }) =>
 {/* Palette button */}
 <button
   onClick={() => setShowPaletteDialog(true)}
-  title="Change Colors"
+  data-tooltip="Change Colors"
   className="p-2 rounded-full border"
   style={{ 
     color: COLORS.teal,
@@ -406,7 +406,7 @@ const BudgetDashboard = ({ onLayersReady, setSavedArtifacts, title, onBack }) =>
           <button
             onClick={() => setShowShareDialog(true)}
             className="p-2 rounded-full border"
-            title="Share"
+            data-tooltip="Share"
             style={{ 
               color: COLORS.teal,
               backgroundColor: COLORS.white,
@@ -705,7 +705,7 @@ const BudgetDashboard = ({ onLayersReady, setSavedArtifacts, title, onBack }) =>
             <button
               onClick={() => setShowEmailNotification(false)}
               className="absolute top-1 right-1 w-5 h-5 rounded-full text-[#008080] hover:bg-[#008080]/10 hidden group-hover:flex items-center justify-center"
-              title="Dismiss"
+              data-tooltip="Dismiss"
             >
               ×
             </button>

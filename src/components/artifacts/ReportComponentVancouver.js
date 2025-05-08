@@ -464,7 +464,7 @@ useEffect(() => {
             <button 
               onClick={toggleEditMode}
               className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-              title={isEditing ? "Save edits" : "Edit report"}
+              data-tooltip={isEditing ? "Save edits" : "Edit report"}
               style={{ 
                 color: COLORS.coral, 
                 border: 'none',
@@ -483,7 +483,7 @@ useEffect(() => {
               {isEditing ? <Save size={20} /> : <Edit2 size={20} />}
             </button>
 
-            <button onClick={() => setShowSources(prev => !prev)} title="View Sources" style={{ 
+            <button onClick={() => setShowSources(prev => !prev)} data-tooltip="View Sources" style={{ 
             color: COLORS.coral,
             backgroundColor: 'white',
             border: 'none',
@@ -509,7 +509,7 @@ useEffect(() => {
             <button 
               onClick={setShowReportDownloadDialog}
               className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-              title="Download as PDF"
+              data-tooltip="Download as PDF"
               style={{ 
                 color: COLORS.coral, 
                 border: 'none',
@@ -531,7 +531,7 @@ useEffect(() => {
             <button 
               onClick={toggleSidebar}
               className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-              title="Close sidebar"
+              data-tooltip="Close sidebar"
               style={{ 
                 color: COLORS.coral,
                 border: 'none',
@@ -553,7 +553,7 @@ useEffect(() => {
             <button 
               onClick={toggleFullscreen}
               className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-              title="Toggle fullscreen"
+              data-tooltip="Toggle fullscreen"
               style={{ 
                 color: COLORS.coral, 
                 border: 'none',
@@ -642,7 +642,7 @@ useEffect(() => {
           <button 
             onClick={toggleEditMode}
             className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2"
-            title={isEditing ? "Save edits" : "Edit report"}
+            data-tooltip={isEditing ? "Save edits" : "Edit report"}
             style={{ 
               color: COLORS.coral, 
               border: 'none',
@@ -663,7 +663,7 @@ useEffect(() => {
 
           <button 
   onClick={() => setShowSources(prev => !prev)} 
-  title="View Sources"
+  data-tooltip="View Sources"
   style={{ 
     color: COLORS.coral,
     backgroundColor: 'transparent',
@@ -693,7 +693,7 @@ useEffect(() => {
           <button 
             onClick={setShowReportDownloadDialog}
             className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2"
-            title="Download as PDF"
+            data-tooltip="Download as PDF"
             style={{ 
               color: COLORS.coral, 
               border: 'none',
@@ -715,7 +715,7 @@ useEffect(() => {
           <button 
             onClick={toggleSidebar}
             className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2"
-            title="Open table of contents"
+            data-tooltip="Open table of contents"
             style={{ 
               color: COLORS.coral,
               border: 'none',
@@ -737,7 +737,7 @@ useEffect(() => {
           <button 
             onClick={toggleFullscreen}
             className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2"
-            title="Toggle fullscreen"
+            data-tooltip="Toggle fullscreen"
             style={{ 
               color: COLORS.coral, 
               border: 'none',
@@ -762,7 +762,7 @@ useEffect(() => {
       <button 
         onClick={toggleMenu}
         className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-        title="Toggle menu"
+        data-tooltip="Toggle menu"
         style={{ 
           color: COLORS.coral, 
           border: 'none',
@@ -878,7 +878,7 @@ useEffect(() => {
                     <button 
                       onClick={toggleEditMode}
                       className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2"
-                      title={isEditing ? "Save edits" : "Edit report"}
+                      data-tooltip={isEditing ? "Save edits" : "Edit report"}
                       style={{ 
                         color: COLORS.coral, 
                         border: 'none',
@@ -898,7 +898,7 @@ useEffect(() => {
                     </button>
                     <button 
   onClick={() => setShowSources(prev => !prev)} 
-  title="View Sources"
+  data-tooltip="View Sources"
   style={{ 
     color: COLORS.coral,
     backgroundColor: 'transparent',
@@ -929,7 +929,7 @@ useEffect(() => {
                     <button 
                       onClick={setShowReportDownloadDialog}
                       className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2"
-                      title="Download as PDF"
+                      data-tooltip="Download as PDF"
                       style={{ 
                         color: COLORS.coral, 
                         border: 'none',
@@ -952,7 +952,7 @@ useEffect(() => {
                     <button 
                       onClick={toggleSidebar}
                       className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2"
-                      title="Open table of contents"
+                      data-tooltip="Open table of contents"
                       style={{ 
                         color: COLORS.coral,
                         border: 'none',
@@ -975,7 +975,7 @@ useEffect(() => {
                     <button 
                       onClick={toggleFullscreen}
                       className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2"
-                      title="Exit fullscreen"
+                      data-tooltip="Exit fullscreen"
                       style={{ 
                         color: COLORS.coral, 
                         border: 'none',
@@ -1000,7 +1000,7 @@ useEffect(() => {
                 <button 
                   onClick={toggleMenu}
                   className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-                  title="Toggle menu"
+                  data-tooltip="Toggle menu"
                   style={{ 
                     color: COLORS.coral, 
                     border: 'none',
@@ -1051,7 +1051,7 @@ useEffect(() => {
                       <button 
                         onClick={toggleEditMode}
                         className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-                        title={isEditing ? "Save edits" : "Edit report"}
+                        data-tooltip={isEditing ? "Save edits" : "Edit report"}
                         style={{ 
                           color: COLORS.coral, 
                           border: 'none',
@@ -1072,7 +1072,7 @@ useEffect(() => {
   
                       <button 
   onClick={() => setShowSources(prev => !prev)} 
-  title="View Sources"
+  data-tooltip="View Sources"
   style={{ 
     color: COLORS.coral,
     backgroundColor: 'transparent',
@@ -1102,7 +1102,7 @@ useEffect(() => {
                       <button 
                         onClick={setShowReportDownloadDialog}
                         className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-                        title="Download as PDF"
+                        data-tooltip="Download as PDF"
                         style={{ 
                           color: COLORS.coral, 
                           border: 'none',
@@ -1124,7 +1124,7 @@ useEffect(() => {
                       <button 
                         onClick={toggleSidebar}
                         className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-                        title="Close sidebar"
+                        data-tooltip="Close sidebar"
                         style={{ 
                           color: COLORS.coral,
                           border: 'none',
@@ -1146,7 +1146,7 @@ useEffect(() => {
                       <button 
                         onClick={toggleFullscreen}
                         className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-                        title="Exit fullscreen"
+                        data-tooltip="Exit fullscreen"
                         style={{ 
                           color: COLORS.coral, 
                           border: 'none',

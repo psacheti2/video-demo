@@ -1287,8 +1287,8 @@ const handleDownloadFallback = () => {
 
             <button 
               onClick={toggleEditMode}
-              className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-              title={isEditing ? "Save edits" : "Edit report"}
+              className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow tooltip-bottom"
+              data-tooltip={isEditing ? "Save edits" : "Edit report"}
               style={{ 
                 color: COLORS.coral, 
                 border: 'none',
@@ -1307,7 +1307,7 @@ const handleDownloadFallback = () => {
               {isEditing ? <Save size={20} /> : <Edit2 size={20} />}
             </button>
 
-            <button onClick={() => setShowSources(prev => !prev)} title="View Sources" style={{ 
+            <button onClick={() => setShowSources(prev => !prev)} className="tooltip-bottom" data-tooltip="View Sources" style={{ 
             color: COLORS.coral,
             backgroundColor: 'white',
             border: 'none',
@@ -1332,8 +1332,8 @@ const handleDownloadFallback = () => {
 
           <button 
   onClick={() => setShowShareDialog(true)}
-  className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-  title="Share and Download"
+  className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow tooltip-bottom"
+  data-tooltip="Share and Download"
   style={{ 
     color: COLORS.coral, 
     border: 'none',
@@ -1354,8 +1354,8 @@ const handleDownloadFallback = () => {
 
             <button 
               onClick={toggleSidebar}
-              className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-              title="Close sidebar"
+              className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow tooltip-bottom"
+              data-tooltip="Close sidebar"
               style={{ 
                 color: COLORS.coral,
                 border: 'none',
@@ -1376,8 +1376,8 @@ const handleDownloadFallback = () => {
 
             <button 
               onClick={toggleFullscreen}
-              className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-              title="Toggle fullscreen"
+              className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow tooltip-bottom"
+              data-tooltip="Toggle fullscreen"
               style={{ 
                 color: COLORS.coral, 
                 border: 'none',
@@ -1417,7 +1417,7 @@ const handleDownloadFallback = () => {
                 element.scrollIntoView({ behavior: 'smooth' });
               }
             }}
-            className="w-full text-left px-4 py-3 text-sm flex items-center mb-2 rounded-full transition-all"
+            className="w-full text-left px-4 py-3 text-sm flex items-center mb-2 rounded-full transition-all tooltip-bottom"
             style={{
               backgroundColor: activeSection === section.id ? COLORS.coral : COLORS.white,
               color: activeSection === section.id ? COLORS.white : COLORS.secondary,
@@ -1462,11 +1462,11 @@ const handleDownloadFallback = () => {
       }}
     >
       {isMenuOpen && (
-        <div className="flex items-center space-x-1 bg-white rounded-full shadow-md p-2">
+        <div className="flex items-center space-x-1 bg-white rounded-full shadow-md p-2 t">
           <button 
             onClick={toggleEditMode}
-            className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2"
-            title={isEditing ? "Save edits" : "Edit report"}
+            className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2 tooltip-bottom"
+            data-tooltip={isEditing ? "Save edits" : "Edit report"}
             style={{ 
               color: COLORS.coral, 
               border: 'none',
@@ -1487,7 +1487,8 @@ const handleDownloadFallback = () => {
 
           <button 
   onClick={() => setShowSources(prev => !prev)} 
-  title="View Sources"
+  className="tooltip-bottom"
+  data-tooltip="View Sources"
   style={{ 
     color: COLORS.coral,
     backgroundColor: 'transparent',
@@ -1515,8 +1516,8 @@ const handleDownloadFallback = () => {
 
 <button 
   onClick={() => setShowShareDialog(true)}
-  className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-  title="Share and Download"
+  className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow tooltip-bottom"
+  data-tooltip="Share and Download"
   style={{ 
     color: COLORS.coral, 
     border: 'none',
@@ -1537,8 +1538,8 @@ const handleDownloadFallback = () => {
 
           <button 
             onClick={toggleSidebar}
-            className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2"
-            title="Open table of contents"
+            className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2 tooltip-bottom"
+            data-tooltip="Open table of contents"
             style={{ 
               color: COLORS.coral,
               border: 'none',
@@ -1559,8 +1560,8 @@ const handleDownloadFallback = () => {
 
           <button 
             onClick={toggleFullscreen}
-            className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2"
-            title="Toggle fullscreen"
+            className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2 tooltip-bottom"
+            data-tooltip="Toggle fullscreen"
             style={{ 
               color: COLORS.coral, 
               border: 'none',
@@ -1584,8 +1585,8 @@ const handleDownloadFallback = () => {
       {/* Menu toggle button - always rightmost */}
       <button 
         onClick={toggleMenu}
-        className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-        title="Toggle menu"
+        className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow tooltip-bottom"
+        data-tooltip="Toggle menu"
         style={{ 
           color: COLORS.coral, 
           border: 'none',
@@ -1700,8 +1701,8 @@ const handleDownloadFallback = () => {
                     {/* Edit/Save button */}
                     <button 
                       onClick={toggleEditMode}
-                      className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2"
-                      title={isEditing ? "Save edits" : "Edit report"}
+                      className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2 tooltip-bottom"
+                      data-tooltip={isEditing ? "Save edits" : "Edit report"}
                       style={{ 
                         color: COLORS.coral, 
                         border: 'none',
@@ -1721,7 +1722,8 @@ const handleDownloadFallback = () => {
                     </button>
                     <button 
   onClick={() => setShowSources(prev => !prev)} 
-  title="View Sources"
+  className="tooltip-bottom"
+  data-tooltip="View Sources"
   style={{ 
     color: COLORS.coral,
     backgroundColor: 'transparent',
@@ -1750,8 +1752,8 @@ const handleDownloadFallback = () => {
   
 <button 
   onClick={() => setShowShareDialog(true)}
-  className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-  title="Share and Download"
+  className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow tooltip-bottom"
+  data-tooltip="Share and Download"
   style={{ 
     color: COLORS.coral, 
     border: 'none',
@@ -1773,8 +1775,8 @@ const handleDownloadFallback = () => {
                     {/* TOC toggle button */}
                     <button 
                       onClick={toggleSidebar}
-                      className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2"
-                      title="Open table of contents"
+                      className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2 tooltip-bottom"
+                      data-tooltip="Open table of contents"
                       style={{ 
                         color: COLORS.coral,
                         border: 'none',
@@ -1796,8 +1798,8 @@ const handleDownloadFallback = () => {
                     {/* Exit fullscreen button */}
                     <button 
                       onClick={toggleFullscreen}
-                      className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2"
-                      title="Exit fullscreen"
+                      className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow mr-2 tooltip-bottom"
+                      data-tooltip="Exit fullscreen"
                       style={{ 
                         color: COLORS.coral, 
                         border: 'none',
@@ -1821,8 +1823,8 @@ const handleDownloadFallback = () => {
                 {/* Menu toggle button - always visible and rightmost */}
                 <button 
                   onClick={toggleMenu}
-                  className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-                  title="Toggle menu"
+                  className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow tooltip-bottom"
+                  data-tooltip="Toggle menu"
                   style={{ 
                     color: COLORS.coral, 
                     border: 'none',
@@ -1873,8 +1875,8 @@ const handleDownloadFallback = () => {
 
                       <button 
                         onClick={toggleEditMode}
-                        className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-                        title={isEditing ? "Save edits" : "Edit report"}
+                        className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow tooltip-bottom"
+                        data-tooltip={isEditing ? "Save edits" : "Edit report"}
                         style={{ 
                           color: COLORS.coral, 
                           border: 'none',
@@ -1895,7 +1897,8 @@ const handleDownloadFallback = () => {
   
                       <button 
   onClick={() => setShowSources(prev => !prev)} 
-  title="View Sources"
+  className="tooltip-bottom"
+  data-tooltip="View Sources"
   style={{ 
     color: COLORS.coral,
     backgroundColor: 'transparent',
@@ -1924,8 +1927,8 @@ const handleDownloadFallback = () => {
   
 <button 
   onClick={() => setShowShareDialog(true)}
-  className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-  title="Share and Download"
+  className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow tooltip-bottom"
+  data-tooltip="Share and Download"
   style={{ 
     color: COLORS.coral, 
     border: 'none',
@@ -1946,8 +1949,8 @@ const handleDownloadFallback = () => {
   
                       <button 
                         onClick={toggleSidebar}
-                        className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-                        title="Close sidebar"
+                        className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow tooltip-bottom"
+                        data-tooltip="Close sidebar"
                         style={{ 
                           color: COLORS.coral,
                           border: 'none',
@@ -1968,8 +1971,8 @@ const handleDownloadFallback = () => {
   
                       <button 
                         onClick={toggleFullscreen}
-                        className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow"
-                        title="Exit fullscreen"
+                        className="flex items-center justify-center p-2 rounded-full transition-all hover:shadow tooltip-bottom"
+                        data-tooltip="Exit fullscreen"
                         style={{ 
                           color: COLORS.coral, 
                           border: 'none',

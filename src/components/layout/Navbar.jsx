@@ -28,7 +28,7 @@ const toggleProfileDropdown = () => setProfileOpen(!profileOpen);
 <button
   onClick={onToggleSidebar}
   className="p-2 rounded-full bg-white border border-[#008080] hover:bg-[#008080]/90 group shadow-sm transition"
-  title="Toggle Sidebar"
+  data-tooltip="Toggle Sidebar"
 >
   <PanelRight className="h-5 w-5 text-[#008080] group-hover:text-white" />
 </button>
@@ -36,8 +36,8 @@ const toggleProfileDropdown = () => setProfileOpen(!profileOpen);
 {/* New Chat */}
 <button
   onClick={onStartNewChat}
-  className="p-2 rounded-full bg-white border border-[#008080] hover:bg-[#008080]/90 group shadow-sm transition"
-  title="New Chat"
+  className="p-2 rounded-full bg-white border border-[#008080] hover:bg-[#008080]/90 group shadow-sm transition tooltip-bottom"
+  data-tooltip="New Chat"
 >
   <Plus className="h-5 w-5 text-[#008080] group-hover:text-white" />
 </button>
@@ -63,7 +63,8 @@ const toggleProfileDropdown = () => setProfileOpen(!profileOpen);
 <div className="relative">
   <button
     onClick={toggleDropdown}
-    className="p-2 rounded-full bg-white border border-[#008080] hover:bg-[#008080]/90 group shadow-sm transition relative"
+    className="p-2 rounded-full bg-white border border-[#008080] hover:bg-[#008080]/90 group shadow-sm transition relative tooltip-bottom"
+    data-tooltip="Notifications"
   >
     <Bell className="h-5 w-5 text-[#008080] group-hover:text-white" />
     {unreadCount > 0 && (
@@ -107,7 +108,8 @@ const toggleProfileDropdown = () => setProfileOpen(!profileOpen);
       <div className="relative">
   <button
     onClick={toggleProfileDropdown}
-    className="w-10 h-10 flex items-center justify-center rounded-full bg-white text-[#008080] border border-[#008080] hover:bg-[#008080]/90 hover:text-white font-semibold shadow-sm hover:scale-105 transition"
+    className="w-10 h-10 flex items-center justify-center rounded-full bg-white text-[#008080] border border-[#008080] hover:bg-[#008080]/90 hover:text-white font-semibold shadow-sm hover:scale-105 transition tooltip-bottom"
+    data-tooltip="Profile"
   >
     JD
   </button>
