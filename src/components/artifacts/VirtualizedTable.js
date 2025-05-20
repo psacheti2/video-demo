@@ -294,7 +294,7 @@ const Row = useCallback(({ index, style }) => {
             }}
             className={`px-2 py-1 text-xs border-r border-gray-200 overflow-hidden text-ellipsis whitespace-nowrap ${
               selectedColIndex === colIdx ? 'bg-[#ccecec]' : ''
-            } ${colIdx === 0 ? 'sticky left-10 bg-white z-[2] border-r border-gray-300' : ''}`}
+            } ${colIdx === 0 ? 'sticky left-10 bg-inherit z-[2] border-r border-gray-300' : ''}`}
             style={{
               width: `${columnWidths[colIdx]}px`,
               flex: '0 0 auto',
@@ -683,31 +683,7 @@ const Row = useCallback(({ index, style }) => {
             >
               <div style={{ width: `${totalWidth}px`, minWidth: '100%' }}>
                 
-                {/* A/B/C Header Row */}
-                <div className="flex border-b border-gray-300">
-                  <div className="sticky left-0 z-10 w-10 min-w-[40px] text-[10px] bg-gray-100 border border-gray-300 flex items-center justify-center">
-                    &nbsp;
-                  </div>
-                  {currentTable.headers.map((_, colIdx) => (
-                    <div
-                      key={`abc-${colIdx}`}
-                      onClick={() => setSelectedColIndex((prev) => (prev === colIdx ? null : colIdx))}
-                      onContextMenu={(e) => {
-                        e.preventDefault();
-                        handleRightClick(e, 'column', colIdx, currentTable.headers[colIdx]);
-                      }}
-                      className={`px-3 py-1 text-center text-[10px] font-semibold text-gray-700 uppercase border border-gray-300 
-                        ${selectedColIndex === colIdx ? 'bg-[#ccecec]' : 'bg-gray-100'}`}
-                      style={{ 
-                        width: `${columnWidths[colIdx]}px`, 
-                        minWidth: `${columnWidths[colIdx]}px`,
-                        flex: '0 0 auto'
-                      }}
-                    >
-                      {String.fromCharCode(65 + colIdx)}
-                    </div>
-                  ))}
-                </div>
+                
 
                 {/* Actual column names (Name, Age, etc.) */}
                 <div className="flex border-b border-gray-200">

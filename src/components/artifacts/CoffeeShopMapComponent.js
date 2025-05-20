@@ -12,6 +12,7 @@ import 'leaflet-draw/dist/leaflet.draw.js';
 import MapDownloader from '../MapDownloader'
 import TextToolbar from '../TextToolbar'
 import _ from 'lodash';
+import ShareDialog from '../ShareDialog'
 import {
     createPolygonDrawTool,
     createFreehandTool,
@@ -1329,19 +1330,6 @@ const highlightMultipleFeatures = (rowIndices) => {
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [map]);
-
-
-    useEffect(() => {
-        if (isFullscreen) {
-            // Position on the left side, vertically centered
-            const windowHeight = window.innerHeight;
-
-            setToolbarPosition({
-                top: windowHeight / 2 - 330,
-                left: 20 // Left margin
-            });
-        }
-    }, [isFullscreen]);
 
 
 
@@ -2873,8 +2861,28 @@ leafletMap.on(L.Draw.Event.CREATED, function(e) {
             }
         });
     }, [tableData]);
-
-
+    
+    useEffect(() => {
+        if (!isFullscreen && !toolbarPosition) {
+          // Position the toolbar with spacing from the bottom edge in regular view
+          setToolbarPosition({
+            top: 'auto', 
+            left: 'auto'
+          });
+        } else if (isFullscreen) {
+          // Position on the left side with proper spacing in fullscreen mode
+          const windowHeight = window.innerHeight;
+          const windowWidth = window.innerWidth;
+          
+          // Calculate position with margins
+          const topPosition = Math.min(windowHeight / 2 - 200, windowHeight - 400);
+          
+          setToolbarPosition({
+            top: Math.max(80, topPosition),
+            left: 80 // Left margin from the edge
+          });
+        }
+      }, [isFullscreen, toolbarPosition]);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedTeammate, setSelectedTeammate] = useState(null);
@@ -3161,27 +3169,7 @@ leafletMap.on(L.Draw.Event.CREATED, function(e) {
                                     <span>Select</span>
                                 </div>
                             </button>
-                            <button
-                                className="w-full px-2 py-1 rounded-full border text-xs font-medium text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white transition"
-                                onClick={() => {
-                                    setShowDrawTools(false);
-                                    createPolygonDrawTool(
-                                        map,
-                                        snapLayersRef,
-                                        setActiveDrawTool,
-                                        sendQuestionToChat,
-                                        nextShapeIds,
-                                        setNextShapeIds,
-                                        setDrawnLayers,
-                                        setDrawnLayersOrder
-                                      );                                }}
-                            >
-                                <div className="flex items-center">
-                                    <IconMapPinSearch className="mr-1" size={12} style={{ minWidth: '12px' }} />
-                                    <span>Insights</span>
-                                </div>
-                            </button>
-                            {/* Replace the existing Measurement button onClick handler with this: */}
+                            
                           
 
                             <button
@@ -3279,92 +3267,25 @@ leafletMap.on(L.Draw.Event.CREATED, function(e) {
                         addNotification={addNotification}
                     />
                 )}
-                {showShareDialog && (
-                    <div className="absolute bottom-[20px] right-6 z-[1000]">
-                        <div className="bg-white w-[340px] rounded-2xl shadow-2xl p-6 border border-gray-200 relative animate-fade-in">
-                            <button
-                                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
-                                onClick={() => setShowShareDialog(false)}
-                            >
-                                <X size={16} />
-                            </button>
-
-                            <h2 className="text-lg font-semibold text-gray-800 mb-4">Share This Map</h2>
-
-                            {/* Teammate Search */}
-                            <div className="mb-4">
-                                <label className="text-sm font-medium text-gray-700 mb-1 block">Search Teammate</label>
-                                <input
-                                    type="text"
-                                    placeholder="Type a name..."
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#008080] focus:outline-none"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                            </div>
-
-                            {/* Teammate List */}
-                            <div className="max-h-40 overflow-y-auto mb-4 space-y-1 pr-1">
-                                {filteredTeammates.map(teammate => (
-                                    <div
-                                        key={teammate}
-                                        onClick={() => setSelectedTeammate(teammate)}
-                                        className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition border 
-              ${selectedTeammate === teammate
-                                                ? 'bg-[#008080]/10 border-[#008080]'
-                                                : 'bg-white hover:bg-gray-50 border-gray-200'}
-            `}
-                                    >
-                                        <div className="flex items-center space-x-3">
-                                            <div className="w-8 h-8 rounded-full bg-[#008080]/90 text-white text-sm font-semibold flex items-center justify-center shadow-sm">
-                                                {teammate.split(' ').map(n => n[0]).join('').toUpperCase()}
-                                            </div>
-                                            <span className="text-sm text-gray-800 font-medium">{teammate}</span>
-                                        </div>
-                                        {selectedTeammate === teammate && (
-                                            <span className="text-xs font-medium text-[#008080]">✓</span>
-                                        )}
-                                    </div>
-                                ))}
-                                {filteredTeammates.length === 0 && (
-                                    <div className="text-sm text-gray-500 text-center py-3">No teammates found</div>
-                                )}
-                            </div>
-
-                            {/* Share Button */}
-                            <button
-                                disabled={!selectedTeammate}
-                                onClick={() => {
-                                    setShowShareDialog(false);
-                                    const msg = `Map shared with ${selectedTeammate}`;
-                                    setNotificationMessage(msg);
-                                    setShowEmailNotification(true);
-                                    addNotification(msg);
-                                }}
-                                className={`w-full py-2 rounded-md text-sm font-semibold transition-all duration-200 mb-6
-          ${selectedTeammate
-                                        ? 'bg-[#008080] text-white hover:bg-teal-700'
-                                        : 'bg-gray-200 text-gray-500 cursor-not-allowed'}
-        `}
-                            >
-                                Share Map
-                            </button>
-
-                            {/* Divider */}
-                            <button
-                                onClick={() => {
-                                    setShowShareDialog(false);
-                                    setShowMapDownloader(true);
-                                }}
-                                className="w-full py-2 rounded-md text-sm font-semibold bg-[#008080] text-white hover:bg-teal-700"
-                            >
-                                Download Map
-                            </button>
-
-
-                        </div>
-                    </div>
-                )}
+              {showShareDialog && (
+  <ShareDialog
+    isOpen={showShareDialog}
+    onClose={() => setShowShareDialog(false)}
+    onShare={(teammates) => {
+      setShowShareDialog(false);
+      const msg = `Map shared with: ${teammates.join(', ')}`;
+      setNotificationMessage(msg);
+      setShowEmailNotification(true);
+      addNotification(msg);
+    }}
+    onShowDownloader={() => setShowMapDownloader(true)}
+    title="Share This Map"
+    position={{ 
+      bottom: isFullscreen ? '80px' : '60px', 
+      right: '16px' 
+    }}
+  />
+)}
 
 
                 <ToolbarComponent
@@ -3391,11 +3312,23 @@ leafletMap.on(L.Draw.Event.CREATED, function(e) {
                     setMapView={handleMapViewChange}
                     activeMapView={currentMapView}
                     showTextToolbar={showTextToolbar}
+                    map={map}
+    createPolygonDrawTool={createPolygonDrawTool}
+    snapLayersRef={snapLayersRef}
+    setActiveDrawTool={setActiveDrawTool}
+    sendQuestionToChat={sendQuestionToChat}
+    nextShapeIds={nextShapeIds}
+    setNextShapeIds={setNextShapeIds}
+    setDrawnLayers={setDrawnLayers}
+    setDrawnLayersOrder={setDrawnLayersOrder}
                 />
+
 
 
                 {showLegend && (
                     <DraggableLegend
+                    mapContainerRef={mapContainerRef}
+                    isFullscreen={isFullscreen} 
                     showLegend={showLegend}
                     setShowLegend={setShowLegend}
                     activeLayers={activeLayers}

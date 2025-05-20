@@ -3,6 +3,7 @@ import { Layers, X, ChevronDown, ChevronUp } from 'lucide-react';
 
 // This is the updated Legend component that allows reordering
 const DraggableLegend = ({ 
+  isFullscreen,
   showLegend, 
   setShowLegend, 
   activeLayers, 
@@ -23,14 +24,18 @@ currentMapView,
   setDrawnLayers,
   drawnLayersOrder,
   toggleDrawnLayer,
-  updateDrawnLayerColor
+  updateDrawnLayerColor,
+  mapContainerRef
 }) => {
   const [draggingIndex, setDraggingIndex] = useState(null);
   const [layerOrder, setLayerOrder] = useState([]);
   const dragOverItemIndex = useRef(null);
   const [baseMapVisible, setBaseMapVisible] = useState(true);
 
-
+  const [legendPosition, setLegendPosition] = useState({ bottom: 4, left: 4 });
+  const [isDraggingLegend, setIsDraggingLegend] = useState(false);
+  const legendRef = useRef(null);
+  const dragStartPosition = useRef({ x: 0, y: 0 });
 const [editingLayerId, setEditingLayerId] = useState(null);
 useEffect(() => {
     const storedNames = localStorage.getItem('customLayerNames');
@@ -43,7 +48,18 @@ useEffect(() => {
     localStorage.setItem('customLayerNames', JSON.stringify(customLayerNames));
   }, [customLayerNames]);
   
-
+  useEffect(() => {
+    if (isDraggingLegend) {
+      document.addEventListener('mousemove', handleLegendDragMove);
+      document.addEventListener('mouseup', handleLegendDragEnd);
+    }
+  
+    return () => {
+      document.removeEventListener('mousemove', handleLegendDragMove);
+      document.removeEventListener('mouseup', handleLegendDragEnd);
+    };
+  }, [isDraggingLegend]);
+  
   // Initialize the layer order based on z-index when the component mounts
   useEffect(() => {
     if (!layerZIndexes) return;
@@ -84,6 +100,62 @@ useEffect(() => {
     }
   };
   
+  const handleLegendDragStart = (e) => {
+    setIsDraggingLegend(true);
+    dragStartPosition.current = {
+      x: e.clientX,
+      y: e.clientY,
+      initialLeft: legendPosition.left,
+      initialBottom: legendPosition.bottom
+    };
+    
+    document.addEventListener('mousemove', handleLegendDragMove);
+    document.addEventListener('mouseup', handleLegendDragEnd);
+    
+    e.preventDefault();
+  };
+  
+  const handleLegendDragMove = (e) => {
+    if (!isDraggingLegend || !mapContainerRef.current || !legendRef.current) return;
+  
+    const containerRect = mapContainerRef.current.getBoundingClientRect();
+    const legendRect = legendRef.current.getBoundingClientRect();
+  
+    const dx = e.clientX - dragStartPosition.current.x;
+    const dy = e.clientY - dragStartPosition.current.y;
+  
+    // Proposed new positions
+    let newLeft = dragStartPosition.current.initialLeft + dx;
+    let newBottom = dragStartPosition.current.initialBottom - dy;
+  
+    // Clamp left: not less than 4px
+    newLeft = Math.max(4, newLeft);
+  
+    // Clamp bottom: not less than 4px
+    newBottom = Math.max(4, newBottom);
+  
+    // Clamp top: legend should not go above the top of container
+    const legendHeight = legendRect.height;
+    const containerHeight = containerRect.height;
+    const maxBottom = containerHeight - legendHeight - 4;
+    newBottom = Math.min(newBottom, maxBottom);
+  
+    // Clamp right: legend should not go beyond right edge
+    const legendWidth = legendRect.width;
+    const containerWidth = containerRect.width;
+    const maxLeft = containerWidth - legendWidth - 4;
+    newLeft = Math.min(newLeft, maxLeft);
+  
+    setLegendPosition({ left: newLeft, bottom: newBottom });
+  };
+  
+
+  const handleLegendDragEnd = () => {
+    setIsDraggingLegend(false);
+    document.removeEventListener('mousemove', handleLegendDragMove);
+    document.removeEventListener('mouseup', handleLegendDragEnd);
+  };
+
   // Handlers for drag and drop functionality
   const handleDragStart = (index) => {
     setDraggingIndex(index);
@@ -172,10 +244,35 @@ useEffect(() => {
   if (!showLegend) return null;
   
   return (
-    <div className="absolute bottom-4 left-4 w-[300px] bg-white border border-gray-200 rounded-xl shadow-xl p-4 z-[1000] overflow-y-auto max-h-[70vh]">
+    <div 
+      ref={legendRef}
+      className={`absolute ${isFullscreen ? 'w-[300px]' : 'w-[220px]'} bg-white border border-gray-200 rounded-xl shadow-xl p-4 z-[1000] overflow-y-auto max-h-[70vh]`}
+      style={{ 
+        bottom: `${legendPosition.bottom}px`,
+        left: `${legendPosition.left}px`
+      }}
+    >
+<div 
+  className="absolute -top-1 left-1/2 transform -translate-x-1/2 flex justify-center items-center cursor-grab z-10"
+  onMouseDown={handleLegendDragStart}
+>
+  <div className="w-12 h-6 flex flex-col justify-center items-center gap-[3px]">
+    <div className="flex space-x-[3px]">
+      <span className="block w-[3px] h-[3px] bg-gray-400 rounded-full"></span>
+      <span className="block w-[3px] h-[3px] bg-gray-400 rounded-full"></span>
+      <span className="block w-[3px] h-[3px] bg-gray-400 rounded-full"></span>
+    </div>
+    <div className="flex space-x-[3px]">
+      <span className="block w-[3px] h-[3px] bg-gray-400 rounded-full"></span>
+      <span className="block w-[3px] h-[3px] bg-gray-400 rounded-full"></span>
+      <span className="block w-[3px] h-[3px] bg-gray-400 rounded-full"></span>
+    </div>
+  </div>
+</div>
+      
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-base font-semibold text-[#2C3E50] flex items-center">
-          <Layers className="mr-2 text-[#008080]" size={18} /> Layers & Legend
+          <Layers className="mr-2 text-[#008080]" size={18} /> Legend
         </h3>
         <button
           onClick={() => setShowLegend(false)}
@@ -185,100 +282,9 @@ useEffect(() => {
         </button>
       </div>
       
-      <p className="text-xs text-gray-500 mb-2">Drag layers to change their display order</p>
       
       <div className="space-y-4">
-        {/* Base Map Section */}
-<div className="border-t border-gray-200 pt-3 first:border-none first:pt-0 mb-4">
-  <div className="flex justify-between items-center">
-    <label className="flex items-center space-x-2 text-sm font-medium text-[#2C3E50]">
-      <input
-        type="checkbox"
-        checked={baseMapVisible}
-        onChange={() => {
-          const newState = !baseMapVisible;
-          setBaseMapVisible(newState);
-          toggleBaseMap(newState);
-        }}
-        className="cursor-pointer"
-      />
-      <span>Base Map</span>
-    </label>
-    <button 
-      onClick={() => toggleSection('baseMap')}
-      className="text-gray-500 hover:text-gray-700"
-    >
-      {expandedSections['baseMap'] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-    </button>
-  </div>
 
-  {expandedSections['baseMap'] && (
-    <div className="mt-2 pl-6 text-xs space-y-2">
-      <div className="grid grid-cols-2 gap-2 mt-2">
-        {mapStyles.map(style => (
-          <button
-            key={style.id}
-            onClick={() => handleMapViewChange(style.id)}
-            className={`px-2 py-1 text-xs rounded ${
-              currentMapView === style.id 
-                ? 'bg-[#008080] text-white font-medium' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            {style.name}
-          </button>
-        ))}
-      </div>
-    </div>
-  )}
-</div>
-
-<div className="border-t border-gray-200 pt-3 first:border-none first:pt-0 mb-4">
-  <div className="flex justify-between items-center">
-    <label className="flex items-center space-x-2 text-sm font-medium text-[#2C3E50]">
-      <span>Drawn Shapes</span>
-    </label>
-    <button 
-      onClick={() => toggleSection('drawnShapes')}
-      className="text-gray-500 hover:text-gray-700"
-    >
-      {expandedSections['drawnShapes'] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-    </button>
-  </div>
-
-  {expandedSections['drawnShapes'] && (
-  <div className="mt-2 pl-6 text-xs space-y-2">
-    {drawnLayersOrder && drawnLayersOrder.length > 0 ? (
-      drawnLayersOrder.map(layerId => {
-        const layer = drawnLayers[layerId];
-        if (!layer) return null;
-        
-        return (
-          <div key={layerId} className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                checked={layer.visible}
-                onChange={() => toggleDrawnLayer(layerId)}
-                className="mr-2 h-3 w-3"
-              />
-              <span className="text-xs text-gray-600">{layer.name}</span>
-            </div>
-            <input
-              type="color"
-              value={layer.color || '#008080'}
-              onChange={(e) => updateDrawnLayerColor(layerId, e.target.value)}
-              className="w-6 h-4 border rounded cursor-pointer"
-            />
-          </div>
-        );
-      })
-    ) : (
-      <div className="text-xs text-gray-500 italic">No shapes drawn yet</div>
-    )}
-  </div>
-)}
-</div>
         {layerOrder.map((layerId, index) => {
           const section = layerConfig[layerId];
           if (!section) return null;
@@ -322,12 +328,9 @@ useEffect(() => {
     className="text-sm font-medium text-[#2C3E50] bg-transparent border-b border-gray-300 focus:outline-none focus:border-[#008080] w-full"
   />
 ) : (
-  <span
-    onDoubleClick={() => setEditingLayerId(layerId)}
-    className="text-sm font-medium text-[#2C3E50] cursor-text"
-  >
-    {customLayerNames[layerId] || section.name}
-  </span>
+  <span className="text-sm font-medium text-[#2C3E50] cursor-text break-words">
+  {customLayerNames[layerId] || section.name}
+</span>
 )}
 
                 </label>
@@ -395,6 +398,99 @@ useEffect(() => {
             </div>
           );
         })}
+{drawnLayersOrder && drawnLayersOrder.length > 0 && (
+
+<div className="border-t border-gray-200 pt-3 first:border-none first:pt-0 mb-4">
+  <div className="flex justify-between items-center">
+    <label className="flex items-center space-x-2 text-sm font-medium text-[#2C3E50]">
+      <span>Drawn Shapes</span>
+    </label>
+    <button 
+      onClick={() => toggleSection('drawnShapes')}
+      className="text-gray-500 hover:text-gray-700"
+    >
+      {expandedSections['drawnShapes'] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+    </button>
+  </div>
+
+  {expandedSections['drawnShapes'] && (
+  <div className="mt-2 pl-6 text-xs space-y-2">
+    {drawnLayersOrder && drawnLayersOrder.length > 0 ? (
+      drawnLayersOrder.map(layerId => {
+        const layer = drawnLayers[layerId];
+        if (!layer) return null;
+        
+        return (
+          <div key={layerId} className="flex items-center justify-between">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                checked={layer.visible}
+                onChange={() => toggleDrawnLayer(layerId)}
+                className="mr-2 h-3 w-3"
+              />
+              <span className="text-xs text-gray-600">{layer.name}</span>
+            </div>
+            <input
+              type="color"
+              value={layer.color || '#008080'}
+              onChange={(e) => updateDrawnLayerColor(layerId, e.target.value)}
+              className="w-6 h-4 border rounded cursor-pointer"
+            />
+          </div>
+        );
+      })
+    ) : (
+      <div className="text-xs text-gray-500 italic">No shapes drawn yet</div>
+    )}
+  </div>
+)}
+</div>
+)}
+           {/* Base Map Section */}
+<div className="border-t border-gray-200 pt-3 first:border-none first:pt-0 mb-4">
+  <div className="flex justify-between items-center">
+    <label className="flex items-center space-x-2 text-sm font-medium text-[#2C3E50]">
+      <input
+        type="checkbox"
+        checked={baseMapVisible}
+        onChange={() => {
+          const newState = !baseMapVisible;
+          setBaseMapVisible(newState);
+          toggleBaseMap(newState);
+        }}
+        className="cursor-pointer"
+      />
+      <span>Base Map</span>
+    </label>
+    <button 
+      onClick={() => toggleSection('baseMap')}
+      className="text-gray-500 hover:text-gray-700"
+    >
+      {expandedSections['baseMap'] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+    </button>
+  </div>
+
+  {expandedSections['baseMap'] && (
+    <div className="mt-2 pl-6 text-xs space-y-2">
+      <div className="grid grid-cols-2 gap-2 mt-2">
+        {mapStyles.map(style => (
+          <button
+            key={style.id}
+            onClick={() => handleMapViewChange(style.id)}
+            className={`px-2 py-1 text-xs rounded ${
+              currentMapView === style.id 
+                ? 'bg-[#008080] text-white font-medium' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {style.name}
+          </button>
+        ))}
+      </div>
+    </div>
+  )}
+</div>
       </div>
       
       <style jsx>{`

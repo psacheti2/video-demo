@@ -22,10 +22,11 @@ export interface Artifact {
 
 export interface ChatMessageType {
   text: string;
-  file?: string | null;
+  file?: File | string | null;  
   isUser: boolean;
   artifacts?: Artifact[];
   id: string;
+  feedback?: 'like' | 'dislike' | null;
 }
 
 export default function Home() {
@@ -62,44 +63,63 @@ export default function Home() {
     }
   }, []);
 
-  const loadConversation = (id: string) => {
-    if (typeof window === 'undefined') return; // Guard against SSR
-    
-    isReloading.current = true;
-    const stored = JSON.parse(localStorage.getItem('conversations') || '{}');
-    const convo = stored[id];
-    if (convo) {
-      const messages: ChatMessageType[] = convo.messages.map((msg: ChatMessageType) => ({
-        ...msg,
-        id: msg.id.startsWith('loaded_') ? msg.id : `loaded_${msg.id}`
-      })) || [];
-      const allArtifacts: Artifact[] = [];
-      messages.forEach((msg) => {
-        if (msg.artifacts && msg.artifacts.length > 0) {
-          allArtifacts.push(...msg.artifacts);
-        }
-      });
 
-      setMessages(messages);
-      setArtifacts(allArtifacts);
-      setSelectedArtifact(null); 
-      setArtifactsPanelWidth(0); 
-      setConversationId(id);
-      localStorage.setItem('activeConversationId', id);
-      setIsNewConversation(false);
-      prevArtifactsLength.current = allArtifacts.length;
-      setLastMessageId(prev => prev || `loaded_${id}`);
-      if (pendingSelectedArtifact) {
-        setTimeout(() => {
-          setSelectedArtifact(pendingSelectedArtifact);
-          setPendingSelectedArtifact(null);
-        }, 50); 
+const loadConversation = (id: string) => {
+  if (typeof window === 'undefined') return; // Guard against SSR
+  
+  isReloading.current = true;
+  const stored = JSON.parse(localStorage.getItem('conversations') || '{}');
+  const convo = stored[id];
+  if (convo) {
+    // Process messages to handle file metadata
+    const messages: ChatMessageType[] = convo.messages.map((msg: any) => {
+      // Create a copy of the message
+      const processedMsg = { ...msg };
+      
+      // Check if the file is our metadata string format
+      if (typeof processedMsg.file === 'string' && processedMsg.file.startsWith('FILE_METADATA:')) {
+        // Extract just the filename from our metadata format
+        const parts = processedMsg.file.split(':');
+        if (parts.length >= 2) {
+          processedMsg.file = parts[1]; // Just use the filename for display
+        }
       }
+      
+      // Add the loaded_ prefix to message IDs
+      processedMsg.id = processedMsg.id.startsWith('loaded_') 
+        ? processedMsg.id 
+        : `loaded_${processedMsg.id}`;
+        
+      return processedMsg;
+    }) || [];
+    
+    const allArtifacts: Artifact[] = [];
+    messages.forEach((msg) => {
+      if (msg.artifacts && msg.artifacts.length > 0) {
+        allArtifacts.push(...msg.artifacts);
+      }
+    });
+
+    setMessages(messages);
+    setArtifacts(allArtifacts);
+    setSelectedArtifact(null); 
+    setArtifactsPanelWidth(0); 
+    setConversationId(id);
+    localStorage.setItem('activeConversationId', id);
+    setIsNewConversation(false);
+    prevArtifactsLength.current = allArtifacts.length;
+    setLastMessageId(prev => prev || `loaded_${id}`);
+    if (pendingSelectedArtifact) {
+      setTimeout(() => {
+        setSelectedArtifact(pendingSelectedArtifact);
+        setPendingSelectedArtifact(null);
+      }, 50); 
     }
-    setTimeout(() => {
-      isReloading.current = false;
-    }, 500);
-  };
+  }
+  setTimeout(() => {
+    isReloading.current = false;
+  }, 500);
+};
 
   // Update localStorage only on client side
   useEffect(() => {
@@ -112,17 +132,35 @@ export default function Home() {
     setArtifacts(prev => [...prev, artifact]);
   };
 
-  const saveConversationToLocalStorage = (id: string, messages: ChatMessageType[], artifacts: Artifact[]) => {
-    if (typeof window === 'undefined') return; // Guard against SSR
+
+const saveConversationToLocalStorage = (id: string, messages: ChatMessageType[], artifacts: Artifact[]) => {
+  if (typeof window === 'undefined') return; // Guard against SSR
+  
+  // We need to serialize the messages for localStorage
+  // File objects can't be serialized directly, so we'll replace them with string metadata
+  const serializableMessages = messages.map(message => {
+    // Create a new object to avoid mutating the original
+    const serializableMessage = { ...message };
     
-    const allConversations = JSON.parse(localStorage.getItem('conversations') || '{}');
-    allConversations[id] = {
-      messages,
-      artifacts,
-      lastUpdated: new Date().toISOString(),
-    };
-    localStorage.setItem('conversations', JSON.stringify(allConversations));
+    // If file is a File object, replace it with a string representation
+    if (serializableMessage.file && typeof serializableMessage.file === 'object' && serializableMessage.file instanceof File) {
+      // Replace File object with a string in format "FILE_METADATA:name:type:size"
+      // This way we maintain type compatibility with string | null
+      const fileMetadata = `FILE_METADATA:${serializableMessage.file.name}:${serializableMessage.file.type}:${serializableMessage.file.size}`;
+      serializableMessage.file = fileMetadata;
+    }
+    
+    return serializableMessage;
+  });
+  
+  const allConversations = JSON.parse(localStorage.getItem('conversations') || '{}');
+  allConversations[id] = {
+    messages: serializableMessages,
+    artifacts,
+    lastUpdated: new Date().toISOString(),
   };
+  localStorage.setItem('conversations', JSON.stringify(allConversations));
+};
 
   const startNewConversation = () => {
     const isEmpty =
@@ -144,79 +182,102 @@ export default function Home() {
     }
   };
   
-  const handleSendMessage = async ({ text, file }: { text: string, file: string | null }) => {
-    if (isNewConversation) {
-      setIsNewConversation(false);
-    }
-    
-    const userMessageId = `user_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-    const userMessage: ChatMessageType = { 
-      text, 
-      file, 
-      isUser: true, 
-      id: userMessageId 
-    };
-    
-    setMessages(prev => [...prev, userMessage]);
-    setIsLoading(true);
-    prevArtifactsLength.current = artifacts.length;
-    
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text }),
-      });
-    
-      if (!response.ok) throw new Error('Failed to get response');
-    
-      const data = await response.json();
-      const assistantMessageId = `assistant_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-    
-      const botMessage: ChatMessageType = {
-        text: data.text,
-        isUser: false,
-        id: assistantMessageId,
-      };
-    
-      if (data.artifacts && data.artifacts.length > 0) {
-        botMessage.artifacts = data.artifacts;
-        data.artifacts.forEach((artifact: Artifact, index: number) => {
-          addArtifact(artifact);
-          // Select the first new artifact immediately
-          if (index === 0) {
-            setSelectedArtifact(artifact);
-            if (artifactsPanelWidth === 0) {
-              setArtifactsPanelWidth(40); // Open panel if closed
-            }
-          }
-        });
-      }
-      const updatedMessages = [...messages, userMessage, botMessage];
-      const updatedArtifacts = [...artifacts];
-    
-      setMessages(updatedMessages);
-      saveConversationToLocalStorage(conversationId, updatedMessages, updatedArtifacts);
-      setRefreshSidebarKey(prev => prev + 1);
-      setLastMessageId(assistantMessageId);
-    
-    } catch (error) {
-      console.error('Error sending message:', error);
-      
-      const errorMessageId = `error_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-      
-      setMessages(prev => [...prev, {
-        text: "Sorry, I encountered an error. Please try again.",
-        isUser: false,
-        id: errorMessageId
-      }]);
-      
-      setLastMessageId(errorMessageId);
-      
-    } finally {
-      setIsLoading(false);
-    }
+
+const handleSendMessage = async ({ text, file }: { text: string, file: File | string | null }) => {
+  if (isNewConversation) {
+    setIsNewConversation(false);
+  }
+  
+  const userMessageId = `user_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+  const userMessage: ChatMessageType = { 
+    text, 
+    file, // Pass the file object or string directly 
+    isUser: true, 
+    id: userMessageId 
   };
+  
+  setMessages(prev => [...prev, userMessage]);
+  setIsLoading(true);
+  prevArtifactsLength.current = artifacts.length;
+  
+  try {
+    // For API calls, we need to handle File objects differently
+    // If file is a File object, we may need to extract metadata
+    let fileInfo = null;
+    if (file) {
+      if (typeof file === 'object' && file instanceof File) {
+        // For API JSON, just pass file metadata
+        fileInfo = {
+          name: file.name,
+          type: file.type,
+          size: file.size
+        };
+      } else {
+        // If it's a string, pass it directly
+        fileInfo = file;
+      }
+    }
+    
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        message: text,
+        fileInfo: fileInfo
+      }),
+    });
+  
+    if (!response.ok) throw new Error('Failed to get response');
+  
+    const data = await response.json();
+    const assistantMessageId = `assistant_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+  
+    const botMessage: ChatMessageType = {
+      text: data.text,
+      isUser: false,
+      id: assistantMessageId,
+    };
+  
+    if (data.artifacts && data.artifacts.length > 0) {
+      botMessage.artifacts = data.artifacts;
+      data.artifacts.forEach((artifact: Artifact, index: number) => {
+        addArtifact(artifact);
+        // Select the first new artifact immediately
+        if (index === 0) {
+          setSelectedArtifact(artifact);
+          if (artifactsPanelWidth === 0) {
+            setArtifactsPanelWidth(60); 
+          }
+        }
+      });
+    }
+    
+    const updatedMessages = [...messages, userMessage, botMessage];
+    
+    setMessages(updatedMessages);
+    saveConversationToLocalStorage(conversationId, updatedMessages, artifacts);
+    setRefreshSidebarKey(prev => prev + 1);
+    setLastMessageId(assistantMessageId);
+  
+  } catch (error) {
+    console.error('Error sending message:', error);
+    
+    const errorMessageId = `error_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    
+    setMessages(prev => [...prev, {
+      text: "Sorry, I encountered an error. Please try again.",
+      isUser: false,
+      id: errorMessageId
+    }]);
+    
+    setLastMessageId(errorMessageId);
+    
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+  
 
   const toggleSidebar = () => {
     setShowSidebar(prev => !prev);
@@ -229,7 +290,24 @@ export default function Home() {
     Icon: React.ElementType;
     position: 'left' | 'right';
   }
+// Add proper TypeScript type definitions for your handler functions
+const handleUpdateArtifact = (artifactId: string, updatedData: Partial<Artifact>) => {
+  // Update the artifact in savedArtifacts state
+  setSavedArtifacts(prev => 
+    prev.map(artifact => 
+      artifact.id === artifactId 
+        ? { ...artifact, ...updatedData } 
+        : artifact
+    )
+  );
+};
 
+const handleDeleteArtifact = (artifactId: string) => {
+  // Remove the artifact from savedArtifacts state
+  setSavedArtifacts(prev => 
+    prev.filter(artifact => artifact.id !== artifactId)
+  );
+};
   const handleArtifactSelect = (artifact: Artifact) => {
     console.log('Selected artifact:', artifact);
     setSelectedArtifact(artifact);
@@ -239,7 +317,7 @@ export default function Home() {
     }
   
     if (artifactsPanelWidth === 0) {
-      setArtifactsPanelWidth(40);
+      setArtifactsPanelWidth(60);
     }
   };
   
@@ -350,6 +428,8 @@ export default function Home() {
         savedArtifacts={savedArtifacts}
         setModalArtifact={setModalArtifact}
         activeChatId={conversationId}
+        onUpdateArtifact={handleUpdateArtifact}
+  onDeleteArtifact={handleDeleteArtifact}
       />
       
       <Navbar

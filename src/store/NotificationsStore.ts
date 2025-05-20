@@ -12,9 +12,11 @@ interface NotificationStore {
     notifications: Notification[];
     addNotification: (message: string) => void;
     markAllAsRead: () => void;
-    clearAllNotifications: () => void; // ✅ new
+    clearAllNotifications: () => void; 
+    removeNotification: (id: number) => void; 
   }
   let idCounter = 0;
+  
 
   export const useNotificationStore = create<NotificationStore>((set) => ({
     notifications: [],
@@ -30,6 +32,9 @@ interface NotificationStore {
         notifications: state.notifications.map((n) => ({ ...n, read: true }))
       })),
     clearAllNotifications: () =>
-      set({ notifications: [] }) // ✅ clear all
+      set({ notifications: [] }),
+    removeNotification: (id) =>
+      set((state) => ({
+        notifications: state.notifications.filter((n) => n.id !== id)
+      }))
   }));
-  

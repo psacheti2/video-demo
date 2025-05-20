@@ -28,7 +28,7 @@ interface ChatWindowProps {
   messages: ChatMessageType[];
   setMessages: React.Dispatch<React.SetStateAction<ChatMessageType[]>>;
   isLoading: boolean;
-  onSendMessage: ({ text, file }: { text: string, file: string | null }) => Promise<void>;
+  onSendMessage: ({ text, file }: { text: string, file: File | string | null }) => Promise<void>; // Updated
   isCentered?: boolean;
   sidebarOpen: boolean;
   setSidebarOpen?: React.Dispatch<React.SetStateAction<boolean>>;
@@ -51,7 +51,18 @@ export default function ChatWindow({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-
+  
+  const handleFeedback = (messageId: string, feedbackType: 'like' | 'dislike' | null) => {
+    // Update the message with the feedback
+    setMessages(prevMessages => 
+      prevMessages.map(msg => 
+        msg.id === messageId ? { ...msg, feedback: feedbackType } : msg
+      )
+    );
+    
+    // You can also send the feedback to your backend here if needed
+    console.log(`Message ${messageId} received ${feedbackType} feedback`);
+  };
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -134,6 +145,7 @@ useEffect(() => {
         isUser={message.isUser}
         isReloading={isReloading?.current || false} 
         onArtifactClick={(artifact: Artifact) => setSelectedArtifact(artifact)}
+        onFeedback={handleFeedback} 
       />
     ))}
     {isLoading && (

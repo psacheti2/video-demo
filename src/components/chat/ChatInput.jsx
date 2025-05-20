@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { Upload, X, SendHorizontal} from 'lucide-react';
+import { Upload, X, SendHorizontal, Eye, File } from 'lucide-react';
+import FilePreviewModal from '../FilePreviewModal';
 
 export default function ChatInput({ onSendMessage }) {
   const [message, setMessage] = useState('');
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
   const textareaRef = useRef(null);
 
   // Auto-resize textarea based on content
@@ -21,7 +23,7 @@ export default function ChatInput({ onSendMessage }) {
     if (message.trim() || uploadedFile) {
       const messagePayload = {
         text: message,
-        file: uploadedFile ? uploadedFile.name : null,
+        file: uploadedFile // Pass the actual file object
       };
       onSendMessage(messagePayload);
       setMessage('');
@@ -54,59 +56,81 @@ export default function ChatInput({ onSendMessage }) {
     }
   };
 
+  const getFileIcon = (fileType) => {
+    if (fileType.startsWith('image/')) {
+      // Only create the thumbnail if we have a valid file
+      try {
+        return (
+          <img 
+            src={URL.createObjectURL(uploadedFile)} 
+            alt="Thumbnail" 
+            className="h-5 w-5 object-cover rounded" 
+          />
+        );
+      } catch (err) {
+        // Fallback to File icon if there's an error with thumbnailing
+        return <File className="h-5 w-5 text-[#006666]" />;
+      }
+    }
+    return <File className="h-5 w-5 text-[#006666]" />;
+  };
+
   return (
     <div className="bg-white/20 p-4">
       <form onSubmit={handleSubmit}>
-      <div className="flex items-center gap-2">
-  {/* Textarea container with full height and vertical centering */}
-  <div className="flex-1 h-full rounded-lg border border-gray-300 bg-white flex items-center px-4 py-2">
-    <textarea
-      ref={textareaRef}
-      value={message}
-      onChange={(e) => setMessage(e.target.value)}
-      onKeyDown={handleKeyDown}
-      placeholder="Ask NeuraCities..."
-      className="w-full resize-none focus:outline-none placeholder-gray-400 pt-1"
-      rows={1}
-      style={{ lineHeight: '1.5rem' }}
-    />
-  </div>
+        <div className="flex items-center gap-2">
+          {/* Textarea container with full height and vertical centering */}
+          <div className="flex-1 h-full rounded-lg border border-gray-300 bg-white flex items-center px-4 py-2">
+            <textarea
+              ref={textareaRef}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask NeuraCities..."
+              className="w-full resize-none focus:outline-none placeholder-gray-400 pt-1"
+              rows={1}
+              style={{ lineHeight: '1.5rem' }}
+            />
+          </div>
 
-  {/* Vertically centered send button */}
-  <button
-    type="submit"
-    className="self-center p-2 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors tooltip-bottom"
-    data-tooltip="Send"
-  >
-    <SendHorizontal className="h-4 w-4 text-[#008080] group-hover:text-white" />
-  </button>
-</div>
-
-
+          {/* Vertically centered send button */}
+          <button
+            type="submit"
+            className="self-center p-2 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors tooltip-bottom"
+            data-tooltip="Send"
+          >
+            <SendHorizontal className="h-4 w-4 text-[#008080] group-hover:text-white" />
+          </button>
+        </div>
 
         {uploadedFile && (
-          <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-[#f0fdfa] border-2 border-[#008080] rounded-2xl shadow-sm max-w-xs">
-            <div className="flex items-center gap-2 text-sm font-medium text-[#006666] truncate">
-              <span className="truncate">{uploadedFile.name}</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setUploadedFile(null)}
-              className="hover:text-red-500 text-[#008080] transition"
-              data-tooltip="Remove file"
-            >
-              <X size={16} />
-            </button>
-          </div>
-        )}
+          <div 
+  className="mt-2 inline-flex items-center px-2 py-1 bg-[#f0fdfa] border border-[#00b3b3] rounded-md shadow-sm cursor-pointer hover:bg-[#dffff9] transition-colors"
+  onClick={() => setShowPreview(true)}
+>
+  <span className="text-xs font-medium text-[#007777] truncate max-w-[120px]">{uploadedFile.name}</span>
+  <button
+    type="button"
+    onClick={(e) => {
+      e.stopPropagation();
+      setUploadedFile(null);
+    }}
+    className="p-1 ml-1 rounded-full hover:text-red-500 text-[#008080] transition"
+    data-tooltip="Remove file"
+  >
+    <X size={14} />
+  </button>
+</div> 
+)}
+        
         <div className="flex justify-between mt-2 items-center">
           <label htmlFor="file-upload" className="cursor-pointer">
-          <div 
-  className="p-2 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors tooltip-right" 
-  data-tooltip="Upload file"
->
-  <Upload className="h-4 w-4 text-[#008080] group-hover:text-white" />
-</div>
+            <div 
+              className="p-2 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors tooltip-right" 
+              data-tooltip="Upload file"
+            >
+              <Upload className="h-4 w-4 text-[#008080] group-hover:text-white" />
+            </div>
             <input
               id="file-upload"
               type="file"
@@ -120,6 +144,14 @@ export default function ChatInput({ onSendMessage }) {
           </div>
         </div>
       </form>
+      
+      {/* File Preview Modal */}
+      {showPreview && uploadedFile && (
+        <FilePreviewModal 
+          file={uploadedFile} 
+          onClose={() => setShowPreview(false)} 
+        />
+      )}
     </div>
   );
 }

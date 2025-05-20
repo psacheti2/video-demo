@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
 import { Maximize2, X, Info, Share2, BookmarkPlus, ArrowLeft, Palette,  } from 'lucide-react';
-
+import ShareDialog from '../ShareDialog'
 // Color scheme for charts
 const COLORS = {
   primary: '#2C3E50',
@@ -478,127 +478,25 @@ const renderBreakEvenLineChart = () => {
 
       
 
-      {/* Share Dialog */}
-      {showShareDialog && (
-        <div className="absolute bottom-4 right-4 z-[1000]">
-          <div className="bg-white w-[300px] rounded-xl shadow-xl p-6 border border-gray-200 relative">
-            <button
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
-              onClick={() => setShowShareDialog(false)}
-            >
-              <X size={16} />
-            </button>
-
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Share This Analysis</h2>
-
-            <div className="mb-4">
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Search Teammate</label>
-              <input
-                type="text"
-                placeholder="Type a name..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-[#008080] focus:outline-none"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-
-            <div className="max-h-48 overflow-y-auto mb-4 space-y-1">
-              {teammateList.filter(name =>
-                name.toLowerCase().includes(searchTerm.toLowerCase())
-              ).map(teammate => (
-                <div
-                  key={teammate}
-                  onClick={() => setSelectedTeammate(teammate)}
-                  className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 border 
-                    ${selectedTeammate === teammate
-                      ? 'bg-[#008080]/10 border-[#008080]'
-                      : 'bg-white hover:bg-gray-50 border-gray-200'}
-                  `}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 rounded-full bg-[#008080]/90 text-white text-sm font-semibold flex items-center justify-center shadow-sm">
-                      {teammate.split(' ').map(n => n[0]).join('').toUpperCase()}
-                    </div>
-                    <span className="text-sm text-gray-800 font-medium">{teammate}</span>
-                  </div>
-                  {selectedTeammate === teammate && (
-                    <span className="text-xs font-medium text-[#008080]">✓ Selected</span>
-                  )}
-                </div>
-              ))}
-              {teammateList.filter(name =>
-                name.toLowerCase().includes(searchTerm.toLowerCase())
-              ).length === 0 && (
-                <div className="text-sm text-gray-500 text-center py-3">No teammates found</div>
-              )}
-            </div>
-
-            <button
-              disabled={!selectedTeammate}
-              onClick={() => {
-                setShowShareDialog(false);
-                const msg = `ROI Analysis shared with ${selectedTeammate}`;
-                addNotification(msg);
-              }}
-              className={`w-full py-2 rounded-md text-sm font-semibold transition-all duration-200
-                ${selectedTeammate
-                  ? 'bg-[#008080] text-white hover:bg-teal-700'
-                  : 'bg-gray-200 text-gray-500 cursor-not-allowed'}
-              `}
-            >
-              Share Analysis
-            </button>
-
-            {/* Divider */}
-            <div className="border-t border-gray-200 mb-6 mt-4" />
-
-            {/* Download Section */}
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Download This Chart</h3>
-
-            <div className="flex space-x-2 mb-3">
-              <input
-                type="text"
-                className="border px-3 py-2 rounded-lg w-[160px] text-sm focus:outline-none focus:ring-2 focus:ring-[#008080]"
-                value={downloadSelections['chart']?.filename || 'coffee_shop_roi'}
-                onChange={(e) =>
-                  setDownloadSelections(prev => ({
-                    ...prev,
-                    chart: {
-                      filename: e.target.value,
-                      format: prev['chart']?.format || '.jpg'
-                    }
-                  }))
-                }
-                placeholder="File name"
-              />
-              <select
-                value={downloadSelections['chart']?.format || '.jpg'}
-                onChange={(e) =>
-                  setDownloadSelections(prev => ({
-                    ...prev,
-                    chart: {
-                      filename: prev['chart']?.filename || 'coffee_shop_roi',
-                      format: e.target.value
-                    }
-                  }))
-                }
-                className="border px-2 py-2 rounded-lg text-sm focus:outline-none"
-              >
-                <option value=".jpg">.jpg</option>
-                <option value=".png">.png</option>
-                <option value=".pdf">.pdf</option>
-              </select>
-            </div>
-
-            <button
-              onClick={handleDownloadChart}
-              className="w-full py-2 rounded-md text-sm font-semibold bg-[#008080] text-white hover:bg-teal-700"
-            >
-              Download Chart
-            </button>
-          </div>
-        </div>
-      )}
+{showShareDialog && (
+  <ShareDialog
+    isOpen={showShareDialog}
+    onClose={() => setShowShareDialog(false)}
+    onShare={(teammates) => {
+      setShowShareDialog(false);
+      const msg = `Map shared with ${teammates.length} teammate${teammates.length > 1 ? 's' : ''}: ${teammates.join(', ')}`;
+      setNotificationMessage(msg);
+      setShowEmailNotification(true);
+      addNotification(msg);
+    }}
+    onShowDownloader={() => setShowMapDownloader(true)}
+    title="Share This Map"
+    position={{ 
+      bottom: isFullscreen ? '80px' : '60px', 
+      right: '16px' 
+    }}
+  />
+)}
 
       {/* Palette Dialog */}
       {showPaletteDialog && (

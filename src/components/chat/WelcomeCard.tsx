@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Upload, FileText, SendHorizontal } from 'lucide-react';
-
+import { Upload, FileText, SendHorizontal, X } from 'lucide-react';
+import FilePreviewModal from '../FilePreviewModal';
 interface Artifact {
   id: string;
   title: string;
@@ -13,7 +13,7 @@ interface Artifact {
 }
 
 interface WelcomeCardProps {
-  onSendMessage: (params: { text: string; file: string | null }) => void;
+  onSendMessage: (params: { text: string; file: File | null }) => void;
   savedArtifacts?: Artifact[];
   setModalArtifact?: (artifact: Artifact) => void;
 }
@@ -26,6 +26,7 @@ export default function WelcomeCard({
   const [message, setMessage] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [showFilePreview, setShowFilePreview] = useState(false);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -39,7 +40,7 @@ export default function WelcomeCard({
     if (message.trim() || uploadedFile) {
       onSendMessage({
         text: message,
-        file: uploadedFile ? uploadedFile.name : null,
+        file: uploadedFile, // Pass the entire file object
       });
       setMessage('');
       setUploadedFile(null);
@@ -93,12 +94,32 @@ export default function WelcomeCard({
           </div>
 
           {/* Uploaded File Preview */}
-          {uploadedFile && (
-            <div className="flex items-center gap-2 p-2 px-4 rounded-xl bg-[#e6fffa] border border-[#008080] text-sm text-[#004d40] shadow-inner transition">
-              <FileText className="w-4 h-4" />
-              <span className="truncate">{uploadedFile.name}</span>
-            </div>
-          )}
+{uploadedFile && (
+  <>
+   <div 
+  className="inline-flex items-center px-2 py-1 bg-[#f0fdfa] border border-[#00b3b3] rounded-md shadow-sm cursor-pointer hover:bg-[#dffff9] transition-colors"
+  onClick={() => setShowFilePreview(true)}
+>
+  <span className="text-xs font-medium text-[#007777] truncate max-w-[120px]">{uploadedFile.name}</span>
+  <button
+    type="button"
+    onClick={(e) => {
+      e.stopPropagation();
+      setUploadedFile(null);
+    }}
+    className="p-1 ml-1 rounded-full hover:text-red-500 text-[#008080] transition"
+  >
+    <X size={14} />
+  </button>
+</div>
+    {showFilePreview && (
+      <FilePreviewModal 
+        file={uploadedFile} 
+        onClose={() => setShowFilePreview(false)} 
+      />
+    )}
+  </>
+)}
 
           {/* Upload Button and Disclaimer */}
           <div className="flex justify-between items-center">

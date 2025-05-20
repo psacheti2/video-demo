@@ -14,7 +14,7 @@ const TextToolbar = ({
   const [fontMenuOpen, setFontMenuOpen] = useState(false);
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [fontSizeDropdownOpen, setFontSizeDropdownOpen] = useState(false);
-
+  
   // Default text format values
   const {
     fontFamily = 'Arial, sans-serif',
@@ -26,6 +26,11 @@ const TextToolbar = ({
     color = '#000000'
   } = currentTextFormat;
   
+  const [tempFontSize, setTempFontSize] = useState(fontSize);
+
+  useEffect(() => {
+    setTempFontSize(fontSize); // sync when fontSize changes elsewhere
+  }, [fontSize]);
   // Font options
   const fontOptions = [
     { name: 'Arial', value: 'Arial, sans-serif' },
@@ -107,24 +112,6 @@ const TextToolbar = ({
 </div>
 
 
-  {/* Group 2: Align */}
-  <div className="flex gap-1 items-center border-r border-gray-300 pr-2">
-    {[AlignLeft, AlignCenter, AlignRight].map((Icon, idx) => {
-      const align = ['left', 'center', 'right'][idx];
-      return (
-        <button
-          key={align}
-          onClick={() => handleToggle('textAlign', align)}
-          className={`p-1.5 rounded-full border text-[#008080] text-[10px] border-[#008080] transition hover:bg-[#008080] hover:text-white ${
-            textAlign === align ? 'bg-[#008080] text-white' : ''
-          }`}
-        >
-          <Icon size={14} />
-        </button>
-      );
-    })}
-  </div>
-
   {/* Group 3: Font Family + Font Size + Color */}
   <div className="flex gap-1 items-center border-r border-gray-300 pr-2">
     {/* Font Family Dropdown */}
@@ -159,43 +146,99 @@ const TextToolbar = ({
         </div>
       )}
     </div>
+{/* Font Size Input & Dropdown */}
+<div className="relative flex items-center gap-1">
+<input
+  type="number"
+  value={tempFontSize}
+  onChange={(e) => {
+    // Store what user is typing — don't apply yet
+    setTempFontSize(e.target.value);
+  }}
+  onInput={(e) => {
+    const inputType = e.nativeEvent?.inputType;
+    const num = parseInt(e.target.value);
+  
+    // Handle arrow keys or spinner clicks only
+    if (
+      inputType === 'insertReplacementText' || 
+      inputType === 'insertText' ||           
+      inputType === 'deleteContentBackward' || 
+      inputType === 'deleteContentForward'
+    ) {
+      // DO NOTHING – user is typing or deleting
+      return;
+    }
+  
+    // For spinner/arrow click changes
+    if (!isNaN(num) && num > 0) {
+      handleToggle('fontSize', num);
+    }
+  }}
+  
+  onKeyDown={(e) => {
+    if (e.key === 'Enter') {
+      const num = parseInt(tempFontSize);
+      if (!isNaN(num) && num > 0) {
+        handleToggle('fontSize', num);
+      }
+    } else if (e.key === 'Escape') {
+      setTempFontSize(fontSize);
+    }
+  }}
+  onBlur={() => {
+    const num = parseInt(tempFontSize);
+    if (!isNaN(num) && num > 0) {
+      handleToggle('fontSize', num);
+    } else {
+      setTempFontSize(fontSize);
+    }
+  }}
+  min="8"
+  max="200"
+  className="w-[60px] px-2 py-1 rounded border border-[#008080] text-[#008080] text-xs focus:outline-none focus:ring-2 focus:ring-[#008080]"
+/>
 
-    {/* Font Size Dropdown */}
-    <div className="relative">
-      <button
-        onClick={() => {
-          setFontMenuOpen(false);
-          setColorMenuOpen(false);
-          setFontSizeDropdownOpen(prev => !prev);
-        }}
-        className="flex items-center px-2 py-1 rounded border border-[#008080] text-[#008080] text-xs hover:bg-[#008080] hover:text-white"
-      >
-        A <ChevronDown size={12} className="ml-1" />
-      </button>
-      {fontSizeDropdownOpen && (
-        <div className="absolute left-0 mt-1 z-30 bg-white border border-gray-200 rounded shadow max-h-40 overflow-auto w-24 text-xs">
-          {[12, 14, 16, 18, 20, 24, 28, 32, 48, 72, 96, 120].map(size => (
-            <button
-              key={size}
-              onClick={() => {
-                handleToggle('fontSize', size);
-                setFontSizeDropdownOpen(false);
-              }}
-              className="w-full px-2 py-1 text-left hover:bg-[#008080] hover:text-white"
-            >
-              {size}px
-            </button>
-          ))}
-        </div>
-      )}
+
+  <button
+    onClick={() => {
+      setFontMenuOpen(false);
+      setColorMenuOpen(false);
+      setFontSizeDropdownOpen(prev => !prev);
+    }}
+    className="px-2 py-1 rounded border border-[#008080] text-[#008080] text-xs hover:bg-[#008080] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#008080]"
+    title="Quick Font Sizes"
+  >
+    <ChevronDown size={12} />
+  </button>
+
+  {fontSizeDropdownOpen && (
+    <div className="absolute left-0 top-10 z-30 bg-white border border-gray-200 rounded shadow max-h-40 overflow-auto w-24 text-xs">
+      {[12, 14, 16, 18, 20, 24, 28, 32, 48, 72, 96, 120].map(size => (
+        <button
+          key={size}
+          onClick={() => {
+            setTempFontSize(size);
+            handleToggle('fontSize', size);
+            setFontSizeDropdownOpen(false);
+          }}
+          className={`w-full px-2 py-1 text-left hover:bg-[#008080] hover:text-white ${
+            parseInt(tempFontSize) === size ? 'bg-[#008080] text-white' : ''
+          }`}
+        >
+          {size}px
+        </button>
+      ))}
     </div>
+  )}
+</div>
 
-    {/* Color Picker */}
+
     <label
       className="flex items-center px-2 py-1 rounded border border-[#008080] text-[#008080] text-xs cursor-pointer hover:bg-[#008080] hover:text-white transition"
       style={{ position: 'relative' }}
     >
-      <Palette size={12} className="mr-1" />
+      <Palette size={14} className="mr-1" />
       <input
         type="color"
         value={color}

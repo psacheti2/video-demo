@@ -1,19 +1,34 @@
-import { useState } from 'react';
-import { Search, Bell, Plus, PanelRight } from 'lucide-react';
+import { useState, useRef, useEffect  } from 'react';
+import { Search, Bell, Plus, PanelRight, X } from 'lucide-react';
 import { useNotificationStore } from '@/store/NotificationsStore';
 
 export default function Navbar({ onToggleSidebar, sidebarOpen, onStartNewChat }) {
-  const { notifications, markAllAsRead, clearAllNotifications } = useNotificationStore();
+  const { notifications, markAllAsRead, clearAllNotifications, removeNotification } = useNotificationStore();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const unreadCount = notifications.filter((n) => !n.read).length;
   const [profileOpen, setProfileOpen] = useState(false);
 const toggleProfileDropdown = () => setProfileOpen(!profileOpen);
-
+const notificationRef = useRef(null);
+const profileRef = useRef(null);
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
     if (!dropdownOpen) markAllAsRead();
   };
-
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileOpen(false);
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
   return (
 <header className="sticky top-0 z-[100]  bg-transparent">
   <div
@@ -57,9 +72,9 @@ const toggleProfileDropdown = () => setProfileOpen(!profileOpen);
     {/* Controls */}
     <div className="flex items-center space-x-2 relative">
       
+    <div className="relative" ref={notificationRef}>
 
-      {/* Notifications */}
-     {/* Notifications */}
+    {/* Notifications */}
 <div className="relative">
   <button
     onClick={toggleDropdown}
@@ -68,41 +83,51 @@ const toggleProfileDropdown = () => setProfileOpen(!profileOpen);
   >
     <Bell className="h-5 w-5 text-[#008080] group-hover:text-white" />
     {unreadCount > 0 && (
-      <span className="absolute top-1/2 right-2/5 transform -translate-y-[135%] translate-x-1/2 w-2 h-2 bg-[#FF5747] rounded-full" />
-             )}
+      <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#FF5747] rounded-full" />
+    )}
   </button>
 
   {dropdownOpen && (
-    <div className="absolute right-0 mt-3 w-72 bg-white border border-gray-200 rounded-xl shadow-xl z-50 text-sm overflow-hidden animate-fade-in">
+    <div className="absolute right-0 mt-3 w-72 bg-white border border-gray-200 rounded-2xl shadow-lg z-50 text-sm overflow-hidden animate-fade-in">
+      <div className="px-4 py-3 bg-[#f0fdfa] flex justify-between items-center">
+        <span className="text-sm font-medium text-[#008080] tracking-wide">Notifications</span>
+        <button
+          onClick={clearAllNotifications}
+          className="text-xs text-[#008080] hover:text-red-500 transition font-medium"
+        >
+          Clear All
+        </button>
+      </div>
+
       {notifications.length === 0 ? (
-        <div className="p-4 text-gray-500">No notifications</div>
+        <div className="p-4 text-gray-400 text-center text-sm">No new notifications </div>
       ) : (
-        <>
-          <div className="flex justify-between items-center px-4 py-2 border-b bg-[#f0fdfa]">
-            <span className="text-xs font-semibold text-[#008080]">Notifications</span>
-            <button
-              onClick={clearAllNotifications}
-              className="text-xs text-[#008080] hover:underline hover:text-red-500 transition"
-            >
-              Clear All
-            </button>
-          </div>
-          <ul className="divide-y divide-gray-100 max-h-72 overflow-y-auto">
-            {notifications.map((n) => (
-              <li
-                key={n.id}
-                className="px-4 py-2 text-[#008080] hover:bg-[#f0fdfa] transition"
+<ul className="max-h-72 overflow-y-auto space-y-1 px-2 py-2">
+{notifications.map((n) => (
+            <li
+              key={n.id}
+              className="px-3 py-2 rounded-lg text-[#008080] hover:bg-[#f0fdfa] transition-all relative group flex items-start gap-2"
               >
-                {n.message}
-              </li>
-            ))}
-          </ul>
-        </>
+              <span className="flex-1 leading-snug">{n.message}</span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeNotification(n.id);
+                }}
+                className="opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X className="h-4 w-4 text-gray-400 hover:text-red-500" />
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   )}
 </div>
+</div>
 
+<div className="relative" ref={profileRef}>
 
       {/* Profile */}
       <div className="relative">
@@ -125,7 +150,7 @@ const toggleProfileDropdown = () => setProfileOpen(!profileOpen);
     </div>
   )}
 </div>
-
+</div>
     </div>
   </div>
 </header>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Maximize2, Minimize2, ArrowLeft } from 'lucide-react';
+import { Maximize2, Minimize2, ArrowLeft, X } from 'lucide-react';
 import InfrastructureFloodMap from '../artifacts/InfrastructureFloodMap';
 import ChartComponent from '../artifacts/ChartComponent';
 import ReportComponent from '../artifacts/ReportComponent';
@@ -240,25 +240,66 @@ useEffect(() => {
   return (
     <div className="flex flex-col h-full overflow-hidden relative">
       <div
-        className="sticky top-0 z-10 flex items-center justify-between py-4 px-3 bg-white border-t border-b border-gray-300"
-      >
-        {controlledArtifact ? (
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setControlledArtifact?.(null)}
-              className="p-1 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors"
-              aria-label="Back to List"
-            >
-              <ArrowLeft className="h-4 w-4 text-[#008080] group-hover:text-white" />
-            </button>
-            <h2 className="text-sm font-semibold text-gray-800">{controlledArtifact.title}</h2>
-          </div>
-        ) : (
-          <h2 className="text-sm font-semibold text-[#2C3E50]">Artifacts ({artifacts.length})</h2>
-        )}
-
-
+  className="sticky top-0 z-10 flex items-center justify-between py-4 px-3 bg-white border-t border-b border-gray-300"
+>
+  {controlledArtifact ? (
+    <>
+      {/* Left side with back button and title */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setControlledArtifact?.(null)}
+          className="p-1 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors"
+          aria-label="Back to List"
+        >
+          <ArrowLeft className="h-4 w-4 text-[#008080] group-hover:text-white" />
+        </button>
+        <h2 className="text-sm font-semibold text-gray-800">{controlledArtifact.title}</h2>
       </div>
+      
+      {/* Right side with fullscreen toggle and X button */}
+      <div className="flex items-center gap-2">
+        {/* Fullscreen toggle button */}
+        <button
+          onClick={toggleFullscreen}
+          className="p-1 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors"
+          aria-label={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+        >
+          {isFullscreen ? (
+            <Minimize2 className="h-4 w-4 text-[#008080] group-hover:text-white" />
+          ) : (
+            <Maximize2 className="h-4 w-4 text-[#008080] group-hover:text-white" />
+          )}
+        </button>
+        
+        {/* X button to close preview */}
+        <button
+          onClick={() => setControlledArtifact?.(null)}
+          className="p-1 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors"
+          aria-label="Close Preview"
+        >
+          <X className="h-4 w-4 text-[#008080] group-hover:text-white" />
+        </button>
+      </div>
+    </>
+  ) : (
+    <>
+      <h2 className="text-sm font-semibold text-[#2C3E50]">Artifacts ({artifacts.length})</h2>
+      
+      {/* Fullscreen toggle when in gallery view */}
+      <button
+        onClick={toggleFullscreen}
+        className="p-1 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors"
+        aria-label={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+      >
+        {isFullscreen ? (
+          <Minimize2 className="h-4 w-4 text-[#008080] group-hover:text-white" />
+        ) : (
+          <Maximize2 className="h-4 w-4 text-[#008080] group-hover:text-white" />
+        )}
+      </button>
+    </>
+  )}
+</div>
 
       <div className="flex-1 overflow-y-auto">
         {controlledArtifact ? (

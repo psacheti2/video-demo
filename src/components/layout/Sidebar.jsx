@@ -14,6 +14,8 @@ export default function Sidebar({
   savedArtifacts = [],
   setModalArtifact,
   activeChatId,
+  onUpdateArtifact, 
+  onDeleteArtifact,
 }) {
   const [recentChats, setRecentChats] = useState([]);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -24,13 +26,18 @@ export default function Sidebar({
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [chatToDelete, setChatToDelete] = useState(null);
   const [shareOpen, setShareOpen] = useState(false);
-  const [chatToShare, setChatToShare] = useState(null);
-  const [selectedTeammate, setSelectedTeammate] = useState('');
+  const [artifactToRename, setArtifactToRename] = useState(null);
+const [artifactToDelete, setArtifactToDelete] = useState(null);
+const [newArtifactTitle, setNewArtifactTitle] = useState('');
+  const [itemToShare, setItemToShare] = useState(null);
+  const [itemTypeToShare, setItemTypeToShare] = useState(null); 
+  const [selectedTeammates, setSelectedTeammates] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingChatId, setEditingChatId] = useState(null);
   const inputRefs = useRef({});
   const [shareDialogPosition, setShareDialogPosition] = useState({ x: 0, y: 0 });
   const teammates = ['Alice Chen', 'Bob Smith', 'Cynthia Zhang'];
+  const [editingArtifactId, setEditingArtifactId] = useState(null);
   const filteredTeammates = teammates.filter(t =>
     t.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -64,7 +71,59 @@ export default function Sidebar({
       setNewChatTitle('');
     }
   };
+  const toggleTeammateSelection = (teammate) => {
+    setSelectedTeammates(prev => 
+      prev.includes(teammate)
+        ? prev.filter(t => t !== teammate)
+        : [...prev, teammate]
+    );
+  };
+
+  // Update handleRenameArtifact to actually update the artifact
+const handleRenameArtifact = () => {
+  if (!artifactToRename || !newArtifactTitle.trim()) return;
   
+  // Create updated artifacts array
+  const updatedArtifacts = savedArtifacts.map(artifact => 
+    artifact.id === artifactToRename.id 
+      ? { ...artifact, title: newArtifactTitle.trim() } 
+      : artifact
+  );
+  
+  // Add this line to actually save the changes (you may need to adjust this)
+  // This would be a prop passed from the parent component, similar to how 
+  // onLoadConversation works for chats
+  onUpdateArtifact?.(artifactToRename.id, { title: newArtifactTitle.trim() });
+  
+  // Close the dialog
+  setRenameOpen(false);
+  setArtifactToRename(null);
+  setNewArtifactTitle(''); // Clear the input
+};
+  
+  // Function to open artifact rename dialog
+  const openArtifactRenameDialog = (artifact) => {
+    setArtifactToRename(artifact);
+    setNewArtifactTitle(artifact.title);
+    setRenameOpen(true);
+  };
+  
+  const handleDeleteArtifact = () => {
+    if (!artifactToDelete) return;
+    
+    // Call the parent's delete function
+    onDeleteArtifact?.(artifactToDelete.id);
+    
+    // Close the dialog
+    setDeleteConfirmOpen(false);
+    setArtifactToDelete(null);
+  };
+  
+  // Function to open artifact delete dialog
+  const openArtifactDeleteDialog = (artifact) => {
+    setArtifactToDelete(artifact);
+    setDeleteConfirmOpen(true);
+  };
   const handleDeleteChat = () => {
     if (!chatToDelete) return;
 
@@ -258,7 +317,7 @@ export default function Sidebar({
       } flex w-full items-center px-4 py-2 text-sm`}
       onClick={(e) => {
         e.stopPropagation();
-        setChatToShare(chat);
+        setItemToShare(chat);
         setShareOpen(true);
         setShareDialogPosition({ x: e.clientX, y: e.clientY });
       }}
@@ -295,22 +354,137 @@ export default function Sidebar({
           ) : (
             <>
               <ul className="space-y-2">
-                {savedArtifacts.map(artifact => (
-                  <li key={artifact.id}>
-                    <button
-                      onClick={() => {
-                        setModalArtifact?.(artifact);
-                        onClose();
-                      }}
-                      className="group w-full text-left block p-2 rounded transition-colors duration-200 hover:bg-[#008080]/90"
-                    >
-                      <div className="text-sm font-medium truncate text-[#2C3E50] group-hover:text-white">{artifact.title}</div>
-                      <div className="text-xs text-[#2C3E50] opacity-70 group-hover:text-white">
-                        {artifact.type} • {artifact.date}
-                      </div>
-                    </button>
-                  </li>
-                ))}
+              {savedArtifacts.map(artifact => (
+  <li key={artifact.id} className="relative group">
+    <div className="flex items-center">
+      <button
+        onClick={() => {
+          setModalArtifact?.(artifact);
+          onClose();
+        }}
+        className="group w-[92%] text-left block p-1.5 rounded transition-colors duration-200 hover:bg-[#e0f7f7]"
+      >
+        {editingArtifactId === artifact.id ? (
+          // Show edit input when artifact is being edited
+          <input
+            ref={(el) => {
+              if (el) inputRefs.current[artifact.id] = el;
+            }}
+            type="text"
+            autoFocus
+            value={newArtifactTitle}
+            onChange={(e) => setNewArtifactTitle(e.target.value)}
+            onBlur={() => {
+              if (newArtifactTitle.trim()) {
+                onUpdateArtifact?.(artifact.id, { title: newArtifactTitle.trim() });
+              }
+              setEditingArtifactId(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                if (newArtifactTitle.trim()) {
+                  onUpdateArtifact?.(artifact.id, { title: newArtifactTitle.trim() });
+                }
+                setEditingArtifactId(null);
+              } else if (e.key === 'Escape') {
+                setEditingArtifactId(null);
+              }
+            }}
+            className="text-sm font-medium text-[#2C3E50] bg-white border border-gray-300 rounded px-1 w-full focus:outline-none focus:ring-2 focus:ring-[#008080]"
+            onClick={(e) => e.stopPropagation()}
+          />
+        ) : (
+          // Show normal title when not editing
+          <div className="text-sm font-medium truncate text-[#2C3E50]">{artifact.title}</div>
+        )}
+        <div className="text-xs text-[#2C3E50] opacity-70">
+          {artifact.type} • {artifact.date}
+        </div>
+      </button>
+      
+      <Menu as="div" className="relative ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Menu.Button className="p-1 rounded-full hover:bg-[#e0f7f7] text-[#2C3E50]">
+          <MoreVertical className="h-4 w-4" />
+        </Menu.Button>
+        <Transition
+          as={Fragment}
+          enter="transition ease-out duration-100"
+          enterFrom="transform opacity-0 scale-95"
+          enterTo="transform opacity-100 scale-100"
+          leave="transition ease-in duration-75"
+          leaveFrom="transform opacity-100 scale-100"
+          leaveTo="transform opacity-0 scale-95"
+        >
+          <Menu.Items className="absolute right-0 z-10 mt-1 w-40 origin-top-right rounded-md bg-white shadow-lg focus:outline-none">
+            <div className="py-1">
+              <Menu.Item>
+                {({ active }) => (
+                  <button
+                    className={`${
+                      active ? 'bg-[#e0f7f7] text-[#008080]' : 'text-[#2C3E50]'
+                    } flex w-full items-center px-4 py-2 text-sm`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingArtifactId(artifact.id);
+                      setNewArtifactTitle(artifact.title);
+                      
+                      // Focus and select the input after rendering
+                      setTimeout(() => {
+                        const input = inputRefs.current[artifact.id];
+                        if (input) {
+                          input.focus();
+                          input.select();
+                        }
+                      }, 0);
+                    }}
+                  >
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Rename
+                  </button>
+                )}
+              </Menu.Item>
+    <Menu.Item>
+      {({ active }) => (
+       <button
+       className={`${
+         active ? 'bg-[#e0f7f7] text-[#008080]' : 'text-[#2C3E50]'
+       } flex w-full items-center px-4 py-2 text-sm`}
+       onClick={(e) => {
+         e.stopPropagation();
+         setItemToShare(artifact);
+         setItemTypeToShare('artifact');
+         setShareOpen(true);
+         setShareDialogPosition({ x: e.clientX, y: e.clientY });
+       }}
+     >
+          <Share2 className="mr-2 h-4 w-4" />
+          Share
+        </button>
+      )}
+    </Menu.Item>
+    <Menu.Item>
+      {({ active }) => (
+        <button
+          className={`${
+            active ? 'bg-red-50 text-red-700' : 'text-red-600'
+          } flex w-full items-center px-4 py-2 text-sm`}
+          onClick={(e) => {
+            e.stopPropagation();
+            openArtifactDeleteDialog(artifact);
+          }}
+        >
+          <Trash2 className="mr-2 h-4 w-4" />
+          Delete
+        </button>
+      )}
+    </Menu.Item>
+  </div>
+</Menu.Items>
+        </Transition>
+      </Menu>
+    </div>
+  </li>
+))}
               </ul>
             </>
           )}
@@ -360,41 +534,89 @@ export default function Sidebar({
         </div>
       </Dialog>
 
-      {/* Rename Dialog */}
-      <Dialog open={renameOpen} onClose={() => setRenameOpen(false)} className="relative z-[200]">
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" aria-hidden="true" />
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl space-y-4">
-            <Dialog.Title className="text-lg font-semibold text-[#008080]">Rename Chat</Dialog.Title>
-            <input
-              type="text"
-              placeholder="Enter new name..."
-              value={newChatTitle}
-              onChange={(e) => setNewChatTitle(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
-            />
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => setRenameOpen(false)}
-                className="px-4 py-2 border border-[#008080] text-[#008080] rounded-lg hover:bg-[#f0fdfa] transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleRenameChat}
-                className="px-4 py-2 bg-[#008080] text-white rounded-lg hover:bg-opacity-90 transition"
-                disabled={!newChatTitle.trim()}
-              >
-                Rename
-              </button>
-            </div>
-          </Dialog.Panel>
-        </div>
-      </Dialog>
+<Dialog open={renameOpen} onClose={() => setRenameOpen(false)} className="relative z-[200]">
+  <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" aria-hidden="true" />
+  <div className="fixed inset-0 flex items-center justify-center p-4">
+    <Dialog.Panel className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl space-y-4">
+      <Dialog.Title className="text-lg font-semibold text-[#008080]">
+        Rename {artifactToRename ? 'Artifact' : 'Chat'}
+      </Dialog.Title>
+      <input
+        type="text"
+        placeholder="Enter new name..."
+        value={artifactToRename ? newArtifactTitle : newChatTitle}
+        onChange={(e) => 
+          artifactToRename 
+            ? setNewArtifactTitle(e.target.value) 
+            : setNewChatTitle(e.target.value)
+        }
+        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+      />
+      <div className="flex justify-end space-x-2">
+        <button
+          onClick={() => {
+            setRenameOpen(false);
+            setArtifactToRename(null);
+            setChatToRename(null);
+          }}
+          className="px-4 py-2 border border-[#008080] text-[#008080] rounded-lg hover:bg-[#f0fdfa] transition"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={artifactToRename ? handleRenameArtifact : handleRenameChat}
+          className="px-4 py-2 bg-[#008080] text-white rounded-lg hover:bg-opacity-90 transition"
+          disabled={artifactToRename 
+            ? !newArtifactTitle.trim() 
+            : !newChatTitle.trim()
+          }
+        >
+          Rename
+        </button>
+      </div>
+    </Dialog.Panel>
+  </div>
+</Dialog>
 
-      {shareOpen && chatToShare && (
-  <div
-    className="fixed z-[200] w-[260px] bg-white border border-gray-200 shadow-xl rounded-xl p-4 animate-fade-in"
+<Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)} className="relative z-[200]">
+  <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" aria-hidden="true" />
+  <div className="fixed inset-0 flex items-center justify-center p-4">
+    <Dialog.Panel className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl space-y-4">
+      <Dialog.Title className="text-lg font-semibold text-red-600">
+        Delete {artifactToDelete ? 'Artifact' : 'Chat'}
+      </Dialog.Title>
+      <p className="text-[#2C3E50] text-sm mb-1">
+        Are you sure you want to delete this {artifactToDelete ? 'artifact' : 'chat'}?
+      </p>
+      <p className="text-sm text-[#008080] font-medium italic mb-4">
+        "{artifactToDelete?.title || chatToDelete?.title || 'Untitled'}"
+      </p>
+      <p className="text-xs text-gray-500">This action cannot be undone.</p>
+
+      <div className="flex justify-end space-x-2">
+        <button
+          onClick={() => {
+            setDeleteConfirmOpen(false);
+            setArtifactToDelete(null);
+            setChatToDelete(null);
+          }}
+          className="px-4 py-2 border border-[#008080] text-[#008080] rounded-lg hover:bg-[#f0fdfa] transition"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={artifactToDelete ? handleDeleteArtifact : handleDeleteChat}
+          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+        >
+          Delete
+        </button>
+      </div>
+    </Dialog.Panel>
+  </div>
+</Dialog>
+
+      {shareOpen && itemToShare && (
+  <div className="fixed z-[200] w-[260px] bg-white border border-gray-200 shadow-xl rounded-xl p-4 animate-fade-in"
     style={{
       top: `${shareDialogPosition.y}px`,
       left: `${shareDialogPosition.x}px`,
@@ -402,14 +624,17 @@ export default function Sidebar({
     }}
   >
     <div className="flex justify-between items-center mb-2">
-      <h3 className="text-sm font-semibold text-gray-800">Share Chat</h3>
-      <button onClick={() => setShareOpen(false)} className="text-gray-400 hover:text-gray-600">
+      <h3 className="text-sm font-semibold text-gray-800">Share {itemTypeToShare === 'artifact' ? 'Artifact' : 'Chat'}</h3>
+      <button onClick={() => {
+        setShareOpen(false);
+        setSelectedTeammates([]);
+      }} className="text-gray-400 hover:text-gray-600">
         <X size={16} />
       </button>
     </div>
 
     <p className="text-xs text-gray-500 mb-2">
-      Sharing: <span className="font-medium text-[#008080]">{chatToShare.title}</span>
+      Sharing: <span className="font-medium text-[#008080]">{itemToShare.title}</span>
     </p>
 
     <input
@@ -421,74 +646,49 @@ export default function Sidebar({
     />
 
     <div className="max-h-24 overflow-y-auto space-y-1 pr-1 text-sm">
-      {filteredTeammates.map((teammate) => (
-        <div
-          key={teammate}
-          onClick={() => setSelectedTeammate(teammate)}
-          className={`px-2 py-1 rounded-md cursor-pointer transition border 
-            ${selectedTeammate === teammate
-              ? 'bg-[#008080]/10 border-[#008080]'
-              : 'hover:bg-gray-50 border-gray-200'}
-          `}
-        >
-          <span className="text-xs text-gray-700">{teammate}</span>
-        </div>
-      ))}
+    {filteredTeammates.map((teammate) => (
+  <div
+    key={teammate}
+    onClick={() => toggleTeammateSelection(teammate)}
+    className={`px-2 py-1 rounded-md cursor-pointer transition border 
+      ${selectedTeammates.includes(teammate)
+        ? 'bg-[#008080]/10 border-[#008080]'
+        : 'hover:bg-gray-50 border-gray-200'}
+    `}
+  >
+    <span className="text-xs text-gray-700">{teammate}</span>
+  </div>
+))}
       {filteredTeammates.length === 0 && (
         <div className="text-xs text-gray-500 text-center py-2">No teammates found</div>
       )}
     </div>
 
     <button
-      disabled={!selectedTeammate}
-      onClick={() => {
-        setShareOpen(false);
-        alert(`Shared "${chatToShare.title}" with ${selectedTeammate}`);
-      }}
-      className={`w-full mt-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200
-        ${selectedTeammate
-          ? 'bg-[#008080] text-white hover:bg-teal-700'
-          : 'bg-gray-200 text-gray-500 cursor-not-allowed'}
-      `}
-    >
-      Share
-    </button>
+  disabled={selectedTeammates.length === 0}
+  onClick={() => {
+    setShareOpen(false);
+    if (itemTypeToShare === 'artifact') {
+      alert(`Shared artifact "${itemToShare.title}" with ${selectedTeammates.join(', ')}`);
+    } else {
+      alert(`Shared chat "${itemToShare.title}" with ${selectedTeammates.join(', ')}`);
+    }
+    setSelectedTeammates([]);
+  }}
+  className={`w-full mt-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200
+    ${selectedTeammates.length > 0
+      ? 'bg-[#008080] text-white hover:bg-teal-700'
+      : 'bg-gray-200 text-gray-500 cursor-not-allowed'}
+  `}
+>
+  Share
+</button>
   </div>
 )}
 
 
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)} className="relative z-[200]">
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" aria-hidden="true" />
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl space-y-4">
-          <Dialog.Title className="text-lg font-semibold text-red-600">Delete Chat</Dialog.Title>
-<p className="text-[#2C3E50] text-sm mb-1">
-  Are you sure you want to delete this chat?
-</p>
-<p className="text-sm text-[#008080] font-medium italic mb-4">
-  "{chatToDelete?.title || 'Untitled Chat'}"
-</p>
-<p className="text-xs text-gray-500">This action cannot be undone.</p>
-
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => setDeleteConfirmOpen(false)}
-                className="px-4 py-2 border border-[#008080] text-[#008080] rounded-lg hover:bg-[#f0fdfa] transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteChat}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-              >
-                Delete
-              </button>
-            </div>
-          </Dialog.Panel>
-        </div>
-      </Dialog>
+     
     </>
   );
 }

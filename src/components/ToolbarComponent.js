@@ -3,7 +3,7 @@ import {
   Maximize2, X, Info, ChevronDown, ChevronUp,
   Download, Wrench, Palette, Share2, BookmarkPlus, Table, Minimize2, Layers, Map
 } from 'lucide-react';
-import { TbMapSearch } from "react-icons/tb";
+import { IconMapPinSearch } from '@tabler/icons-react';
 
 const ToolbarComponent = ({
   isFullscreen,
@@ -29,7 +29,16 @@ const ToolbarComponent = ({
   tableHeight,
   setMapView,
   activeMapView,
-  showTextToolbar = false
+  showTextToolbar = false,
+  map,
+  createPolygonDrawTool,
+  snapLayersRef,
+  setActiveDrawTool,
+  sendQuestionToChat,
+  nextShapeIds,
+  setNextShapeIds,
+  setDrawnLayers,
+  setDrawnLayersOrder,
 }) => {
   const toolbarRef = useRef(null);
   const mapButtonRef = useRef(null);
@@ -54,9 +63,27 @@ const ToolbarComponent = ({
   };
 
   const handleMouseMove = (e) => {
+    // Calculate new position
+    const newTop = e.clientY - dragStart.current.y;
+    const newLeft = e.clientX - dragStart.current.x;
+    
+    // Get the map container dimensions
+    const mapWidth = window.innerWidth - 8; // Account for the 4px edge margins
+    const mapHeight = window.innerHeight - 16; // Account for the top and bottom margins
+    
+    // Get toolbar dimensions
+    const toolbarHeight = toolbarRef.current ? toolbarRef.current.offsetHeight : 300;
+    const toolbarWidth = toolbarRef.current ? toolbarRef.current.offsetWidth : 50;
+    
+    // Ensure minimum margin of 20px from edges
+    const minMargin = 20;
+    const boundedTop = Math.max(minMargin, Math.min(mapHeight - toolbarHeight - minMargin, newTop));
+    const boundedLeft = Math.max(minMargin, Math.min(mapWidth - toolbarWidth - minMargin, newLeft));
+    
+    // Update position with boundaries applied
     setToolbarPosition({
-      top: e.clientY - dragStart.current.y,
-      left: e.clientX - dragStart.current.x
+      top: boundedTop,
+      left: boundedLeft
     });
   };
 
@@ -64,6 +91,8 @@ const ToolbarComponent = ({
     document.removeEventListener("mousemove", handleMouseMove);
     document.removeEventListener("mouseup", handleMouseUp);
   };
+
+  
 
   // Function to render the map view options dialog with position based on table state
   const renderMapViewOptions = () => {
@@ -123,22 +152,24 @@ const ToolbarComponent = ({
       </div>
     );
   };
+
+  
   if (showTextToolbar) {
     return null; // Don't render the regular toolbar when text toolbar is active
   }
   if (!isFullscreen) {
     return (
       <div
-        className="flex justify-center items-center space-x-2 bg-white bg-opacity-70 backdrop-blur-sm p-2 shadow-sm z-30 rounded-full transition-all duration-300"
-        style={{
-            position: 'absolute',
-            ...(showTable 
-              ? { bottom: 'auto', top: `auto` } 
-              : { bottom: '0px', top: 'auto' }),
-            left: '50%',
-            transform: 'translateX(-50%)'
-          }}
-      >
+  className="flex justify-center items-center space-x-2 bg-white bg-opacity-70 backdrop-blur-sm p-2 shadow-sm z-30 rounded-full transition-all duration-300"
+  style={{
+    position: 'absolute',
+    ...(showTable 
+      ? { bottom: 'auto', top: 'auto', marginTop: '10px' }
+      : { bottom: '10px', top: 'auto' }), 
+    left: '50%',
+    transform: 'translateX(-50%)'
+  }}
+>
         <button onClick={() => setShowTable(!showTable)} data-tooltip="Toggle Table" className="p-2 rounded-full border" style={{
           color: COLORS.coral,
           border: `1px solid ${COLORS.coral}`,
@@ -190,6 +221,34 @@ const ToolbarComponent = ({
         >
           <Wrench size={16} />
         </button>
+        <button onClick={() => {
+  if (map && typeof createPolygonDrawTool === 'function') {
+    createPolygonDrawTool(
+      map,
+      snapLayersRef,
+      setActiveDrawTool,
+      sendQuestionToChat,
+      nextShapeIds,
+      setNextShapeIds,
+      setDrawnLayers,
+      setDrawnLayersOrder
+    );
+  }
+}} data-tooltip="Insights" className="p-2 rounded-full border" style={{
+  color: COLORS.coral,
+  border: `1px solid ${COLORS.coral}`,
+  transition: 'all 0.2s ease-in-out'
+}}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.backgroundColor = COLORS.coral;
+    e.currentTarget.style.color = 'white';
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.backgroundColor = 'white';
+    e.currentTarget.style.color = COLORS.coral;
+  }}>
+  <IconMapPinSearch size={16} />
+</button>
         <button onClick={() => setShowLegend(prev => !prev)} data-tooltip="Legend" className="p-2 rounded-full border" style={{
           color: COLORS.coral,
           border: `1px solid ${COLORS.coral}`,
@@ -266,7 +325,6 @@ style={{
     cursor: 'grab'
   }}
     >
-      {/* 🛠️ Wrench (toggle + drag) */}
       <button
         onClick={() => setToolbarVisible(!toolbarVisible)}
         onMouseDown={handleMouseDown}
@@ -288,7 +346,34 @@ style={{
       >
         {toolbarVisible ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
       </button>
-
+      <button onClick={() => {
+  if (map && typeof createPolygonDrawTool === 'function') {
+    createPolygonDrawTool(
+      map,
+      snapLayersRef,
+      setActiveDrawTool,
+      sendQuestionToChat,
+      nextShapeIds,
+      setNextShapeIds,
+      setDrawnLayers,
+      setDrawnLayersOrder
+    );
+  }
+}} data-tooltip="Insights" className="p-2 rounded-full border" style={{
+  color: COLORS.coral,
+  border: `1px solid ${COLORS.coral}`,
+  transition: 'all 0.2s ease-in-out'
+}}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.backgroundColor = COLORS.coral;
+    e.currentTarget.style.color = 'white';
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.backgroundColor = 'white';
+    e.currentTarget.style.color = COLORS.coral;
+  }}>
+  <IconMapPinSearch size={16} />
+</button>
       {/* 👇 Render the rest only if visible */}
       {toolbarVisible && (
         <>
@@ -368,6 +453,7 @@ style={{
           >
             <Wrench size={16} />
           </button>
+          
           <button onClick={() => setShowLegend(prev => !prev)} data-tooltip="Legend" className="p-2 rounded-full border" style={{
             color: COLORS.coral,
             border: `1px solid ${COLORS.coral}`,
