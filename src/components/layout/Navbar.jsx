@@ -136,7 +136,7 @@ const profileRef = useRef(null);
     className="w-10 h-10 flex items-center justify-center rounded-full bg-white text-[#008080] border border-[#008080] hover:bg-[#008080]/90 hover:text-white font-semibold shadow-sm hover:scale-105 transition tooltip-bottom"
     data-tooltip="Profile"
   >
-    JD
+    AS
   </button>
 
   {profileOpen && (

@@ -111,7 +111,7 @@ const textareaRef = useRef<HTMLTextAreaElement | null>(null);
       <div className="w-full max-w-2xl bg-white rounded-3xl shadow-lg p-8 border border-gray-200 transition-all duration-300">
         <div className="mb-6 text-center">
           <h2 className="text-3xl font-extrabold bg-gradient-to-r from-[#008080] to-[#007878] text-transparent bg-clip-text mb-2">
-            Hi John!
+            Hi Ash!
           </h2>
           <p className="text-[#2C3E50] text-base">How can I help you?</p>
         </div>

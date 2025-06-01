@@ -6,7 +6,7 @@ import ShareDialog from '../ShareDialog'
 const COLORS = {
   primary: '#2C3E50',
   secondary: '#34495E',
-  teal: '#008080',
+  coral: '#008080',
   gray: '#95A5A6',
   blue: '#3498DB',
   green: '#27AE60',
@@ -26,8 +26,6 @@ const locationData = [
 ];
 
 
-// Pie chart colors
-const PIE_COLORS = [COLORS.blue, COLORS.green, COLORS.orange, COLORS.purple, COLORS.red];
 
 const BarChartComponent = ({ onLayersReady, setSavedArtifacts, title, onBack }) => {
   const [loading, setLoading] = useState(false);
@@ -132,7 +130,7 @@ const BarChartComponent = ({ onLayersReady, setSavedArtifacts, title, onBack }) 
         <XAxis dataKey="name" />
         <YAxis />
         <Tooltip />
-        <Bar dataKey="value" fill={customColors.blue} />
+<Bar dataKey="value" fill="#008080" radius={[6, 6, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -204,143 +202,6 @@ const BarChartComponent = ({ onLayersReady, setSavedArtifacts, title, onBack }) 
     {renderBarChart()}
   </div>
 
-      {/* Bottom Toolbar */}
-      <div className="flex justify-center items-center mt-4">
-        <div className="inline-flex items-center space-x-2 bg-white bg-opacity-70 backdrop-blur-sm p-2 shadow-sm z-30 rounded-full transition-all duration-300">
-          {/* Info Button */}
-          <div className="relative">
-            <button
-              onClick={() => setShowSources(prev => !prev)}
-              data-tooltip="View Information"
-              className="p-2 rounded-full border"
-              style={{ 
-                color: COLORS.teal,
-                backgroundColor: COLORS.white,
-                border: `1px solid ${COLORS.teal}`,
-                transition: 'all 0.2s ease-in-out'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = COLORS.teal;
-                e.currentTarget.style.color = COLORS.white;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = COLORS.white;
-                e.currentTarget.style.color = COLORS.teal;
-              }}
-            >
-              <Info size={16} />
-            </button>
-
-            {/* Info popup */}
-            {showSources && (
-              <div 
-                ref={infoRef} 
-                className="absolute right-0 bottom-full mb-2 w-[280px] bg-white border border-gray-200 rounded-xl shadow-lg p-5 z-50"
-              >
-                <div className="space-y-2 text-sm text-gray-700">
-                  <h3 className="font-bold">About This Analysis</h3>
-                  <p>This chart visualizes the projected ROI and break-even timeline for potential coffee shop locations near Times Square.</p>
-                  <ul className="list-disc pl-5 space-y-1">
-                    <li>ROI Chart: Comparison of percentage returns</li>
-                    <li>Break-Even Chart: Months until profitable</li>
-                  </ul>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Save Button */}
-          <button
-            onClick={() => setShowSaveDialog(true)}
-            data-tooltip="Save Chart"
-            className="p-2 rounded-full border"
-            style={{ 
-              color: COLORS.teal,
-              backgroundColor: COLORS.white,
-              border: `1px solid ${COLORS.teal}`,
-              transition: 'all 0.2s ease-in-out'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = COLORS.teal;
-              e.currentTarget.style.color = COLORS.white;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = COLORS.white;
-              e.currentTarget.style.color = COLORS.teal;
-            }}
-          >
-            <BookmarkPlus size={16} />
-          </button>
-
-          {/* Palette button */}
-          <button
-            onClick={() => setShowPaletteDialog(true)}
-            data-tooltip="Change Colors"
-            className="p-2 rounded-full border"
-            style={{ 
-              color: COLORS.teal,
-              backgroundColor: COLORS.white,
-              border: `1px solid ${COLORS.teal}`,
-              transition: 'all 0.2s ease-in-out'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = COLORS.teal;
-              e.currentTarget.style.color = COLORS.white;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = COLORS.white;
-              e.currentTarget.style.color = COLORS.teal;
-            }}
-          >
-            <Palette size={16} />
-          </button>
-
-          {/* Share button */}
-          <button
-            onClick={() => setShowShareDialog(true)}
-            className="p-2 rounded-full border"
-            data-tooltip="Share"
-            style={{ 
-              color: COLORS.teal,
-              backgroundColor: COLORS.white,
-              border: `1px solid ${COLORS.teal}`,
-              transition: 'all 0.2s ease-in-out'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = COLORS.teal;
-              e.currentTarget.style.color = COLORS.white;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = COLORS.white;
-              e.currentTarget.style.color = COLORS.teal;
-            }}
-          >
-            <Share2 size={16} />
-          </button>
-          
-          {/* Fullscreen button */}
-          <button 
-            onClick={toggleFullscreen} 
-            className="p-2 rounded-full border" 
-            style={{ 
-              color: COLORS.teal,
-              backgroundColor: COLORS.white,
-              border: `1px solid ${COLORS.teal}`,
-              transition: 'all 0.2s ease-in-out'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = COLORS.teal;
-              e.currentTarget.style.color = COLORS.white;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = COLORS.white;
-              e.currentTarget.style.color = COLORS.teal;
-            }}
-          >
-            {isFullscreen ? <X size={16} /> : <Maximize2 size={16} />}
-          </button>
-        </div>
-      </div>
 </div>
 
       
