@@ -45,7 +45,24 @@ const VirtualizedTable = ({
   const tableContainerRef = useRef(null);
   const headerContainerRef = useRef(null);
   const tableBodyRef = useRef(null);
-
+// Add this at the top of your file
+const scrollbarStyles = `
+  .always-visible-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    background-color: #f5f5f5;
+  }
+  
+  .always-visible-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #c1c1c1;
+    border-radius: 4px;
+  }
+  
+  /* For Firefox */
+  .always-visible-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f5f5f5;
+  }
+`;
   // Store a memoized version of the current table data
   const currentTable = useMemo(() => 
     tableData[currentTableIndex] || { headers: [], rows: [] }, 
@@ -69,7 +86,16 @@ const VirtualizedTable = ({
     }
   };
 
+  // Add this inside your component
+useEffect(() => {
+  const styleElement = document.createElement('style');
+  styleElement.innerHTML = scrollbarStyles;
+  document.head.appendChild(styleElement);
   
+  return () => {
+    document.head.removeChild(styleElement);
+  };
+}, []);
 // Replace your existing smoothScrollToRow function with this enhanced version
 const smoothScrollToRow = (rowIndex) => {
     if (!listRef.current || rowIndex < 0 || !currentTable?.rows?.length) return;
@@ -275,11 +301,16 @@ const Row = useCallback(({ index, style }) => {
         }}
       >
         <div 
-          className="sticky left-0 text-center text-xs font-semibold border-r border-gray-300 bg-gray-100 flex items-center justify-center"
-          style={{ width: '40px', minWidth: '40px', zIndex: 2 }}
-        >
-          {index + 1}
-        </div>
+  className="sticky left-0 text-center text-xs font-semibold border-r border-gray-300 flex items-center justify-center"
+  style={{ 
+    width: '40px', 
+    minWidth: '40px', 
+    zIndex: 3, // Increased z-index to be above the first column
+    backgroundColor: isSelected ? '#ccecec' : (index % 2 === 0 ? '#f9f9f9' : '#ffffff')
+  }}
+>
+  {index + 1}
+</div>
         
         {currentTable.headers.map((header, colIdx) => (
           <div
@@ -294,7 +325,7 @@ const Row = useCallback(({ index, style }) => {
             }}
             className={`px-2 py-1 text-xs border-r border-gray-200 overflow-hidden text-ellipsis whitespace-nowrap ${
               selectedColIndex === colIdx ? 'bg-[#ccecec]' : ''
-            } ${colIdx === 0 ? 'sticky left-10 bg-inherit z-[2] border-r border-gray-300' : ''}`}
+            } ${colIdx === 0 ? 'sticky left-[40px] bg-inherit z-[2] border-r border-gray-300' : ''}`}
             style={{
               width: `${columnWidths[colIdx]}px`,
               flex: '0 0 auto',
@@ -676,11 +707,13 @@ const Row = useCallback(({ index, style }) => {
         {currentTable.headers && currentTable.headers.length > 0 ? (
           <div className="flex flex-col h-full">
             {/* Virtualized rows with synchronized horizontal scrolling */}
+            <div className="relative flex-grow" style={{ maxWidth: '100%' }}>
             <div 
-              ref={tableBodyRef} 
-              className="overflow-x-auto overflow-y-hidden flex-grow relative" 
-              style={{ maxWidth: '100%' }}
-            >
+    ref={tableBodyRef}
+    className="overflow-x-auto w-full"
+    onScroll={syncScroll}
+  >
+              
               <div style={{ width: `${totalWidth}px`, minWidth: '100%' }}>
                 
                 
@@ -692,12 +725,14 @@ const Row = useCallback(({ index, style }) => {
                     <div
                       key={`label-${idx}`}
                       data-column={header}
-                      className="px-3 py-1 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider"
-                      style={{ 
-                        width: `${columnWidths[idx]}px`, 
+                      className="text-center text-xs font-semibold border-r border-gray-300 bg-gray-100 flex items-center justify-center"
+                      style={{
+                        width: `${columnWidths[idx]}px`,
                         minWidth: `${columnWidths[idx]}px`,
-                        flex: '0 0 auto'
-                      }}
+                        flex: '0 0 auto',
+                        height: '36px', 
+                        zIndex: 2
+                      }}                      
                       onClick={() => setSelectedColIndex(idx)}
                       onContextMenu={(e) => {
                         e.preventDefault();
@@ -731,11 +766,17 @@ const Row = useCallback(({ index, style }) => {
   itemSize={rowHeight}
   width="100%"
   overscanCount={5}
-  style={{ overflowX: 'hidden', width: '100%' }}
+  className="always-visible-scrollbar" // Add this class
+  style={{ 
+    overflowX: 'hidden', 
+    width: '100%',
+    overflowY: 'scroll' // Force scrollbar to always be visible
+  }}
 >
   {Row}
 </List>
               </div>
+            </div>
             </div>
           </div>
         ) : (

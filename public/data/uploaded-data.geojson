@@ -1,0 +1,65 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "San Fernando de Henares Industrial Park",
+        "Description": "– 60 000 m² campus with up to 79 MW planned (130 MVA) – Direct access to Barcelona–Madrid fiber highway – 10 min from Adolfo Suárez Barajas Airport – Multiple 220–400 kV substations on‑site",
+        "Reference": "Iron Mountain MAD‑1 (“C. del Mar Egeo, 4, 28830 San Fernando de Henares”) (Iron Mountain)"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-3.502245627, 40.44262913]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "Alcobendas – Equinix MD2",
+        "Description": "– 4 000 m² facility (expandable) with 3 MW live load today and room for 79 MW – Situated in a major tech park with extensive fiber rings – Zoned for heavy‑industrial / data‑use – Low flood/seismic risk",
+        "Reference": "Equinix MD2, Calle Valgrande 6, 28108 Alcobendas (Data Centers)"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-3.649031411, 40.53648282]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "Las Rozas de Madrid – NTT Madrid 1",
+        "Description": "– 3 400 m² server space with 6.9 MW IT load – 2N UPS, N+1 generator redundancy – Proximity to 400 kV Aquisgrán substation – Easy highway access (M‑503/M‑505) – Industrial zoning, low flood footprint",
+        "Reference": "NTT Madrid 1 Data Center, Calle Aquisgrán 2, Las Rozas de Madrid (NTT)"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-3.89002509, 40.50026363]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "Alcalá de Henares – Punto Com Park",
+        "Description": "– Located in established industrial/manufacturing zone – Served by 220 kV Almudena substation nearby – Direct rail corridor to Madrid for dark‑fiber routes – Municipally designated for “high‑tech / logistics” uses",
+        "Reference": "Nabiax Alcalá Data Center (“Av. Punto Com 23, 28805 Alcalá de Henares”) (Data Centers)"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-3.341420201, 40.51939852]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "Valdebebas – New Urban Extension",
+        "Description": "– Large undeveloped parcels adjacent to new 400 kV Valdebebas substation – Fiber ring backbone for Metro‑Ethernet in build – Zoned as “Innovation District” with streamlined permitting – Outside known 100‑yr flood zones",
+        "Reference": "No single public dataset—combine ENTSO‑E grid map + Madrid land‑use plan for substation proximity and zoning requirements"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-3.705749366, 40.44501153]
+      }
+    }
+  ]
+}

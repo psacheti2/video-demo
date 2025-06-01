@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import {
-  Maximize2, X, Info, ChevronDown, ChevronUp,
-  Download, Wrench, Palette, Share2, BookmarkPlus, Table, Minimize2, Layers, Map
+  Maximize2, X, ChevronDown, ChevronUp,
+  Download, Wrench, Palette, Share2, BookmarkPlus, Table, Minimize2, Layers, Map, ArrowLeft
 } from 'lucide-react';
 import { IconMapPinSearch } from '@tabler/icons-react';
 
@@ -39,6 +39,8 @@ const ToolbarComponent = ({
   setNextShapeIds,
   setDrawnLayers,
   setDrawnLayersOrder,
+  onBack,
+  isPreview = true
 }) => {
   const toolbarRef = useRef(null);
   const mapButtonRef = useRef(null);
@@ -185,21 +187,55 @@ const ToolbarComponent = ({
           }}>
           {showTable ? <Table size={16} /> : <Table size={16} />}
         </button>
-        <button onClick={() => setShowSaveDialog(true)} data-tooltip="Save Map" className="p-2 rounded-full border" style={{
-          color: COLORS.coral,
-          border: `1px solid ${COLORS.coral}`,
-          transition: 'all 0.2s ease-in-out'
-        }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = COLORS.coral;
-            e.currentTarget.style.color = 'white';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'white';
-            e.currentTarget.style.color = COLORS.coral;
-          }}>
-          <BookmarkPlus size={16} />
-        </button>
+        {!isPreview || (!isPreview && onBack) ? (
+  <button
+  onClick={() => {
+    console.log('[TOOLBAR] Back button clicked');
+    if (onBack) {
+      onBack();
+    }
+  }}
+      data-tooltip={isPreview ? "Back to Chat" : "Back to Chat"}
+    className="p-2 rounded-full border"
+    style={{
+      color: COLORS.coral,
+      border: `1px solid ${COLORS.coral}`,
+      transition: 'all 0.2s ease-in-out'
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.backgroundColor = COLORS.coral;
+      e.currentTarget.style.color = 'white';
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.backgroundColor = 'white';
+      e.currentTarget.style.color = COLORS.coral;
+    }}
+  >
+    <ArrowLeft size={16} />
+  </button>
+) : (
+  <button
+    onClick={() => setShowSaveDialog(true)}
+    data-tooltip="Save Map"
+    className="p-2 rounded-full border"
+    style={{
+      color: COLORS.coral,
+      border: `1px solid ${COLORS.coral}`,
+      transition: 'all 0.2s ease-in-out'
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.backgroundColor = COLORS.coral;
+      e.currentTarget.style.color = 'white';
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.backgroundColor = 'white';
+      e.currentTarget.style.color = COLORS.coral;
+    }}
+  >
+    <BookmarkPlus size={16} />
+  </button>
+)}
+
         <button
           ref={pencilRef}
           onClick={() => setShowDrawTools(!showDrawTools)}
@@ -264,21 +300,7 @@ const ToolbarComponent = ({
           }}>
           <Layers size={16} />
         </button>
-        <button onClick={() => setShowSources(prev => !prev)} data-tooltip="Sources" className="p-2 rounded-full border" style={{
-          color: COLORS.coral,
-          border: `1px solid ${COLORS.coral}`,
-          transition: 'all 0.2s ease-in-out'
-        }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = COLORS.coral;
-            e.currentTarget.style.color = 'white';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'white';
-            e.currentTarget.style.color = COLORS.coral;
-          }}>
-          <Info size={16} />
-        </button>
+       
         <button onClick={() => setShowShareDialog(true)} data-tooltip="Share" className="p-2 rounded-full border" style={{
           color: COLORS.coral,
           border: `1px solid ${COLORS.coral}`,
@@ -469,21 +491,7 @@ style={{
             }}>
             <Layers size={16} />
           </button>
-          <button onClick={() => setShowSources(prev => !prev)} data-tooltip="Sources" className="p-2 rounded-full border" style={{
-            color: COLORS.coral,
-            border: `1px solid ${COLORS.coral}`,
-            transition: 'all 0.2s ease-in-out'
-          }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = COLORS.coral;
-              e.currentTarget.style.color = 'white';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'white';
-              e.currentTarget.style.color = COLORS.coral;
-            }}>
-            <Info size={16} />
-          </button>
+          
           <button onClick={() => setShowShareDialog(true)} data-tooltip="Share" className="p-2 rounded-full border" style={{
             color: COLORS.coral,
             border: `1px solid ${COLORS.coral}`,

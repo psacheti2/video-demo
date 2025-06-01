@@ -31,9 +31,6 @@
   transition: box-shadow 0.2s ease;
 }
 
-.leaflet-text-element:hover .leaflet-text-bounding-box {
-  border-color: #008080;
-}
 
 .leaflet-text-content {
   position: relative;
@@ -84,13 +81,48 @@
   z-index: 1000;
   transition: all 0.3s ease;
 }
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out;
+}
 .text-toolbar button {
   transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
-.text-toolbar button:hover {
-  background-color: rgba(0, 128, 128, 0.1);
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  appearance: none; 
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 .text-toolbar button:active {
@@ -165,21 +197,6 @@
 /* Replace your [title] selector with [data-tooltip] */
 [data-tooltip] {
   position: relative;
-}
-
-[data-tooltip]:hover::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  white-space: nowrap;
-  background: rgba(0, 128, 128, 0.8); 
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  pointer-events: none;
-  z-index: 1000;
-  max-width: 200px;
-  word-wrap: break-word;
 }
 
 /* Top position (default) */

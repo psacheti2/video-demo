@@ -27,7 +27,7 @@ import ToolbarComponent from '../ToolbarComponent';
 import DraggableLegend from './DraggableLegend';
 
 const CoffeeShopMapComponent = ({ onLayersReady, onSaveMap, savedMaps = [], setSavedArtifacts, title,
-    onBack, center = [-73.9866, 40.7589], radius = 0.8, onSendMessage }) => {
+    onBack, isPreview = false, center = [-73.9866, 40.7589], radius = 0.8, onSendMessage, originConversationId, }) => {
     const [layerZIndexes, setLayerZIndexes] = useState({
         coffeeShops: 30,
         footTraffic: 50,
@@ -2973,6 +2973,7 @@ leafletMap.on(L.Draw.Event.CREATED, function(e) {
                                         },
                                         data: {
                                             conversationId: localStorage.getItem('activeConversationId') || '',
+                                            chatId: localStorage.getItem('activeConversationId') || '',
                                         },
                                         date: new Date().toLocaleDateString(),
                                     };
@@ -3294,6 +3295,8 @@ leafletMap.on(L.Draw.Event.CREATED, function(e) {
                     setShowTable={setShowTable}
                     onSaveMap={onSaveMap}
                     savedMaps={savedMaps}
+                    onBack={onBack}
+                    isPreview={isPreview}
                     captureAndDownload={() => setShowMapDownloader(true)}
                     setShowLegend={setShowLegend}
                     setShowSources={setShowSources}
@@ -3321,6 +3324,7 @@ leafletMap.on(L.Draw.Event.CREATED, function(e) {
     setNextShapeIds={setNextShapeIds}
     setDrawnLayers={setDrawnLayers}
     setDrawnLayersOrder={setDrawnLayersOrder}
+    
                 />
 
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { Layers, X, ChevronDown, ChevronUp } from 'lucide-react';
 
 // This is the updated Legend component that allows reordering
@@ -16,7 +16,6 @@ const DraggableLegend = ({
   layerZIndexes,
   customLayerNames,
 setCustomLayerNames,
-setTopInteractiveLayer,
 currentMapView,
   handleMapViewChange,
   toggleBaseMap,
@@ -31,7 +30,7 @@ currentMapView,
   const [layerOrder, setLayerOrder] = useState([]);
   const dragOverItemIndex = useRef(null);
   const [baseMapVisible, setBaseMapVisible] = useState(true);
-
+  const [showSourcesPopup, setShowSourcesPopup] = useState(null);
   const [legendPosition, setLegendPosition] = useState({ bottom: 4, left: 4 });
   const [isDraggingLegend, setIsDraggingLegend] = useState(false);
   const legendRef = useRef(null);
@@ -71,34 +70,238 @@ useEffect(() => {
     
     setLayerOrder(sortedLayers);
   }, [layerZIndexes]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showSourcesPopup && !event.target.closest('.relative')) {
+        setShowSourcesPopup(null);
+      }
+    };
   
-  // The layer config with visual properties
-  const layerConfig = {
-    coffeeShops: {
-        name: customLayerNames['coffeeShops'] || 'Coffee Shops',
-        icon: <div className="w-4 h-4 rounded-full" style={{ backgroundColor: layerColors.existingShop }} />,
-      legend: [
-        { label: 'Existing Shops', color: layerColors.existingShop },
-      ]
-    },
-    footTraffic: {
-        name: customLayerNames['footTraffic'] || 'Foot Traffic',
-        icon: <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: layerColors.highTraffic }} />,
-      legend: [
-        {
-          label: 'Heatmap Intensity',
-          gradient: [layerColors.lowTraffic, layerColors.mediumTraffic, layerColors.highTraffic]
-        }
-      ]
-    },
-    radius: {
-        name: customLayerNames['radius'] || '1-Mile Radius',
-        icon: <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-dashed" style={{ backgroundColor: 'transparent' }} />,
-      legend: [
-        { label: 'Times Square Radius', color: '#4169E1', dashed: true }
-      ]
-    }
-  };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSourcesPopup]);
+
+  const layerConfig = useMemo(() => ({
+    uploadedLocations: {
+    name: customLayerNames['uploadedLocations'] || 'Analysis Locations',
+    icon: <div className="w-4 h-4 rounded-full" style={{ backgroundColor: layerColors.uploadedLocations || '#FF6B35' }} />,
+    legend: [
+      { label: 'Client Locations', color: layerColors.uploadedLocations || '#FF6B35' },
+    ],
+    sources: [
+      { title: 'Client Site Data', url: '#' },
+      { title: 'Location Analysis Requirements', url: '#' }
+    ]
+  },
+  substations: {
+  name: customLayerNames['substations'] || 'Power Substations',
+  icon: <div className="w-4 h-4 transform rotate-45" style={{ backgroundColor: layerColors.substations || '#4ECDC4' }} />,
+  legend: [
+    { label: 'Substations (various voltages)', color: layerColors.substations || '#4ECDC4', note: 'Size indicates capacity' }
+  ],
+  sources: [
+    { title: 'OpenStreetMap Power Infrastructure', url: 'https://overpass-turbo.eu/' },
+    { title: 'Spanish Electrical Grid Data', url: 'https://www.ree.es/en' },
+    { title: 'ENTSO-E Transmission Map', url: 'https://www.entsoe.eu/' }
+  ]
+},
+  powerlines: {
+    name: customLayerNames['powerlines'] || 'Power Lines',
+    icon: <div className="w-4 h-1" style={{ backgroundColor: layerColors.powerlines400kv || '#E74C3C' }} />,
+    legend: [
+      { label: '400kV Lines', color: layerColors.powerlines400kv || '#E74C3C', lineWeight: 'Heavy' },
+      { label: '220kV Lines', color: layerColors.powerlines220kv || '#F39C12', lineWeight: 'Medium' },
+      { label: 'Other Lines', color: layerColors.powerlinesOther || '#9B59B6', lineWeight: 'Light' }
+    ],
+    sources: [
+      { title: 'Red Eléctrica de España', url: 'https://www.ree.es/en' },
+      { title: 'OpenStreetMap Power Lines', url: 'https://overpass-turbo.eu/' },
+      { title: 'European Transmission Grid', url: 'https://www.entsoe.eu/' }
+    ]
+  },
+  bufferZones: {
+    name: customLayerNames['bufferZones'] || 'Infrastructure Zones',
+    icon: <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-dashed" style={{ backgroundColor: 'transparent' }} />,
+    legend: [
+      { label: 'Infrastructure Buffer Zones', color: layerColors.bufferZones || '#3498DB', dashed: true }
+    ],
+    sources: [
+      { title: 'Infrastructure Density Analysis', url: '#' },
+      { title: 'Proximity Assessment Data', url: '#' }
+    ]
+  },
+  dataCenters: {
+    name: customLayerNames['dataCenters'] || 'Data Centers',
+    icon: <div className="w-4 h-4 rounded-full" style={{ backgroundColor: layerColors.existingDataCenter || '#008080' }} />,
+    legend: [
+      { label: 'Data Centers', color: layerColors.existingDataCenter || '#008080' },
+    ],
+    sources: [
+      { title: 'Madrid Data Center Registry', url: '#' },
+      { title: 'European Colocation Database', url: '#' },
+      { title: 'Infrastructure Site Analysis', url: '#' }
+    ]
+  },
+  coffeeShops: {
+    name: customLayerNames['coffeeShops'] || 'Coffee Shops',
+    icon: <div className="w-4 h-4 rounded-full" style={{ backgroundColor: layerColors.existingShop }} />,
+    legend: [
+      { label: 'Existing Shops', color: layerColors.existingShop },
+    ],
+    sources: [
+      { title: 'Coffee Shop Locations', url: 'https://data.cityofnewyork.us/Health/Coffee-Shop-Inspections-2023/xyz123' }
+    ]
+  },
+  footTraffic: {
+    name: customLayerNames['footTraffic'] || 'Foot Traffic',
+    icon: <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: layerColors.highTraffic }} />,
+    legend: [
+      {
+        label: 'Heatmap Intensity',
+        gradient: [layerColors.lowTraffic, layerColors.mediumTraffic, layerColors.highTraffic]
+      }
+    ],
+    sources: [
+      { title: 'Foot Traffic Data', url: 'https://data.nyc.gov/Transportation/Foot-Traffic-Counts-2023/abc456' },
+      { title: 'Pedestrian Analytics', url: 'https://example.com/pedestrian-data' },
+      { title: 'NYC Walking Patterns', url: 'https://opendata.cityofnewyork.us/walking-patterns' }
+    ]
+  },
+  radius: {
+    name: customLayerNames['radius'] || '1-Mile Radius',
+    icon: <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-dashed" style={{ backgroundColor: 'transparent' }} />,
+    legend: [
+      { label: 'Times Square Radius', color: '#4169E1', dashed: true }
+    ],
+    sources: [
+      { title: 'Times Square Location', url: 'https://en.wikipedia.org/wiki/Times_Square' }
+    ]
+  },
+  floodZones: {
+    name: customLayerNames['floodZones'] || 'Flood Risk Zones',
+    icon: <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: layerColors.floodZones || '#FF6B6B' }} />,
+    legend: [
+      { label: 'High Risk Flood Areas', color: layerColors.floodZones || '#FF6B6B' }
+    ],
+    sources: [
+      { title: 'Madrid Flood Risk Assessment', url: '#' },
+      { title: 'Spanish Hydrological Agency', url: '#' },
+      { title: 'EU Flood Risk Management', url: '#' }
+    ]
+  },
+  waterBodies: {
+    name: customLayerNames['waterBodies'] || 'Water Bodies',
+    icon: <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: layerColors.waterBodies || '#3498DB' }} />,
+    legend: [
+      { label: 'Lakes and Reservoirs', color: layerColors.waterBodies || '#3498DB' }
+    ],
+    sources: [
+      { title: 'Madrid Water Resources', url: '#' },
+      { title: 'OpenStreetMap Water Features', url: 'https://overpass-turbo.eu/' },
+      { title: 'Spanish Water Authority', url: '#' }
+    ]
+  },
+  waterways: {
+    name: customLayerNames['waterways'] || 'Waterways',
+    icon: <div className="w-4 h-1" style={{ backgroundColor: layerColors.waterways || '#2980B9' }} />,
+    legend: [
+      { label: 'Rivers and Streams', color: layerColors.waterways || '#2980B9', lineWeight: 'Medium' }
+    ],
+    sources: [
+      { title: 'Madrid River Network', url: '#' },
+      { title: 'OpenStreetMap Waterways', url: 'https://overpass-turbo.eu/' },
+      { title: 'Hydrographic Confederation', url: '#' }
+    ]
+  },
+  zoningBoundaries: {
+    name: customLayerNames['zoningBoundaries'] || 'Zoning Boundaries',
+    icon: <div className="w-4 h-4 rounded-sm border-2 border-purple-500 border-dashed" style={{ backgroundColor: 'transparent' }} />,
+    legend: [
+      { label: 'Zoning Districts', color: layerColors.zoningBoundaries || '#8E44AD', dashed: true }
+    ],
+    sources: [
+      { title: 'Madrid Urban Planning', url: '#' },
+      { title: 'Municipal Zoning Database', url: '#' },
+      { title: 'Land Use Regulations', url: '#' }
+    ]
+  },
+  environmentalRisk: {
+    name: customLayerNames['environmentalRisk'] || 'Environmental Risk',
+    icon: <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: layerColors.environmentalRisk || '#E67E22' }} />,
+    legend: [
+      {
+        label: 'Risk Intensity Heatmap',
+        gradient: ['#27AE60', '#F1C40F', '#F39C12', '#E67E22', '#E74C3C', '#8B0000']
+      }
+    ],
+    sources: [
+      { title: 'Environmental Risk Assessment', url: '#' },
+      { title: 'Industrial Zone Analysis', url: '#' },
+      { title: 'Pollution Risk Modeling', url: '#' }
+    ]
+  },
+  complianceIndicators: {
+    name: customLayerNames['complianceIndicators'] || 'Compliance Status',
+    icon: <div className="w-4 h-4 rounded-full" style={{ backgroundColor: layerColors.complianceIndicators || '#27AE60' }} />,
+    legend: [
+      { label: 'Compliant', color: '#27AE60' },
+      { label: 'Needs Review', color: '#F39C12' },
+      { label: 'Violation', color: '#E74C3C' }
+    ],
+    sources: [
+      { title: 'Environmental Compliance Database', url: '#' },
+      { title: 'Regulatory Status Reports', url: '#' },
+      { title: 'Permit Tracking System', url: '#' }
+    ]
+  },
+  weightedScoring: {
+  name: customLayerNames['weightedScoring'] || 'Weighted Site Scoring',
+  icon: <div className="w-4 h-4 rounded-full" style={{ backgroundColor: layerColors.weightedScoring || '#3498DB' }} />,
+  legend: [
+    { label: 'Score 8.0+ (Excellent)', color: '#27AE60' },
+    { label: 'Score 7.0-7.9 (Good)', color: '#F39C12' },
+    { label: 'Score 6.0-6.9 (Fair)', color: '#E67E22' },
+    { label: 'Score <6.0 (Poor)', color: '#E74C3C' }
+  ],
+  sources: [
+    { title: 'Infrastructure Weighting Analysis', url: '#' },
+    { title: 'Multi-Criteria Decision Matrix', url: '#' },
+    { title: 'Site Evaluation Methodology', url: '#' }
+  ]
+},
+costAnalysisZones: {
+  name: customLayerNames['costAnalysisZones'] || 'Cost Analysis Zones',
+  icon: <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: layerColors.costAnalysisZones || '#9B59B6' }} />,
+  legend: [
+    { label: 'Premium Zone (€180-220/sqm)', color: '#E74C3C' },
+    { label: 'High-Cost Zone (€120-180/sqm)', color: '#F39C12' },
+    { label: 'Moderate Zone (€80-120/sqm)', color: '#F1C40F' },
+    { label: 'Affordable Zone (€50-80/sqm)', color: '#27AE60' }
+  ],
+  sources: [
+    { title: 'Madrid Real Estate Market Data', url: '#' },
+    { title: 'Commercial Land Pricing Analysis', url: '#' },
+    { title: 'Industrial Zone Cost Assessment', url: '#' }
+  ]
+},
+rankingLabels: {
+  name: customLayerNames['rankingLabels'] || 'Final Site Rankings',
+  icon: <div className="w-4 h-4 rounded-full" style={{ backgroundColor: layerColors.rankingLabels || '#E74C3C' }} />,
+  legend: [
+    { label: '1st Choice', color: '#27AE60' },
+    { label: '2nd Choice', color: '#F39C12' },
+    { label: '3rd Choice', color: '#E67E22' }
+  ],
+  sources: [
+    { title: 'Final Ranking Methodology', url: '#' },
+    { title: 'Decision Support Analysis', url: '#' },
+    { title: 'Site Selection Recommendations', url: '#' }
+  ]
+}
+}), [layerColors, customLayerNames]);
   
   const handleLegendDragStart = (e) => {
     setIsDraggingLegend(true);
@@ -205,13 +408,11 @@ useEffect(() => {
         // Always set only the topmost layer as the interactive layer
         // This ensures only one layer is interactive at a time
         if (newLayerOrder.length > 0 && activeLayers[newLayerOrder[0]]) {
-            setTopInteractiveLayer(newLayerOrder[0]);
             console.log("Setting top interactive layer to:", newLayerOrder[0]);
         } else {
             // If top layer is not active, find the first active layer
             const firstActiveLayer = newLayerOrder.find(layerId => activeLayers[layerId]);
             if (firstActiveLayer) {
-                setTopInteractiveLayer(firstActiveLayer);
                 console.log("Setting top interactive layer to first active:", firstActiveLayer);
             }
         }
@@ -224,6 +425,51 @@ useEffect(() => {
 
   const getLayerKeyFromLegend = (layerId, label) => {
     const clean = (str) => str.toLowerCase().replace(/[^a-z]/g, '');
+if (layerId === 'floodZones') {
+    return 'floodZones';
+  }
+
+  if (layerId === 'waterBodies') {
+    return 'waterBodies';
+  }
+
+  if (layerId === 'waterways') {
+    return 'waterways';
+  }
+
+  if (layerId === 'zoningBoundaries') {
+    return 'zoningBoundaries';
+  }
+
+  if (layerId === 'complianceIndicators') {
+    if (label.includes('Compliant')) return 'complianceIndicators';
+    if (label.includes('Review')) return 'complianceIndicators';
+    if (label.includes('Violation')) return 'complianceIndicators';
+    return 'complianceIndicators';
+  }
+
+     if (layerId === 'uploadedLocations') {
+    return 'uploadedLocations';
+  }
+
+  if (layerId === 'substations') {
+    return 'substations';
+  }
+
+  if (layerId === 'powerlines') {
+    if (label.includes('400kV')) return 'powerlines400kv';
+    if (label.includes('220kV')) return 'powerlines220kv';
+    if (label.includes('Other')) return 'powerlinesOther';
+    return 'powerlines400kv'; // default
+  }
+
+  if (layerId === 'bufferZones') {
+    return 'bufferZones';
+  }
+
+if (layerId === 'dataCenters') {
+    return 'existingDataCenter';
+  }
 
     if (layerId === 'coffeeShops') {
       if (label.includes('Existing')) return 'existingShop';
@@ -237,6 +483,17 @@ useEffect(() => {
       if (label.includes('Medium')) return 'mediumTraffic';
       if (label.includes('Low')) return 'lowTraffic';
     }
+    if (layerId === 'weightedScoring') {
+  return 'weightedScoring';
+}
+
+if (layerId === 'costAnalysisZones') {
+  return 'costAnalysisZones';
+}
+
+if (layerId === 'rankingLabels') {
+  return 'rankingLabels';
+}
 
     return '';
   };
@@ -253,19 +510,19 @@ useEffect(() => {
       }}
     >
 <div 
-  className="absolute -top-1 left-1/2 transform -translate-x-1/2 flex justify-center items-center cursor-grab z-10"
+  className="absolute -top-0 left-1/2 transform -translate-x-1/2 flex justify-center items-center cursor-grab z-10"
   onMouseDown={handleLegendDragStart}
 >
-  <div className="w-12 h-6 flex flex-col justify-center items-center gap-[3px]">
+  <div className="w-10 h-4 flex flex-col justify-center items-center gap-[4px]">
     <div className="flex space-x-[3px]">
-      <span className="block w-[3px] h-[3px] bg-gray-400 rounded-full"></span>
-      <span className="block w-[3px] h-[3px] bg-gray-400 rounded-full"></span>
-      <span className="block w-[3px] h-[3px] bg-gray-400 rounded-full"></span>
+      <span className="block w-[1.5px] h-[1.6px] bg-gray-300 rounded-full"></span>
+      <span className="block w-[1.5px] h-[1.6px] bg-gray-300 rounded-full"></span>
+      <span className="block w-[1.5px] h-[1.6px] bg-gray-300 rounded-full"></span>
     </div>
     <div className="flex space-x-[3px]">
-      <span className="block w-[3px] h-[3px] bg-gray-400 rounded-full"></span>
-      <span className="block w-[3px] h-[3px] bg-gray-400 rounded-full"></span>
-      <span className="block w-[3px] h-[3px] bg-gray-400 rounded-full"></span>
+      <span className="block w-[1.5px] h-[1.6px] bg-gray-300 rounded-full"></span>
+      <span className="block w-[1.5px] h-[1.6px] bg-gray-300 rounded-full"></span>
+      <span className="block w-[1.5px] h-[1.6px] bg-gray-300 rounded-full"></span>
     </div>
   </div>
 </div>
@@ -347,52 +604,173 @@ useEffect(() => {
 
 
               {expandedSections[layerId] && (
+                  <>
                 <div className="mt-2 pl-6 text-xs space-y-2">
                   {section.legend.map((item, idx) =>
-                    item.gradient ? (
-                      <div key={idx}>
-                        <div
-                          className="h-2 rounded"
-                          style={{
-                            background: `linear-gradient(to right, ${item.gradient.join(', ')})`
-                          }}
-                        />
-                        <div className="flex justify-between text-[10px] mt-1 text-gray-500">
-                          <span>Low</span>
-                          <span>High</span>
-                        </div>
-                      </div>
-                    ) : item.markers ? (
-                      <div key={idx} className="flex space-x-3">
-                        {item.markers.map((m, i) => (
-                          <div key={i} className="flex items-center space-x-2">
-                            <div
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: m.color }}
-                            ></div>
-                            <span>{m.label}</span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div key={idx} className="flex items-center space-x-2">
-                        <input
-                          type="color"
-                          value={item.color}
-                          onChange={(e) => {
-                            const newColor = e.target.value;
-                            setLayerColors((prev) => ({
-                              ...prev,
-                              [getLayerKeyFromLegend(layerId, item.label)]: newColor
-                            }));
-                          }}
-                          className="w-6 h-4 border rounded cursor-pointer"
-                        />
-                        <span>{item.label}</span>
-                      </div>
-                    )
-                  )}
+  item.gradient ? (
+    <div key={idx}>
+      <div
+        className="h-2 rounded"
+        style={{
+          background: `linear-gradient(to right, ${item.gradient.join(', ')})`
+        }}
+      />
+      <div className="flex justify-between text-[10px] mt-1 text-gray-500">
+        <span>Low</span>
+        <span>High</span>
+      </div>
+    </div>
+  ) : item.markers ? (
+    <div key={idx} className="flex space-x-3">
+      {item.markers.map((m, i) => (
+        <div key={i} className="flex items-center space-x-2">
+          <div
+            className="w-3 h-3 rounded-full"
+            style={{ backgroundColor: m.color }}
+          ></div>
+          <span>{m.label}</span>
+        </div>
+      ))}
+    </div>
+  ) : item.dashed ? (
+    <div key={idx} className="flex items-center space-x-2">
+      <div className="flex items-center space-x-1">
+        <div
+          className="w-2 h-2 rounded-full border-2"
+          style={{ 
+            borderColor: item.color,
+            borderStyle: 'dashed',
+            backgroundColor: 'transparent'
+          }}
+        ></div>
+        <span className="text-xs">{item.label}</span>
+      </div>
+      <input
+        type="color"
+        value={item.color}
+        onChange={(e) => {
+          const newColor = e.target.value;
+          setLayerColors((prev) => ({
+            ...prev,
+            [getLayerKeyFromLegend(layerId, item.label)]: newColor
+          }));
+        }}
+        className="w-6 h-4 border rounded cursor-pointer"
+      />
+    </div>
+  ) : item.lineWeight ? (
+    <div key={idx} className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2">
+        <div
+          className={`rounded ${
+            item.lineWeight === 'Heavy' ? 'w-4 h-1' :
+            item.lineWeight === 'Medium' ? 'w-4 h-0.5' : 'w-4 h-px'
+          }`}
+          style={{ backgroundColor: item.color }}
+        ></div>
+        <span className="text-xs">{item.label}</span>
+      </div>
+      <input
+        type="color"
+        value={item.color}
+        onChange={(e) => {
+          const newColor = e.target.value;
+          setLayerColors((prev) => ({
+            ...prev,
+            [getLayerKeyFromLegend(layerId, item.label)]: newColor
+          }));
+        }}
+        className="w-6 h-4 border rounded cursor-pointer"
+      />
+    </div>
+  ) : item.size ? (
+    <div key={idx} className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2">
+        <div
+          className={`transform rotate-45 ${
+            item.size === 'Large' ? 'w-3 h-3' :
+            item.size === 'Medium' ? 'w-2.5 h-2.5' : 'w-2 h-2'
+          }`}
+          style={{ backgroundColor: item.color }}
+        ></div>
+        <span className="text-xs">{item.label}</span>
+      </div>
+      <input
+        type="color"
+        value={item.color}
+        onChange={(e) => {
+          const newColor = e.target.value;
+          setLayerColors((prev) => ({
+            ...prev,
+            [getLayerKeyFromLegend(layerId, item.label)]: newColor
+          }));
+        }}
+        className="w-6 h-4 border rounded cursor-pointer"
+      />
+    </div>
+  ) : (
+  <div key={idx} className="flex items-center space-x-2">
+    <input
+      type="color"
+      value={item.color}
+      onChange={(e) => {
+        const newColor = e.target.value;
+        setLayerColors((prev) => ({
+          ...prev,
+          [getLayerKeyFromLegend(layerId, item.label)]: newColor
+        }));
+      }}
+      className="w-6 h-4 border rounded cursor-pointer"
+    />
+    <div className="flex flex-col">
+      <span>{item.label}</span>
+      {item.note && <span className="text-xs text-gray-500 italic">{item.note}</span>}
+    </div>
+  </div>
+)
+)}
+            {section.sources && section.sources.length > 0 && (
+  <div className="mt-2 text-[11px] text-gray-500 w-full px-2">
+    {section.sources.length === 1 ? (
+      <a 
+        href={section.sources[0].url} 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        className="text-[#008080] underline hover:text-[#006666]"
+      >
+        {section.sources[0].title}
+      </a>
+    ) : (
+      <div className="relative">
+        <button
+          onClick={() => setShowSourcesPopup(showSourcesPopup === layerId ? null : layerId)}
+          className="text-[#008080] underline hover:text-[#006666] cursor-pointer"
+        >
+          Sources ({section.sources.length})
+        </button>
+        
+        {showSourcesPopup === layerId && (
+          <div className="absolute left-0 top-5 bg-white border border-gray-300 rounded shadow-lg p-2 z-50 min-w-48">
+            {section.sources.map((source, idx) => (
+              <div key={idx} className="mb-1 last:mb-0">
+                <a 
+                  href={source.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-[#008080] underline hover:text-[#006666] text-xs block"
+                >
+                  {source.title}
+                </a>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+)}
                 </div>
+                </>
               )}
               
             </div>

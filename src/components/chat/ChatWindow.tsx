@@ -1,9 +1,13 @@
-// 2. MODIFY CHATWINDOW COMPONENT
-// Next, update the ChatWindow component to receive messages and setMessages as props
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { Brain, Zap, Sparkles, Code, FileText, Send } from 'lucide-react';
+
+interface SequentialLoadingMessagesProps {
+  isVisible: boolean;
+}
+
+
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 import { Artifact, ChatMessageType } from '../../app/page';
@@ -101,6 +105,7 @@ useEffect(() => {
   };
 }, []);
 
+const [activeFeedbackMessageId, setActiveFeedbackMessageId] = useState<string | null>(null);
 
   return (
     
@@ -146,22 +151,13 @@ useEffect(() => {
         isReloading={isReloading?.current || false} 
         onArtifactClick={(artifact: Artifact) => setSelectedArtifact(artifact)}
         onFeedback={handleFeedback} 
+        activeFeedbackMessageId={activeFeedbackMessageId}
+  setActiveFeedbackMessageId={setActiveFeedbackMessageId}
       />
     ))}
-    {isLoading && (
-      <div className="flex justify-start">
-        <div className="bg-[#34495E] text-[#FFFFFF] rounded-lg px-4 py-2 rounded-bl-none">
-          <div className="flex space-x-2">
-            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '200ms' }}></div>
-            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '400ms' }}></div>
-          </div>
-        </div>
-      </div>
-    )}
     <div ref={messagesEndRef} />
   </div>
-  <ChatInput onSendMessage={onSendMessage} />
+  <ChatInput onSendMessage={onSendMessage} setActiveFeedbackMessageId={setActiveFeedbackMessageId} />
 </div>
 
       </div>

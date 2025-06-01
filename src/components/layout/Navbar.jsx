@@ -89,8 +89,8 @@ const profileRef = useRef(null);
 
   {dropdownOpen && (
     <div className="absolute right-0 mt-3 w-72 bg-white border border-gray-200 rounded-2xl shadow-lg z-50 text-sm overflow-hidden animate-fade-in">
-      <div className="px-4 py-3 bg-[#f0fdfa] flex justify-between items-center">
-        <span className="text-sm font-medium text-[#008080] tracking-wide">Notifications</span>
+<div className="px-4 py-3 bg-neutral-50 flex justify-between items-center border-b border-gray-200">
+<span className="text-sm font-medium text-[#008080] tracking-wide">Notifications</span>
         <button
           onClick={clearAllNotifications}
           className="text-xs text-[#008080] hover:text-red-500 transition font-medium"
@@ -104,21 +104,21 @@ const profileRef = useRef(null);
       ) : (
 <ul className="max-h-72 overflow-y-auto space-y-1 px-2 py-2">
 {notifications.map((n) => (
-            <li
-              key={n.id}
-              className="px-3 py-2 rounded-lg text-[#008080] hover:bg-[#f0fdfa] transition-all relative group flex items-start gap-2"
-              >
-              <span className="flex-1 leading-snug">{n.message}</span>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removeNotification(n.id);
-                }}
-                className="opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <X className="h-4 w-4 text-gray-400 hover:text-red-500" />
-              </button>
-            </li>
+           <li
+           key={n.id}
+           className="px-3 py-2 rounded-lg text-[#008080] bg-white hover:bg-[#008080] hover:text-white transition-all relative group flex justify-between items-center gap-2 border border-transparent hover:border-[#008080]/50"
+         >
+           <span className="leading-snug flex-1">{n.message}</span>
+           <button
+             onClick={(e) => {
+               e.stopPropagation();
+               removeNotification(n.id);
+             }}
+             className="opacity-0 group-hover:opacity-100 transition-opacity"
+           >
+             <X className="h-4 w-4 text-[#008080] group-hover:text-white hover:text-[#FF5747] transition-colors duration-150" />
+           </button>
+         </li>         
           ))}
         </ul>
       )}
@@ -142,10 +142,10 @@ const profileRef = useRef(null);
   {profileOpen && (
     <div className="absolute right-0 mt-3 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 text-sm overflow-hidden animate-fade-in">
       <div className="divide-y divide-gray-100">
-        <button className="w-full px-4 py-3 text-left text-[#008080] hover:bg-[#f0fdfa] transition">Settings</button>
-        <button className="w-full px-4 py-3 text-left text-[#008080] hover:bg-[#f0fdfa] transition">Privacy</button>
-        <button className="w-full px-4 py-3 text-left text-[#008080] hover:bg-[#f0fdfa] transition">Learn More</button>
-        <button className="w-full px-4 py-3 text-left text-[#008080] hover:bg-[#f0fdfa] transition">Help & FAQ</button>
+      <button className="w-full px-4 py-3 text-left text-[#008080] bg-white hover:bg-[#008080] hover:text-white transition-colors duration-150">Settings</button>
+      <button className="w-full px-4 py-3 text-left text-[#008080] bg-white hover:bg-[#008080] hover:text-white transition-colors duration-150">Privacy</button>
+      <button className="w-full px-4 py-3 text-left text-[#008080] bg-white hover:bg-[#008080] hover:text-white transition-colors duration-150">Learn More</button>
+      <button className="w-full px-4 py-3 text-left text-[#008080] bg-white hover:bg-[#008080] hover:text-white transition-colors duration-150">Help & FAQ</button>
       </div>
     </div>
   )}

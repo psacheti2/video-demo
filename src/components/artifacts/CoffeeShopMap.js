@@ -4,10 +4,10 @@ import React, { useEffect, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 
 const MapComponent = dynamic(
-  () => import('./CoffeeShopMapComponent'),
+  () => import('./CoffeeShopMapComponent').then(module => ({ default: module.default })),
   {
     ssr: false,
-    loading: () => <div className="w-full h-full flex items-center justify-center">Loading map...</div>
+    loading: () => <div>Loading map...</div>
   }
 );
 

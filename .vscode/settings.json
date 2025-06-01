@@ -1,3 +1,6 @@
 {
-    "typescript.tsserver.exclude": ["**/node_modules"]
+    "typescript.tsserver.exclude": ["**/node_modules"],
+    "css.validate": false,
+    "scss.validate": false,
+    "less.validate": false
 }

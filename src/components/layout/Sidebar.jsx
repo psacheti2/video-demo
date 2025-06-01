@@ -1,7 +1,9 @@
 import { useState, useEffect, Fragment,useRef } from 'react';
-import { PanelRight, Search, Plus, MoreVertical, Pencil, Trash2, Share2, X} from 'lucide-react';
+import { PanelRight, Search, Plus, MoreVertical, Pencil, Trash2, Share2, X, Link, Send, Copy} from 'lucide-react';
 import { Dialog, Menu, Transition } from '@headlessui/react';
 import { Tooltip } from '../Tooltip';
+import { useNotificationStore } from '@/store/NotificationsStore';
+import { FaXTwitter, FaRedditAlien, FaWhatsapp } from 'react-icons/fa6';
 
 export default function Sidebar({
   isOpen,
@@ -38,6 +40,8 @@ const [newArtifactTitle, setNewArtifactTitle] = useState('');
   const [shareDialogPosition, setShareDialogPosition] = useState({ x: 0, y: 0 });
   const teammates = ['Alice Chen', 'Bob Smith', 'Cynthia Zhang'];
   const [editingArtifactId, setEditingArtifactId] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const addNotification = useNotificationStore((state) => state.addNotification);
   const filteredTeammates = teammates.filter(t =>
     t.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -586,7 +590,7 @@ const handleRenameArtifact = () => {
         Delete {artifactToDelete ? 'Artifact' : 'Chat'}
       </Dialog.Title>
       <p className="text-[#2C3E50] text-sm mb-1">
-        Are you sure you want to delete this {artifactToDelete ? 'artifact' : 'chat'}?
+        Are you sure you want to delete this {artifactToDelete ? 'saved artifact' : 'chat'}?
       </p>
       <p className="text-sm text-[#008080] font-medium italic mb-4">
         "{artifactToDelete?.title || chatToDelete?.title || 'Untitled'}"
@@ -615,8 +619,9 @@ const handleRenameArtifact = () => {
   </div>
 </Dialog>
 
-      {shareOpen && itemToShare && (
-  <div className="fixed z-[200] w-[260px] bg-white border border-gray-200 shadow-xl rounded-xl p-4 animate-fade-in"
+{shareOpen && itemToShare && (
+  <div
+    className="fixed z-[200] w-[250px] bg-white border border-gray-200 shadow-xl rounded-xl p-4 animate-fade-in"
     style={{
       top: `${shareDialogPosition.y}px`,
       left: `${shareDialogPosition.x}px`,
@@ -624,69 +629,161 @@ const handleRenameArtifact = () => {
     }}
   >
     <div className="flex justify-between items-center mb-2">
-      <h3 className="text-sm font-semibold text-gray-800">Share {itemTypeToShare === 'artifact' ? 'Artifact' : 'Chat'}</h3>
-      <button onClick={() => {
-        setShareOpen(false);
-        setSelectedTeammates([]);
-      }} className="text-gray-400 hover:text-gray-600">
-        <X size={16} />
-      </button>
-    </div>
+      <h3 className="text-sm font-semibold text-[#008080]">
+        Share {itemTypeToShare === 'artifact' ? 'Artifact' : 'Chat'}
+      </h3>
+      <button
+  onClick={() => {
+    setShareOpen(false);
+    setSelectedTeammates([]);
+    setSearchTerm('');
+  }}
+  className="text-gray-400 hover:text-[#008080]"
+>
+  <X size={16} />
+</button>
 
-    <p className="text-xs text-gray-500 mb-2">
-      Sharing: <span className="font-medium text-[#008080]">{itemToShare.title}</span>
-    </p>
+    </div>
+    <div className="flex items-center border border-gray-300 rounded-md px-2 py-1 min-h-[38px] mb-2 focus-within:ring-2 focus-within:ring-[#008080]">
+  <div className="flex flex-wrap gap-1 items-center flex-1">
+    {selectedTeammates.map((email) => (
+      <span
+        key={email}
+        className="bg-[#008080]/10 text-[#008080] text-xs px-2 py-0.5 rounded-full flex items-center gap-1"
+      >
+        {email}
+        <button
+          onClick={() =>
+            setSelectedTeammates((prev) => prev.filter((e) => e !== email))
+          }
+          className="hover:text-red-500"
+        >
+          <X size={12} />
+        </button>
+      </span>
+    ))}
 
     <input
       type="text"
-      placeholder="Search teammate..."
+      placeholder="Enter email..."
       value={searchTerm}
       onChange={(e) => setSearchTerm(e.target.value)}
-      className="w-full mb-2 px-2 py-1 border border-gray-300 rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-[#008080]"
+      onKeyDown={(e) => {
+        if (
+          (e.key === 'Enter' || e.key === ',' || e.key === 'Tab') &&
+          /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(searchTerm.trim())
+        ) {
+          e.preventDefault();
+          const email = searchTerm.trim().toLowerCase();
+          if (!selectedTeammates.includes(email)) {
+            setSelectedTeammates([...selectedTeammates, email]);
+          }
+          setSearchTerm('');
+        }
+      }}
+      className="flex-1 text-xs focus:outline-none min-w-[80px] bg-transparent"
     />
-
-    <div className="max-h-24 overflow-y-auto space-y-1 pr-1 text-sm">
-    {filteredTeammates.map((teammate) => (
-  <div
-    key={teammate}
-    onClick={() => toggleTeammateSelection(teammate)}
-    className={`px-2 py-1 rounded-md cursor-pointer transition border 
-      ${selectedTeammates.includes(teammate)
-        ? 'bg-[#008080]/10 border-[#008080]'
-        : 'hover:bg-gray-50 border-gray-200'}
-    `}
-  >
-    <span className="text-xs text-gray-700">{teammate}</span>
   </div>
-))}
-      {filteredTeammates.length === 0 && (
-        <div className="text-xs text-gray-500 text-center py-2">No teammates found</div>
-      )}
-    </div>
 
+  <button
+    disabled={selectedTeammates.length === 0}
+    onClick={() => {
+      const message = `Shared ${itemTypeToShare === 'artifact' ? 'artifact' : 'chat'} "${itemToShare.title}" with ${selectedTeammates.join(', ')}`;
+      addNotification(message);
+      window.dispatchEvent(new CustomEvent('show-toast', { detail: message }));
+      setSelectedTeammates([]);
+      setSearchTerm('');
+      setShareOpen(false);
+    }}
+    className={`ml-2 p-1.5 rounded-full border ${
+      selectedTeammates.length > 0
+        ? 'border-[#008080] text-[#008080] bg-white hover:bg-[#008080] hover:text-white'
+        : 'border-gray-200 text-gray-400 bg-gray-100 cursor-not-allowed'
+    } transition`}
+    title="Send"
+  >
+    <Send size={14} />
+  </button>
+</div>
+<div className="flex justify-center gap-6 mt-3">
+  {/* X */}
+  <div className="flex flex-col items-center group">
     <button
-  disabled={selectedTeammates.length === 0}
+      className="w-8 h-8 rounded-full border border-gray-300 bg-white flex items-center justify-center text-gray-700 hover:bg-black hover:text-white transition"
+      title="Share on X"
+    >
+      <FaXTwitter size={14} />
+    </button>
+    <span className="text-[10px] text-gray-500 mt-1 transition group-hover:text-[#008080]">
+      X
+    </span>
+  </div>
+
+  {/* Reddit */}
+  <div className="flex flex-col items-center group">
+    <button
+      className="w-8 h-8 rounded-full border border-gray-300 bg-white flex items-center justify-center text-gray-700 hover:bg-[#FF5700] hover:text-white transition"
+      title="Share on Reddit"
+    >
+      <FaRedditAlien size={14} />
+    </button>
+    <span className="text-[10px] text-gray-500 mt-1 transition group-hover:text-[#008080]">
+      Reddit
+    </span>
+  </div>
+
+  {/* WhatsApp */}
+  <div className="flex flex-col items-center group">
+    <button
+      className="w-8 h-8 rounded-full border border-gray-300 bg-white flex items-center justify-center text-gray-700 hover:bg-[#25D366] hover:text-white transition"
+      title="Share on WhatsApp"
+    >
+      <FaWhatsapp size={14} />
+    </button>
+    <span className="text-[10px] text-gray-500 mt-1 transition group-hover:text-[#008080]">
+      WhatsApp
+    </span>
+  </div>
+</div>
+
+<div className="flex items-center my-4">
+  <hr className="flex-grow border-gray-300" />
+  <span className="mx-3 text-[10px] text-[#008080] font-medium">OR</span>
+  <hr className="flex-grow border-gray-300" />
+</div>
+    
+
+    <div className="mt-4 flex items-center justify-between space-x-3">
+  
+    <button
   onClick={() => {
-    setShareOpen(false);
-    if (itemTypeToShare === 'artifact') {
-      alert(`Shared artifact "${itemToShare.title}" with ${selectedTeammates.join(', ')}`);
-    } else {
-      alert(`Shared chat "${itemToShare.title}" with ${selectedTeammates.join(', ')}`);
-    }
-    setSelectedTeammates([]);
+    navigator.clipboard.writeText('https://example.com/shared/item');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }}
-  className={`w-full mt-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200
-    ${selectedTeammates.length > 0
-      ? 'bg-[#008080] text-white hover:bg-teal-700'
-      : 'bg-gray-200 text-gray-500 cursor-not-allowed'}
-  `}
+  className="group flex items-center gap-1.5 px-3 py-1 border border-[#008080] text-[#008080] rounded-full bg-white text-xs font-medium hover:bg-[#008080] hover:text-white transition"
 >
-  Share
+  <Copy
+    size={14}
+    className="text-[#008080] group-hover:text-white transition"
+  />
+  {copied ? 'Copied!' : 'Copy link'}
 </button>
+
+  <button
+    onClick={() => {
+      setShareOpen(false);
+      setSearchTerm('');
+      setSelectedTeammates([]);
+    }}
+    className="px-4 py-1 rounded-full border border-[#008080] text-[#008080] bg-white text-xs font-medium hover:bg-[#008080] hover:text-white transition"
+  >
+    Done
+  </button>
+</div>
+
   </div>
 )}
-
-
 
      
     </>

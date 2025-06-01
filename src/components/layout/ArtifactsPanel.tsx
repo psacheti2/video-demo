@@ -18,6 +18,11 @@ import CoffeeShopMap from '../artifacts/CoffeeShopMap'
 import AdditionalLayersMap from '../artifacts/AdditionalLayersMap';
 import CoffeeShopROIAnalysis from '../artifacts/ROIAnalysisDashboard';
 import CoffeeShopReport from '../artifacts/CoffeeShopReport';
+import DataCenterMap from '../artifacts/DataCenterMap'
+import InfrastructureAnalysisMap from '../artifacts/InfrastructureAnalysisMap'
+import EnvironmentAnalysisMap from '../artifacts/EnvironmentAnalysisMap'
+import IndexMap from '../artifacts/IndexMap'
+import DataCenterReport from '../artifacts/DataCenterReport'
 
 interface ArtifactData {
   id: string;
@@ -26,6 +31,7 @@ interface ArtifactData {
   type: string;
   component: string;
   data: any;
+  originConversationId?: string; 
 }
 
 interface ArtifactsPanelProps {
@@ -59,7 +65,31 @@ export default function ArtifactsPanel({
   const setControlledArtifact = setSelectedArtifact || (() => { });
   const prevMessageId = useRef(messageId);
   const prevArtifactsLength = useRef(artifacts.length);
-
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [tempTitle, setTempTitle] = useState(controlledArtifact?.title || '');
+  const handleTitleUpdate = (newTitle: string) => {
+    if (!controlledArtifact) return;
+  
+    const updatedArtifact = { ...controlledArtifact, title: newTitle };
+    setControlledArtifact(updatedArtifact);
+  
+    setSavedArtifacts((prev) =>
+      prev.map((artifact) =>
+        artifact.id === updatedArtifact.id ? updatedArtifact : artifact
+      )
+    );
+  
+    window.dispatchEvent(
+      new CustomEvent('artifact-title-updated', {
+        detail: {
+          id: updatedArtifact.id,
+          newTitle,
+          dataMatch: updatedArtifact.data, 
+        },
+      })
+    );
+  };  
+  
 
   const InfrastructureFloodMapWithProps = ({ data }: { data: any }) => {
     const component = useMemo(() => (
@@ -69,15 +99,22 @@ export default function ArtifactsPanel({
         setSavedArtifacts={setSavedArtifacts}
         title={controlledArtifact?.title}
         onBack={() => {
-          if (isFullscreen) {
-            toggleFullscreen();               // ⬅️ exit fullscreen first
-            setTimeout(() => {
-              setControlledArtifact(null);    // ⬅️ then open gallery
-            }, 300);
+          const chatId = controlledArtifact?.originConversationId;
+          if (chatId) {
+            window.dispatchEvent(new CustomEvent('go-to-chat', { detail: chatId }));
+            console.log('[BACK BUTTON] Going back to chatId:', chatId);
           } else {
-            setControlledArtifact(null);      // ⬅️ regular back just opens gallery
+            if (isFullscreen) {
+              toggleFullscreen();
+              setTimeout(() => {
+                setControlledArtifact(null);
+              }, 300);
+            } else {
+              setControlledArtifact(null);
+            }
           }
         }}
+        
       />
 
     ), [data.id, controlledArtifact?.title, isFullscreen, setControlledArtifact]);
@@ -92,15 +129,22 @@ export default function ArtifactsPanel({
       setSavedArtifacts={setSavedArtifacts}
       title={controlledArtifact?.title}
       onBack={() => {
-        if (isFullscreen) {
-          toggleFullscreen();
-          setTimeout(() => {
-            setControlledArtifact(null);
-          }, 300);
+        const chatId = controlledArtifact?.originConversationId;
+        if (chatId) {
+          window.dispatchEvent(new CustomEvent('go-to-chat', { detail: chatId }));
+          console.log('[BACK BUTTON] Going back to chatId:', chatId);
         } else {
-          setControlledArtifact(null);
+          if (isFullscreen) {
+            toggleFullscreen();
+            setTimeout(() => {
+              setControlledArtifact(null);
+            }, 300);
+          } else {
+            setControlledArtifact(null);
+          }
         }
       }}
+      
     />
   );
   const IndexDashboardComponentWithProps = ({ data }: { data: any }) => <IndexDashboard {...data} />;
@@ -119,15 +163,22 @@ export default function ArtifactsPanel({
       setSavedArtifacts={setSavedArtifacts}
       title={controlledArtifact?.title}
       onBack={() => {
-        if (isFullscreen) {
-          toggleFullscreen();
-          setTimeout(() => {
-            setControlledArtifact(null);
-          }, 300);
+        const chatId = controlledArtifact?.originConversationId;
+        if (chatId) {
+          window.dispatchEvent(new CustomEvent('go-to-chat', { detail: chatId }));
+          console.log('[BACK BUTTON] Going back to chatId:', chatId);
         } else {
-          setControlledArtifact(null);
+          if (isFullscreen) {
+            toggleFullscreen();
+            setTimeout(() => {
+              setControlledArtifact(null);
+            }, 300);
+          } else {
+            setControlledArtifact(null);
+          }
         }
       }}
+      
     />
   );
   // This effect detects when a new message arrives (messageId changes)
@@ -135,13 +186,24 @@ export default function ArtifactsPanel({
     // Only react to new user messages, not conversation reloads
     if (messageId !== '' && messageId !== prevMessageId.current && messageId.startsWith('user_')) {
       if (artifacts.length > prevArtifactsCount) {
-        setControlledArtifact?.(artifacts[artifacts.length - 1]);
-      }
+        const newest = artifacts[artifacts.length - 1];
+        setControlledArtifact?.({
+          ...newest,
+          originConversationId: newest.originConversationId || (localStorage.getItem('activeConversationId') ?? undefined),
+        });
+              }
 
       prevMessageId.current = messageId;
       prevArtifactsLength.current = artifacts.length;
     }
   }, [messageId, artifacts, prevArtifactsCount]);
+
+  useEffect(() => {
+    if (controlledArtifact?.title) {
+      setTempTitle(controlledArtifact.title);
+    }
+  }, [controlledArtifact]);
+  
 useEffect(() => {
   // Tell any map to resize if the panel width changes
   const timer = setTimeout(() => {
@@ -182,17 +244,139 @@ useEffect(() => {
         return <SevenExtractComponentWithProps data={artifact.data} />;
       case 'FourMap':
         return <FourMapComponentWithProps data={artifact.data} />;
-      case 'CoffeeShopMap':
-        return <CoffeeShopMap {...artifact.data} savedMaps={savedArtifacts} setSavedArtifacts={setSavedArtifacts} title={controlledArtifact?.title} onBack={() => {
-          if (isFullscreen) {
-            toggleFullscreen();
-            setTimeout(() => {
-              setControlledArtifact(null);
-            }, 300);
-          } else {
+        case 'CoffeeShopMap':
+          return <CoffeeShopMap {...artifact.data} savedMaps={savedArtifacts} setSavedArtifacts={setSavedArtifacts} title={controlledArtifact?.title} 
+          originConversationId={controlledArtifact?.originConversationId} 
+          onBack={() => {
+            const chatId = controlledArtifact?.originConversationId;
+            if (chatId) {
+              window.dispatchEvent(new CustomEvent('go-to-chat', { detail: chatId }));
+              console.log('[BACK BUTTON] Going back to chatId:', chatId);
+
+            } else {
+              if (isFullscreen) {
+                toggleFullscreen();
+                setTimeout(() => {
+                  setControlledArtifact(null);
+                }, 300);
+              } else {
+                setControlledArtifact(null);
+              }
+            }
+          }}           
+          isPreview={true}
+        />;
+        case 'DataCenterMap':
+          return <DataCenterMap {...artifact.data} savedMaps={savedArtifacts} setSavedArtifacts={setSavedArtifacts} title={controlledArtifact?.title} 
+          originConversationId={controlledArtifact?.originConversationId} 
+          onBack={() => {
+            const chatId = controlledArtifact?.originConversationId;
+            if (chatId) {
+              window.dispatchEvent(new CustomEvent('go-to-chat', { detail: chatId }));
+              console.log('[BACK BUTTON] Going back to chatId:', chatId);
+
+            } else {
+              if (isFullscreen) {
+                toggleFullscreen();
+                setTimeout(() => {
+                  setControlledArtifact(null);
+                }, 300);
+              } else {
+                setControlledArtifact(null);
+              }
+            }
+          }}           
+          isPreview={true}
+        />;
+        case 'InfrastructureAnalysisMap':
+          return <InfrastructureAnalysisMap {...artifact.data} savedMaps={savedArtifacts} setSavedArtifacts={setSavedArtifacts} title={controlledArtifact?.title} 
+          originConversationId={controlledArtifact?.originConversationId} 
+          onBack={() => {
+            const chatId = controlledArtifact?.originConversationId;
+            if (chatId) {
+              window.dispatchEvent(new CustomEvent('go-to-chat', { detail: chatId }));
+              console.log('[BACK BUTTON] Going back to chatId:', chatId);
+
+            } else {
+              if (isFullscreen) {
+                toggleFullscreen();
+                setTimeout(() => {
+                  setControlledArtifact(null);
+                }, 300);
+              } else {
+                setControlledArtifact(null);
+              }
+            }
+          }}           
+          isPreview={true}
+        />;
+        case 'EnvironmentAnalysisMap':
+          return <EnvironmentAnalysisMap {...artifact.data} savedMaps={savedArtifacts} setSavedArtifacts={setSavedArtifacts} title={controlledArtifact?.title} 
+          originConversationId={controlledArtifact?.originConversationId} 
+          onBack={() => {
+            const chatId = controlledArtifact?.originConversationId;
+            if (chatId) {
+              window.dispatchEvent(new CustomEvent('go-to-chat', { detail: chatId }));
+              console.log('[BACK BUTTON] Going back to chatId:', chatId);
+
+            } else {
+              if (isFullscreen) {
+                toggleFullscreen();
+                setTimeout(() => {
+                  setControlledArtifact(null);
+                }, 300);
+              } else {
+                setControlledArtifact(null);
+              }
+            }
+          }}           
+          isPreview={true}
+        />;
+        case 'IndexMap':
+          return <IndexMap {...artifact.data} savedMaps={savedArtifacts} setSavedArtifacts={setSavedArtifacts} title={controlledArtifact?.title} 
+          originConversationId={controlledArtifact?.originConversationId} 
+          onBack={() => {
+            const chatId = controlledArtifact?.originConversationId;
+            if (chatId) {
+              window.dispatchEvent(new CustomEvent('go-to-chat', { detail: chatId }));
+              console.log('[BACK BUTTON] Going back to chatId:', chatId);
+
+            } else {
+              if (isFullscreen) {
+                toggleFullscreen();
+                setTimeout(() => {
+                  setControlledArtifact(null);
+                }, 300);
+              } else {
+                setControlledArtifact(null);
+              }
+            }
+          }}           
+          isPreview={true}
+        />;
+        case 'DataCenterReport':
+  return <DataCenterReport 
+    {...artifact.data} 
+    title={controlledArtifact?.title} 
+    onBack={() => {
+      const chatId = controlledArtifact?.originConversationId;
+      if (chatId) {
+        window.dispatchEvent(new CustomEvent('go-to-chat', { detail: chatId }));
+        console.log('[BACK BUTTON] Going back to chatId:', chatId);
+
+      } else {
+        if (isFullscreen) {
+          toggleFullscreen();
+          setTimeout(() => {
             setControlledArtifact(null);
-          }
-        }} />;
+          }, 300);
+        } else {
+          setControlledArtifact(null);
+        }
+      }
+    }}
+    
+  />;
         case 'CoffeeShopROIAnalysis':
   return <CoffeeShopROIAnalysis 
     {...artifact.data} 
@@ -200,30 +384,46 @@ useEffect(() => {
     setSavedArtifacts={setSavedArtifacts} 
     title={controlledArtifact?.title} 
     onBack={() => {
-      if (isFullscreen) {
-        toggleFullscreen();
-        setTimeout(() => {
-          setControlledArtifact(null);
-        }, 300);
+      const chatId = controlledArtifact?.originConversationId;
+      if (chatId) {
+        window.dispatchEvent(new CustomEvent('go-to-chat', { detail: chatId }));
+        console.log('[BACK BUTTON] Going back to chatId:', chatId);
+
       } else {
-        setControlledArtifact(null);
+        if (isFullscreen) {
+          toggleFullscreen();
+          setTimeout(() => {
+            setControlledArtifact(null);
+          }, 300);
+        } else {
+          setControlledArtifact(null);
+        }
       }
-    }} 
+    }}
+    
   />;
   case 'CoffeeShopReport':
   return <CoffeeShopReport 
     {...artifact.data} 
     title={controlledArtifact?.title} 
     onBack={() => {
-      if (isFullscreen) {
-        toggleFullscreen();
-        setTimeout(() => {
-          setControlledArtifact(null);
-        }, 300);
+      const chatId = controlledArtifact?.originConversationId;
+      if (chatId) {
+        window.dispatchEvent(new CustomEvent('go-to-chat', { detail: chatId }));
+        console.log('[BACK BUTTON] Going back to chatId:', chatId);
+
       } else {
-        setControlledArtifact(null);
+        if (isFullscreen) {
+          toggleFullscreen();
+          setTimeout(() => {
+            setControlledArtifact(null);
+          }, 300);
+        } else {
+          setControlledArtifact(null);
+        }
       }
-    }} 
+    }}
+    
   />;
       case 'AdditionalLayersMap':
         return <AdditionalLayersMapWithProps data={artifact.data} />;
@@ -246,40 +446,38 @@ useEffect(() => {
     <>
       {/* Left side with back button and title */}
       <div className="flex items-center gap-2">
-        <button
-          onClick={() => setControlledArtifact?.(null)}
-          className="p-1 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors"
-          aria-label="Back to List"
-        >
-          <ArrowLeft className="h-4 w-4 text-[#008080] group-hover:text-white" />
-        </button>
-        <h2 className="text-sm font-semibold text-gray-800">{controlledArtifact.title}</h2>
+      
+{isEditingTitle ? (
+  <input
+    type="text"
+    className="text-sm font-semibold text-gray-800 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring focus:border-[#008080]"
+    value={tempTitle}
+    autoFocus
+    onChange={(e) => setTempTitle(e.target.value)}
+    onBlur={() => {
+      setIsEditingTitle(false);
+      handleTitleUpdate(tempTitle);
+    }}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter') {
+        setIsEditingTitle(false);
+        handleTitleUpdate(tempTitle);
+      }
+    }}
+  />
+) : (
+  <h2
+    className="text-sm font-semibold text-gray-800 cursor-pointer"
+    onDoubleClick={() => setIsEditingTitle(true)}
+    title="Double-click to rename"
+  >
+    {controlledArtifact.title}
+  </h2>
+)}
+
       </div>
       
-      {/* Right side with fullscreen toggle and X button */}
-      <div className="flex items-center gap-2">
-        {/* Fullscreen toggle button */}
-        <button
-          onClick={toggleFullscreen}
-          className="p-1 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors"
-          aria-label={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-        >
-          {isFullscreen ? (
-            <Minimize2 className="h-4 w-4 text-[#008080] group-hover:text-white" />
-          ) : (
-            <Maximize2 className="h-4 w-4 text-[#008080] group-hover:text-white" />
-          )}
-        </button>
-        
-        {/* X button to close preview */}
-        <button
-          onClick={() => setControlledArtifact?.(null)}
-          className="p-1 rounded-full border border-[#008080] hover:bg-[#008080] bg-white group transition-colors"
-          aria-label="Close Preview"
-        >
-          <X className="h-4 w-4 text-[#008080] group-hover:text-white" />
-        </button>
-      </div>
+      
     </>
   ) : (
     <>

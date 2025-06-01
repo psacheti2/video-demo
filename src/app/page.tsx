@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { X, Trash2 } from 'lucide-react';
+import { X, Trash2,  Minimize2, Maximize2 } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import ResponsiveChatLayout from '../components/chat/ChatWindow';
 import ArtifactsPanel from '../components/layout/ArtifactsPanel';
@@ -63,7 +63,52 @@ export default function Home() {
     }
   }, []);
 
-
+  useEffect(() => {
+    const handleArtifactTitleUpdate = (e: any) => {
+      const { id, newTitle, dataMatch } = e.detail;
+  
+      // Update savedArtifacts (match by id only)
+      setSavedArtifacts((prev) =>
+        prev.map((artifact) =>
+          artifact.id === id ? { ...artifact, title: newTitle } : artifact
+        )
+      );
+  
+      // Update artifacts (match by both id and data)
+      setArtifacts((prev) =>
+        prev.map((artifact) =>
+          artifact.id === id && JSON.stringify(artifact.data) === JSON.stringify(dataMatch)
+            ? { ...artifact, title: newTitle }
+            : artifact
+        )
+      );
+  
+      // Update messages
+      setMessages((prev) =>
+        prev.map((msg) => {
+          if (!msg.artifacts) return msg;
+          return {
+            ...msg,
+            artifacts: msg.artifacts.map((artifact) =>
+              artifact.id === id && JSON.stringify(artifact.data) === JSON.stringify(dataMatch)
+                ? { ...artifact, title: newTitle }
+                : artifact
+            ),
+          };
+        })
+      );
+  
+      // Save conversation (only after state updates complete)
+      setTimeout(() => {
+        saveConversationToLocalStorage(conversationId, messages, artifacts);
+      }, 0);
+    };
+  
+    window.addEventListener('artifact-title-updated', handleArtifactTitleUpdate);
+    return () =>
+      window.removeEventListener('artifact-title-updated', handleArtifactTitleUpdate);
+  }, [messages, artifacts, savedArtifacts, conversationId]);  
+  
 const loadConversation = (id: string) => {
   if (typeof window === 'undefined') return; // Guard against SSR
   
@@ -132,6 +177,61 @@ const loadConversation = (id: string) => {
     setArtifacts(prev => [...prev, artifact]);
   };
 
+  useEffect(() => {
+    const handleGoToChat = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      const chatId = customEvent.detail;
+      console.log('[HOME] Received go-to-chat event for:', chatId);
+      
+      // Always load the conversation, regardless of current state
+      if (chatId) {
+        // Force load the conversation
+        if (typeof window === 'undefined') return;
+        
+        const stored = JSON.parse(localStorage.getItem('conversations') || '{}');
+        const convo = stored[chatId];
+        if (convo) {
+          // Process messages to handle file metadata
+          const messages: ChatMessageType[] = convo.messages.map((msg: any) => {
+            const processedMsg = { ...msg };
+            
+            if (typeof processedMsg.file === 'string' && processedMsg.file.startsWith('FILE_METADATA:')) {
+              const parts = processedMsg.file.split(':');
+              if (parts.length >= 2) {
+                processedMsg.file = parts[1];
+              }
+            }
+            
+            processedMsg.id = processedMsg.id.startsWith('loaded_') 
+              ? processedMsg.id 
+              : `loaded_${processedMsg.id}`;
+              
+            return processedMsg;
+          }) || [];
+          
+          const allArtifacts: Artifact[] = [];
+          messages.forEach((msg) => {
+            if (msg.artifacts && msg.artifacts.length > 0) {
+              allArtifacts.push(...msg.artifacts);
+            }
+          });
+  
+          setMessages(messages);
+          setArtifacts(allArtifacts);
+          setSelectedArtifact(null); 
+          setArtifactsPanelWidth(0); 
+          setConversationId(chatId);
+          localStorage.setItem('activeConversationId', chatId);
+          setIsNewConversation(false);
+          prevArtifactsLength.current = allArtifacts.length;
+          setLastMessageId(prev => prev || `loaded_${chatId}`);
+        }
+      }
+    };
+  
+    window.addEventListener('go-to-chat', handleGoToChat);
+    return () => window.removeEventListener('go-to-chat', handleGoToChat);
+  }, []); // Remove all dependencies to ensure fresh event listener
 
 const saveConversationToLocalStorage = (id: string, messages: ChatMessageType[], artifacts: Artifact[]) => {
   if (typeof window === 'undefined') return; // Guard against SSR
@@ -154,12 +254,13 @@ const saveConversationToLocalStorage = (id: string, messages: ChatMessageType[],
   });
   
   const allConversations = JSON.parse(localStorage.getItem('conversations') || '{}');
-  allConversations[id] = {
-    messages: serializableMessages,
-    artifacts,
-    lastUpdated: new Date().toISOString(),
-  };
-  localStorage.setItem('conversations', JSON.stringify(allConversations));
+allConversations[id] = {
+  messages: serializableMessages,
+  artifacts: artifacts.map(a => ({ ...a, originConversationId: id })), 
+  lastUpdated: new Date().toISOString(),
+};
+localStorage.setItem('conversations', JSON.stringify(allConversations));
+
 };
 
   const startNewConversation = () => {
@@ -199,7 +300,7 @@ const handleSendMessage = async ({ text, file }: { text: string, file: File | st
   setMessages(prev => [...prev, userMessage]);
   setIsLoading(true);
   prevArtifactsLength.current = artifacts.length;
-  
+  await new Promise(resolve => setTimeout(resolve, 1000));
   try {
     // For API calls, we need to handle File objects differently
     // If file is a File object, we may need to extract metadata
@@ -237,20 +338,26 @@ const handleSendMessage = async ({ text, file }: { text: string, file: File | st
       isUser: false,
       id: assistantMessageId,
     };
-  
     if (data.artifacts && data.artifacts.length > 0) {
-      botMessage.artifacts = data.artifacts;
-      data.artifacts.forEach((artifact: Artifact, index: number) => {
+      const enrichedArtifacts = data.artifacts.map((a: Artifact) => ({
+        ...a,
+        originConversationId: conversationId,
+      }));
+      
+      botMessage.artifacts = enrichedArtifacts;
+      
+      enrichedArtifacts.forEach((artifact: Artifact, index: number) => {
         addArtifact(artifact);
-        // Select the first new artifact immediately
+      
         if (index === 0) {
           setSelectedArtifact(artifact);
           if (artifactsPanelWidth === 0) {
-            setArtifactsPanelWidth(60); 
+            setArtifactsPanelWidth(60);
           }
         }
-      });
+      });      
     }
+    
     
     const updatedMessages = [...messages, userMessage, botMessage];
     
@@ -441,21 +548,41 @@ const handleDeleteArtifact = (artifactId: string) => {
       <div className="flex flex-1 overflow-hidden pt-1">
         {/* Conditional layout based on artifact presence */}
         {isArtifactFullscreen ? (
-          // Fullscreen artifact view
-          <div className="flex-1 overflow-hidden">
-            <ArtifactsPanel
-              artifacts={artifacts}
-              toggleFullscreen={() => setIsArtifactFullscreen(!isArtifactFullscreen)}
-              messageId={lastMessageId}
-              prevArtifactsCount={prevArtifactsLength.current}
-              selectedArtifact={selectedArtifact}
-              setSelectedArtifact={setSelectedArtifact}
-              savedArtifacts={savedArtifacts}
-              setSavedArtifacts={setSavedArtifacts}
-              
-            />
-          </div>
-        ) : hasArtifacts || selectedArtifact ? (  
+  // Fullscreen artifact view
+  <div className="flex-1 overflow-hidden relative">
+    {/* Add the control buttons to the fullscreen view */}
+    <div className="absolute top-2 right-2 z-50 flex gap-2">
+      <button
+        onClick={() => setIsArtifactFullscreen(false)}
+        className="p-1 rounded-full border border-[#008080] bg-white text-[#008080] hover:bg-[#008080] hover:text-white transition"
+      >
+        <Minimize2 className="h-3 w-3" />
+      </button>
+      
+      <button
+        onClick={() => {
+          setIsArtifactFullscreen(false);
+          setModalArtifact(null);
+        }}
+        className="p-1 rounded-full border border-[#008080] bg-white text-[#008080] hover:bg-[#008080] hover:text-white transition"
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </div>
+    
+    <ArtifactsPanel
+      artifacts={artifacts}
+      isFullscreen={true}
+      toggleFullscreen={() => setIsArtifactFullscreen(false)}
+      messageId={lastMessageId}
+      prevArtifactsCount={prevArtifactsLength.current}
+      selectedArtifact={selectedArtifact}
+      setSelectedArtifact={setSelectedArtifact}
+      savedArtifacts={savedArtifacts}
+      setSavedArtifacts={setSavedArtifacts}
+    />
+  </div>
+) : hasArtifacts || selectedArtifact ? ( 
           <div className="flex flex-1 overflow-hidden panels-container">
           <div
             className="flex-1 overflow-hidden relative chat-panel"
@@ -570,16 +697,24 @@ const handleDeleteArtifact = (artifactId: string) => {
         )}
       </div>
       
-      <Dialog open={!!modalArtifact} onClose={() => setModalArtifact(null)} className="relative z-[500]">
+      <Dialog open={!!modalArtifact && !isArtifactFullscreen} onClose={() => setModalArtifact(null)} className="relative z-[500]">       
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center p-4 z-[500]">
-          <Dialog.Panel className="w-full max-w-5xl h-[80vh] overflow-hidden rounded-xl bg-white shadow-xl p-4 relative">
-            <button
-              onClick={() => setModalArtifact(null)}
-              className="absolute top-4 right-4 text-[#008080] hover:text-white bg-white border border-[#008080] hover:bg-[#008080] p-1.5 rounded-full transition"
-            >
-              <span className="text-sm font-bold">X</span>
-            </button>
+        <Dialog.Panel className="w-full max-w-5xl h-[80vh] overflow-hidden rounded-xl bg-white shadow-xl pt-10 pl-2 pr-2 pb-2 relative">          
+<button
+  onClick={() => {
+    if (isArtifactFullscreen) {
+      setIsArtifactFullscreen(false);
+    }
+    setModalArtifact(null);
+  }}
+  className="absolute top-2 right-2 p-1 rounded-full border border-[#008080] bg-white text-[#008080] hover:bg-[#008080] hover:text-white transition"
+>
+  <X className="h-3 w-3" />
+</button>
+<h1 className="absolute top-2 left-4 text-md text-[#008080]">
+    {modalArtifact?.title}
+  </h1>
             {modalArtifact && (
   <ArtifactViewer
     artifact={modalArtifact}

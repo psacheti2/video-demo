@@ -1,13 +1,18 @@
-import { useEffect, useState } from 'react';
-import { File, ThumbsUp, ThumbsDown  } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import { File, ThumbsUp, ThumbsDown, X  } from 'lucide-react';
 import FilePreviewModal from '../FilePreviewModal';
 
-export default function ChatMessage({ message, isUser, onArtifactClick, isReloading, onFeedback }) {
+export default function ChatMessage({ message, isUser, onArtifactClick, isReloading, onFeedback, activeFeedbackMessageId,
+  setActiveFeedbackMessageId }) {
   const [displayedText, setDisplayedText] = useState(isUser ? message.text : '');
   const [filePreviewUrl, setFilePreviewUrl] = useState('');
   const [showFilePreview, setShowFilePreview] = useState(false);
-  const [feedback, setFeedback] = useState(message.feedback || null); // 'like', 'dislike', or null
-
+  const [feedback, setFeedback] = useState(message.feedback || null); 
+  const isFeedbackOpen = activeFeedbackMessageId === message.id;
+  const [selectedReason, setSelectedReason] = useState('');
+  const [additionalFeedback, setAdditionalFeedback] = useState('');  
+  const [showThankYouBanner, setShowThankYouBanner] = useState(false);
+  const prevMessageId = useRef(null);
 
   useEffect(() => {
     console.log('Message effect running, isUser:', isUser, 'isReloading:', isReloading);
@@ -28,6 +33,25 @@ export default function ChatMessage({ message, isUser, onArtifactClick, isReload
       setDisplayedText(message.text || ''); // Show instantly, handle null/undefined text
     }
   }, [message.text, isUser, isReloading, message.id]);
+
+  useEffect(() => {
+    if (isFeedbackOpen) {
+      const lastMessage = document.querySelector('.chat-container .chat-message:last-child');
+      lastMessage?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, [isFeedbackOpen]);
+  
+  
+  useEffect(() => {
+    if (prevMessageId.current !== message.id) {
+      setShowThankYouBanner(false);
+      setSelectedReason('');
+      setAdditionalFeedback('');
+      prevMessageId.current = message.id;
+    }
+  }, [message.id]);
+  
+  
 
   // Create file preview URL when component mounts or message.file changes
   useEffect(() => {
@@ -61,14 +85,13 @@ const renderFileAttachment = () => {
 if (typeof message.file === 'string') {
   return (
     <>
-      <div 
-        className="inline-flex items-center px-2 py-1 mb-2 rounded-md border border-[#00b3b3] bg-[#f0fdfa] shadow-sm cursor-pointer hover:bg-[#dffff9] transition-colors text-xs"
-        onClick={() => setShowFilePreview(true)}
-      >
-        <span className="text-[#007777] font-medium truncate max-w-[120px]">
-          {message.file}
-        </span>
-      </div>
+     <div 
+  className="inline-flex items-center px-2 py-1 mb-2 rounded-full border border-[#008080] bg-white text-[#008080] shadow-sm cursor-pointer transition-colors text-xs font-medium truncate max-w-[120px] group hover:bg-[#008080]"
+  onClick={() => setShowFilePreview(true)}
+>
+  <span className="group-hover:text-white">{message.file.name}</span>
+</div>
+
       
       {showFilePreview && (
         <FilePreviewModal 
@@ -90,11 +113,11 @@ const isImage = message.file.type.startsWith('image/');
 return (
   <>
     <div 
-      className="inline-flex items-center px-2 py-1 mb-2 rounded-md border border-[#00b3b3] bg-[#f0fdfa] shadow-sm cursor-pointer hover:bg-[#dffff9] transition-colors text-xs"
+      className="inline-flex items-center px-2 py-1 mb-2 rounded-full border border-[#008080] bg-white text-[#008080] shadow-sm cursor-pointer hover:bg-[#008080] hover:text-white transition-colors text-xs font-medium truncate max-w-[120px]"
       onClick={() => setShowFilePreview(true)}
     >
-      <span className="text-[#007777] font-medium truncate max-w-[120px]">
-        {message.file.name}
+<span className="truncate group-hover:text-white">
+{message.file.name}
       </span>
     </div>
     
@@ -151,7 +174,7 @@ return (
         onFeedback?.(message.id, 'like');
       }}
       className={`p-1 rounded-full ${
-        feedback === 'like' ? 'bg-green-100 text-green-600' : 'text-gray-400 hover:text-gray-600'
+        feedback === 'like' ? 'bg-[#008080] text-white' : 'text-gray-400 hover:text-gray-600'
       }`}
       aria-label="Like this message"
     >
@@ -160,10 +183,12 @@ return (
     <button
       onClick={() => {
         setFeedback('dislike');
+        setActiveFeedbackMessageId(message.id);
+        setShowThankYouBanner(false);
         onFeedback?.(message.id, 'dislike');
       }}
       className={`p-1 rounded-full ${
-        feedback === 'dislike' ? 'bg-red-100 text-red-600' : 'text-gray-400 hover:text-gray-600'
+        feedback === 'dislike' ? 'bg-[#FF5747] text-white' : 'text-gray-400 hover:text-gray-600'
       }`}
       aria-label="Dislike this message"
     >
@@ -171,6 +196,101 @@ return (
     </button>
   </div>
 )}
+{isFeedbackOpen && (
+  <div className="w-full flex justify-center mt-2 relative">
+    <div className="w-full max-w-3xl p-4 bg-white/70 border border-[#008080]/20 rounded-xl shadow-md animate-fade-in relative">
+      {/* X button */}
+      <button
+        className="absolute top-3 right-4 text-[#008080] hover:text-[#FF5747] transition"
+        onClick={() => setActiveFeedbackMessageId(null)}
+        >
+        <X size={18} />
+      </button>
+
+      <p className="text-sm text-[#008080] mb-3">Tell us more:</p>
+
+      <div className="flex flex-wrap gap-2 mb-3">
+        {[
+          'Did not fully follow my request',
+          'Not factually correct',
+          'Incorrect map',
+          'Report inaccuracies',
+          'Misrepresented chart data',
+        ].map((reason) => (
+          <button
+            key={reason}
+            onClick={() => {
+              setSelectedReason(reason);
+              setActiveFeedbackMessageId(null);              
+              setShowThankYouBanner(true);
+              setTimeout(() => setShowThankYouBanner(false), 3000); 
+            }}
+            className={`text-sm px-3 py-1 rounded-full border transition ${
+              selectedReason === reason
+                ? 'bg-[#008080] text-white border-[#008080]'
+                : 'text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white'
+            }`}
+          >
+            {reason}
+          </button>
+        ))}
+      </div>
+      <div className="relative w-full">
+      <textarea
+  value={additionalFeedback}
+  onChange={(e) => setAdditionalFeedback(e.target.value)}
+  placeholder="(Optional) Feel free to add specific details."
+  className="w-full px-3 pr-10 py-2 text-sm border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#008080] leading-[1.5rem] overflow-y-hidden"
+  style={{
+    height: 'auto',
+    minHeight: '2.5rem',
+    maxHeight: '8rem',
+  }}
+  rows={1}
+  onInput={(e) => {
+    const el = e.target;
+    el.style.height = 'auto';
+    const scrollHeight = el.scrollHeight;
+    el.style.height = `${Math.min(scrollHeight, 128)}px`;
+
+    if (scrollHeight > 128) {
+      el.style.overflowY = 'auto';
+    } else {
+      el.style.overflowY = 'hidden';
+    }
+  }}
+/>
+
+  {additionalFeedback.trim() !== '' && (
+   <button
+   onClick={() => {
+     setActiveFeedbackMessageId(null);
+     setShowThankYouBanner(true);
+     setTimeout(() => setShowThankYouBanner(false), 3000);
+     setSelectedReason('');
+     setAdditionalFeedback('');
+   }}
+   className="absolute right-2 top-1/2 -translate-y-1/2 text-sm px-3 py-1 h-auto rounded-md border border-[#008080] text-[#008080] bg-white hover:bg-[#008080] hover:text-white transition whitespace-nowrap"
+ >
+   Send
+ </button>
+  
+  )}
+</div>
+
+
+    </div>
+  </div>
+)}
+
+{showThankYouBanner && (
+  <div className="w-full flex justify-center mt-2">
+    <div className="px-4 py-2 bg-white text-[#008080] border border-[#008080] text-sm rounded-full shadow-md animate-fade-in-out">
+      Thanks for your feedback!
+    </div>
+  </div>
+)}
+
 
       {!isUser && message.artifacts && message.artifacts.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-2">

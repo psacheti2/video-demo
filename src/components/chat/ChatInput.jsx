@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Upload, X, SendHorizontal, Eye, File } from 'lucide-react';
 import FilePreviewModal from '../FilePreviewModal';
 
-export default function ChatInput({ onSendMessage }) {
+export default function ChatInput({ onSendMessage, setActiveFeedbackMessageId  }) {
   const [message, setMessage] = useState('');
   const [uploadedFile, setUploadedFile] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -28,6 +28,7 @@ export default function ChatInput({ onSendMessage }) {
       onSendMessage(messagePayload);
       setMessage('');
       setUploadedFile(null);
+      setActiveFeedbackMessageId(null);
     }
   };
 
@@ -104,24 +105,26 @@ export default function ChatInput({ onSendMessage }) {
         </div>
 
         {uploadedFile && (
-          <div 
-  className="mt-2 inline-flex items-center px-2 py-1 bg-[#f0fdfa] border border-[#00b3b3] rounded-md shadow-sm cursor-pointer hover:bg-[#dffff9] transition-colors"
-  onClick={() => setShowPreview(true)}
->
-  <span className="text-xs font-medium text-[#007777] truncate max-w-[120px]">{uploadedFile.name}</span>
-  <button
-    type="button"
-    onClick={(e) => {
-      e.stopPropagation();
-      setUploadedFile(null);
-    }}
-    className="p-1 ml-1 rounded-full hover:text-red-500 text-[#008080] transition"
-    data-tooltip="Remove file"
+  <div 
+    className="mt-2 inline-flex items-center px-2 py-1 rounded-full border border-[#008080] bg-white text-[#008080] shadow-sm cursor-pointer hover:bg-[#008080] transition-colors text-xs font-medium truncate max-w-[120px] group"
+    onClick={() => setShowPreview(true)}
   >
-    <X size={14} />
-  </button>
-</div> 
+    <span className="truncate group-hover:text-white">{uploadedFile.name}</span>
+    
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        setUploadedFile(null);
+      }}
+      className="p-1 ml-1 rounded-full text-[#008080] transition group-hover:text-white hover:text-red-500"
+      data-tooltip="Remove file"
+    >
+      <X size={14} />
+    </button>
+  </div>
 )}
+
         
         <div className="flex justify-between mt-2 items-center">
           <label htmlFor="file-upload" className="cursor-pointer">

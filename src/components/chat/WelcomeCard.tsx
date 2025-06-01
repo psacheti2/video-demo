@@ -97,20 +97,22 @@ export default function WelcomeCard({
 {uploadedFile && (
   <>
    <div 
-  className="inline-flex items-center px-2 py-1 bg-[#f0fdfa] border border-[#00b3b3] rounded-md shadow-sm cursor-pointer hover:bg-[#dffff9] transition-colors"
+  className="inline-flex items-center px-2 py-1 rounded-full border border-[#008080] bg-white text-[#008080] shadow-sm cursor-pointer hover:bg-[#008080] transition-colors text-xs font-medium truncate max-w-[120px] group"
   onClick={() => setShowFilePreview(true)}
 >
-  <span className="text-xs font-medium text-[#007777] truncate max-w-[120px]">{uploadedFile.name}</span>
-  <button
-    type="button"
-    onClick={(e) => {
-      e.stopPropagation();
-      setUploadedFile(null);
-    }}
-    className="p-1 ml-1 rounded-full hover:text-red-500 text-[#008080] transition"
-  >
-    <X size={14} />
-  </button>
+<span className="text-xs font-medium truncate group-hover:text-white">{uploadedFile.name}</span>
+<button
+  type="button"
+  onClick={(e) => {
+    e.stopPropagation();
+    setUploadedFile(null);
+  }}
+  className="p-1 ml-1 rounded-full group-hover:text-white hover:text-red-500 text-[#008080] transition"
+  data-tooltip="Remove file"
+>
+  <X size={14} />
+</button>
+
 </div>
     {showFilePreview && (
       <FilePreviewModal 

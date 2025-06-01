@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Type, 
-  Palette, ChevronDown, X
+  Palette, ChevronDown, X, ChevronUp
 } from 'lucide-react';
 
 const TextToolbar = ({ 
@@ -82,13 +82,13 @@ const TextToolbar = ({
 <div className="flex gap-1 items-center border-r border-gray-300 pr-2">
   {/* Bold */}
   <button
-    onClick={() => handleToggle('fontWeight', fontWeight === 'bold' ? 'normal' : 'bold')}
-    className={`p-1.5 rounded-full border text-[#008080] text-[10px] border-[#008080] transition hover:bg-[#008080] hover:text-white ${
-      fontWeight === 'bold' ? 'bg-[#008080] text-white' : ''
-    }`}
-  >
-    <Bold size={14} />
-  </button>
+  onClick={() => handleToggle('fontWeight', fontWeight === 'bold' ? 'normal' : 'bold')}
+  className={`p-1.5 rounded-full border text-[#008080] text-[10px] border-[#008080] transition ${
+    fontWeight === 'bold' ? 'bg-[#008080] text-white' : 'bg-white'
+  } hover:bg-[#008080] hover:text-white`}
+>
+  <Bold size={14} />
+</button>
 
   {/* Italic */}
   <button
@@ -147,90 +147,60 @@ const TextToolbar = ({
       )}
     </div>
 {/* Font Size Input & Dropdown */}
-<div className="relative flex items-center gap-1">
-<input
-  type="number"
-  value={tempFontSize}
-  onChange={(e) => {
-    // Store what user is typing — don't apply yet
-    setTempFontSize(e.target.value);
-  }}
-  onInput={(e) => {
-    const inputType = e.nativeEvent?.inputType;
-    const num = parseInt(e.target.value);
-  
-    // Handle arrow keys or spinner clicks only
-    if (
-      inputType === 'insertReplacementText' || 
-      inputType === 'insertText' ||           
-      inputType === 'deleteContentBackward' || 
-      inputType === 'deleteContentForward'
-    ) {
-      // DO NOTHING – user is typing or deleting
-      return;
-    }
-  
-    // For spinner/arrow click changes
-    if (!isNaN(num) && num > 0) {
-      handleToggle('fontSize', num);
-    }
-  }}
-  
-  onKeyDown={(e) => {
-    if (e.key === 'Enter') {
+<div className="flex items-center px-1 py-0 border border-[#008080] rounded overflow-hidden text-xs">
+  {/* Down arrow on the left */}
+  <button
+    onClick={() => {
+      const num = parseInt(tempFontSize);
+      if (!isNaN(num) && num > 8) {
+        handleToggle('fontSize', num - 1);
+        setTempFontSize(num - 1);
+      }
+    }}
+    className="p-1 rounded-full text-[#008080] hover:bg-[#008080] hover:text-white transition"
+  >
+    <ChevronDown size={14} />
+  </button>
+
+  {/* Font size input */}
+  <input
+    type="number"
+    value={tempFontSize}
+    onChange={(e) => setTempFontSize(e.target.value)}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter') {
+        const num = parseInt(tempFontSize);
+        if (!isNaN(num) && num > 0) handleToggle('fontSize', num);
+      } else if (e.key === 'Escape') {
+        setTempFontSize(fontSize);
+      }
+    }}
+    onBlur={() => {
       const num = parseInt(tempFontSize);
       if (!isNaN(num) && num > 0) {
         handleToggle('fontSize', num);
+      } else {
+        setTempFontSize(fontSize);
       }
-    } else if (e.key === 'Escape') {
-      setTempFontSize(fontSize);
-    }
-  }}
-  onBlur={() => {
-    const num = parseInt(tempFontSize);
-    if (!isNaN(num) && num > 0) {
-      handleToggle('fontSize', num);
-    } else {
-      setTempFontSize(fontSize);
-    }
-  }}
-  min="8"
-  max="200"
-  className="w-[60px] px-2 py-1 rounded border border-[#008080] text-[#008080] text-xs focus:outline-none focus:ring-2 focus:ring-[#008080]"
-/>
+    }}
+    className="w-[50px] text-center text-[#008080] outline-none"
+    min="8"
+    max="200"
+  />
 
-
+  {/* Up arrow on the right */}
   <button
     onClick={() => {
-      setFontMenuOpen(false);
-      setColorMenuOpen(false);
-      setFontSizeDropdownOpen(prev => !prev);
+      const num = parseInt(tempFontSize);
+      if (!isNaN(num) && num < 200) {
+        handleToggle('fontSize', num + 1);
+        setTempFontSize(num + 1);
+      }
     }}
-    className="px-2 py-1 rounded border border-[#008080] text-[#008080] text-xs hover:bg-[#008080] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#008080]"
-    title="Quick Font Sizes"
+    className="p-1 rounded-full text-[#008080] hover:bg-[#008080] hover:text-white transition"
   >
-    <ChevronDown size={12} />
+    <ChevronUp size={14} />
   </button>
-
-  {fontSizeDropdownOpen && (
-    <div className="absolute left-0 top-10 z-30 bg-white border border-gray-200 rounded shadow max-h-40 overflow-auto w-24 text-xs">
-      {[12, 14, 16, 18, 20, 24, 28, 32, 48, 72, 96, 120].map(size => (
-        <button
-          key={size}
-          onClick={() => {
-            setTempFontSize(size);
-            handleToggle('fontSize', size);
-            setFontSizeDropdownOpen(false);
-          }}
-          className={`w-full px-2 py-1 text-left hover:bg-[#008080] hover:text-white ${
-            parseInt(tempFontSize) === size ? 'bg-[#008080] text-white' : ''
-          }`}
-        >
-          {size}px
-        </button>
-      ))}
-    </div>
-  )}
 </div>
 
 

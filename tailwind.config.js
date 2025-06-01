@@ -4,6 +4,22 @@ module.exports = {
     content: ["./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
   	extend: {
+		keyframes: {
+			'fade-in': {
+			  '0%': { opacity: '0', transform: 'translateY(4px)' },
+			  '100%': { opacity: '1', transform: 'translateY(0)' },
+			},
+			'fade-in-out': {
+			  '0%': { opacity: '0', transform: 'translateY(4px)' },
+			  '10%': { opacity: '1', transform: 'translateY(0)' },
+			  '90%': { opacity: '1', transform: 'translateY(0)' },
+			  '100%': { opacity: '0', transform: 'translateY(4px)' },
+			},
+		  },
+		  animation: {
+			'fade-in': 'fade-in 0.4s ease-out',
+			'fade-in-out': 'fade-in-out 3s ease-in-out forwards',
+		  },		  
   		colors: {
 			primary: '#2C3E50',
 			secondary: '#34495E',

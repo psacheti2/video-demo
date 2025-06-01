@@ -1,117 +1,183 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Copy, Share, Send } from 'lucide-react';
+import { FaXTwitter, FaRedditAlien, FaWhatsapp } from 'react-icons/fa6';
 
-const ShareDialog = ({ 
-  isOpen, 
-  onClose, 
-  onShare, 
-  onShowDownloader = null, // Optional prop for download button
+const ShareDialog = ({
+  isOpen,
+  onClose,
+  onShare,
+  onShowDownloader = null,
   title = "Share This Map",
-  position = { bottom: '60px', right: '16px' } // New prop for positioning
+  position = { bottom: '60px', right: '16px' }
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTeammates, setSelectedTeammates] = useState([]);
-  
-  // Sample teammates list - in a real app this could come from props or an API
-  const teammateList = [
-    "Alice Johnson", "Bob Smith", "Catherine Nguyen", "David Li", "Emma Patel"
-  ];
+  const [emailInput, setEmailInput] = useState('');
+  const [selectedEmails, setSelectedEmails] = useState([]);
+  const [copied, setCopied] = useState(false);
 
-  const filteredTeammates = teammateList.filter(name =>
-    name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const suggestedDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'purdue.edu'];
+
+  const handleAddEmail = () => {
+    const trimmed = emailInput.trim().toLowerCase();
+    if (
+      trimmed &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed) &&
+      !selectedEmails.includes(trimmed)
+    ) {
+      setSelectedEmails([...selectedEmails, trimmed]);
+    }
+    setEmailInput('');
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ',' || e.key === 'Tab') {
+      e.preventDefault();
+      handleAddEmail();
+    }
+  };
+
+  const filteredSuggestions = suggestedDomains
+    .filter((domain) => emailInput.includes('@') && domain.startsWith(emailInput.split('@')[1]))
+    .map((domain) => emailInput.split('@')[0] + '@' + domain);
 
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="absolute z-[1000]"
-      style={position}
-    >
-      <div className="bg-white w-[340px] rounded-2xl shadow-2xl p-6 border border-gray-200 relative animate-fade-in">
-        <button
-          className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
-          onClick={onClose}
-        >
+    <div className="absolute z-[1000]" style={position}>
+      <div className="bg-white w-[250px] rounded-2xl shadow-2xl p-6 border border-gray-200 relative animate-fade-in">
+        <button className="absolute top-3 right-3 text-gray-400 hover:text-[#008080]" onClick={onClose}>
           <X size={16} />
         </button>
 
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">{title}</h2>
-
-        {/* Teammate Search */}
-        <div className="mb-4">
-          <label className="text-sm font-medium text-gray-700 mb-1 block">Search Teammate</label>
-          <input
-            type="text"
-            placeholder="Type a name..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#008080] focus:outline-none"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        {/* Teammate List */}
-        <div className="max-h-40 overflow-y-auto mb-4 space-y-1 pr-1">
-          {filteredTeammates.map(teammate => (
-            <div
-              key={teammate}
-              onClick={() => {
-                setSelectedTeammates(prev => 
-                  prev.includes(teammate)
-                    ? prev.filter(t => t !== teammate)
-                    : [...prev, teammate]
-                );
-              }}
-              className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition border 
-                ${selectedTeammates.includes(teammate)
-                  ? 'bg-[#008080]/10 border-[#008080]'
-                  : 'bg-white hover:bg-gray-50 border-gray-200'}
-              `}
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-full bg-[#008080]/90 text-white text-sm font-semibold flex items-center justify-center shadow-sm">
-                  {teammate.split(' ').map(n => n[0]).join('').toUpperCase()}
-                </div>
-                <span className="text-sm text-gray-800 font-medium">{teammate}</span>
-              </div>
-              {selectedTeammates.includes(teammate) && (
-                <span className="text-xs font-medium text-[#008080]">✓</span>
-              )}
-            </div>
-          ))}
-          {filteredTeammates.length === 0 && (
-            <div className="text-sm text-gray-500 text-center py-3">No teammates found</div>
-          )}
-        </div>
-
-        {/* Share Button */}
+        <h2 className="text-md font-semibold text-[#008080] mb-4">{title}</h2>
+        <div className="flex items-center border border-gray-300 rounded-md px-2 py-1 min-h-[38px] mb-2 focus-within:ring-2 focus-within:ring-[#008080]">
+  <div className="flex flex-wrap gap-1 items-center flex-1">
+    {selectedEmails.map((email) => (
+      <span
+        key={email}
+        className="bg-[#008080]/10 text-[#008080] text-xs px-2 py-0.5 rounded-full flex items-center gap-1"
+      >
+        {email}
         <button
-          disabled={selectedTeammates.length === 0}
-          onClick={() => {
-            onShare(selectedTeammates);
-          }}
-          className={`w-full py-2 rounded-md text-sm font-semibold transition-all duration-200 mb-6
-            ${selectedTeammates.length > 0
-              ? 'bg-[#008080] text-white hover:bg-teal-700'
-              : 'bg-gray-200 text-gray-500 cursor-not-allowed'}
-          `}
+          onClick={() =>
+            setSelectedEmails((prev) => prev.filter((e) => e !== email))
+          }
+          className="hover:text-red-500"
         >
-          Share
+          <X size={12} />
         </button>
+      </span>
+    ))}
+
+    <input
+      type="text"
+      value={emailInput}
+      onChange={(e) => setEmailInput(e.target.value)}
+      onKeyDown={handleKeyDown}
+      placeholder="Enter email..."
+      className="flex-1 text-xs focus:outline-none min-w-[80px] bg-transparent"
+    />
+  </div>
+
+  {/* Share Button inside input */}
+  <button
+    disabled={selectedEmails.length === 0}
+    onClick={() => onShare(selectedEmails)}
+    className={`ml-2 p-1.5 rounded-full border ${
+      selectedEmails.length > 0
+        ? 'border-[#008080] text-[#008080] bg-white hover:bg-[#008080] hover:text-white'
+        : 'border-gray-200 text-gray-400 bg-gray-100 cursor-not-allowed'
+    } transition`}
+    title="Share"
+  >
+    <Send size={14} />
+  </button>
+</div>
+
+<div className="flex justify-center gap-6 mt-3">
+  {/* X */}
+  <div className="flex flex-col items-center group">
+    <button
+      className="w-8 h-8 rounded-full border border-gray-300 bg-white flex items-center justify-center text-gray-700 hover:bg-[black] hover:text-white transition"
+      title="Share on X"
+    >
+      <FaXTwitter size={14} />
+    </button>
+    <span className="text-[10px] text-gray-500 mt-1 transition group-hover:text-[#008080]">
+      X
+    </span>
+  </div>
+
+  {/* Reddit */}
+  <div className="flex flex-col items-center group">
+    <button
+      className="w-8 h-8 rounded-full border border-gray-300 bg-white flex items-center justify-center text-gray-700 hover:bg-[#FF5700] hover:text-white transition"
+      title="Share on Reddit"
+    >
+      <FaRedditAlien size={14} />
+    </button>
+    <span className="text-[10px] text-gray-500 mt-1 transition group-hover:text-[#008080]">
+      Reddit
+    </span>
+  </div>
+
+  {/* WhatsApp */}
+  <div className="flex flex-col items-center group">
+    <button
+      className="w-8 h-8 rounded-full border border-gray-300 bg-white flex items-center justify-center text-gray-700 hover:bg-[#25D366] hover:text-white transition"
+      title="Share on WhatsApp"
+    >
+      <FaWhatsapp size={14} />
+    </button>
+    <span className="text-[10px] text-gray-500 mt-1 transition group-hover:text-[#008080]">
+      WhatsApp
+    </span>
+  </div>
+</div>
+<div className="flex items-center my-4">
+  <hr className="flex-grow border-gray-300" />
+  <span className="mx-3 text-[10px] text-[#008080] font-medium">OR</span>
+  <hr className="flex-grow border-gray-300" />
+</div>
+    
+{/* Copy Link + Done */}
+<div className="mt-4 flex items-center justify-between space-x-3">
+  <button
+    onClick={() => {
+      navigator.clipboard.writeText('https://example.com/shared/map');
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }}
+    className="group flex items-center gap-1.5 px-3 py-1 border border-[#008080] text-[#008080] rounded-full bg-white text-xs font-medium hover:bg-[#008080] hover:text-white transition"
+  >
+    <Copy
+      size={14}
+      className="text-[#008080] group-hover:text-white transition"
+    />
+    {copied ? 'Copied!' : 'Copy link'}
+  </button>
+
+  <button
+    onClick={onClose}
+    className="px-4 py-1 rounded-full border border-[#008080] text-[#008080] bg-white text-xs font-medium hover:bg-[#008080] hover:text-white transition"
+  >
+    Done
+  </button>
+</div>
 
         {/* Optional Download Button */}
         {onShowDownloader && (
           <>
-            <div className="border-t border-gray-200 my-2"></div>
+            <div className="border-t border-gray-200 my-4"></div>
             <button
-              onClick={() => {
-                onClose();
-                onShowDownloader();
-              }}
-              className="w-full py-2 rounded-md text-sm font-semibold bg-[#008080] text-white hover:bg-teal-700"
-            >
-              Download
-            </button>
+  onClick={() => {
+    onClose();
+    onShowDownloader();
+  }}
+  className="w-full mt-2 py-1.5 text-xs font-medium rounded-full border border-[#008080] text-[#008080] bg-white hover:bg-[#008080] hover:text-white transition"
+>
+  Download
+</button>
+
           </>
         )}
       </div>

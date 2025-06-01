@@ -1,0 +1,57 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "Digital Realty MAD1",
+        "Address": "Calle Albasanz 71, 28037 Madrid, Spain",
+        "Region": "Madrid City",
+        "Notes": "Large-scale facility in Madrid’s main data center corridor"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-3.6214132, 40.43949341]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "Prime Madrid",
+        "Address": "Calle de la Pedriza 1, 28108 Alcobendas, Spain",
+        "Region": "Alcobendas",
+        "Notes": "40MW campus in Madrid’s largest data center ecosystem"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-3.661109275, 40.53309997]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "Iron Mountain MAD-1",
+        "Address": "Calle Mar Egeo, 4, 28830 San Fernando de Henares, Spain",
+        "Region": "San Fernando de Henares",
+        "Notes": "Strategic campus with major expansion plans"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-3.498775176, 40.4579515]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "Edged Madrid-Getafe",
+        "Address": "Calle Fundidores 40, 28906 Getafe, Spain",
+        "Region": "Getafe",
+        "Notes": "State-of-the-art facility supporting Madrid’s digital economy"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-3.692880088, 40.3108468]
+      }
+    }
+  ]
+}
