@@ -18,11 +18,11 @@ const COLORS = {
 };
 
 const locationData = [
-  { name: 'Location A', value: 8.7 },
-  { name: 'Location B', value: 8.0 },
-  { name: 'Location C', value: 7.2 },
-  { name: 'Location D', value: 5.2 },
-  { name: 'Location E', value: 6.7 },
+  { name: 'A', value: 8.7 },
+  { name: 'B', value: 8.0 },
+  { name: 'C', value: 7.2 },
+  { name: 'D', value: 5.2 },
+  { name: 'E', value: 6.7 },
 ];
 
 

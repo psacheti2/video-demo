@@ -77,61 +77,43 @@ export default function ChatMessage({ message, isUser, onArtifactClick, isReload
     }
   }, [message.file]);
 
-  // Function to render the file attachment correctly
+  // Replace the entire renderFileAttachment function with:
 const renderFileAttachment = () => {
-  if (!message.file) return null;
+  // Handle both old single file format and new multiple files format
+  const files = message.files || (message.file ? [message.file] : []);
   
-  // If file is a string (filename only)
-if (typeof message.file === 'string') {
+  if (!files.length) return null;
+  
   return (
     <>
-     <div 
-  className="inline-flex items-center px-2 py-1 mb-2 rounded-full border border-[#008080] bg-white text-[#008080] shadow-sm cursor-pointer transition-colors text-xs font-medium truncate max-w-[120px] group hover:bg-[#008080]"
-  onClick={() => setShowFilePreview(true)}
->
-  <span className="group-hover:text-white">{message.file.name}</span>
-</div>
-
+      <div className="mb-2 flex flex-wrap gap-2">
+        {files.map((file, index) => {
+          // Handle both File objects and string filenames
+          const fileName = typeof file === 'string' ? file : file.name;
+          const isFileObject = typeof file === 'object' && file !== null;
+          
+          return (
+            <div 
+              key={index}
+              className="inline-flex items-center px-2 py-1 rounded-full border border-[#008080] bg-white text-[#008080] shadow-sm cursor-pointer hover:bg-[#008080] hover:text-white transition-colors text-xs font-medium truncate max-w-[120px]"
+              onClick={() => setShowFilePreview(true)}
+            >
+              <span className="truncate group-hover:text-white">
+                {fileName}
+              </span>
+            </div>
+          );
+        })}
+      </div>
       
-      {showFilePreview && (
+      {showFilePreview && files.length > 0 && (
         <FilePreviewModal 
-          file={message.file} 
+          file={files[0]} // Show first file for now
           onClose={() => setShowFilePreview(false)} 
         />
       )}
     </>
   );
-}
-  
- // If file is a File object (has name and type properties)
-if (typeof message.file === 'object' && message.file !== null && 
-  typeof message.file.name === 'string' && 
-  typeof message.file.type === 'string') {
-
-const isImage = message.file.type.startsWith('image/');
-
-return (
-  <>
-    <div 
-      className="inline-flex items-center px-2 py-1 mb-2 rounded-full border border-[#008080] bg-white text-[#008080] shadow-sm cursor-pointer hover:bg-[#008080] hover:text-white transition-colors text-xs font-medium truncate max-w-[120px]"
-      onClick={() => setShowFilePreview(true)}
-    >
-<span className="truncate group-hover:text-white">
-{message.file.name}
-      </span>
-    </div>
-    
-    {showFilePreview && (
-      <FilePreviewModal 
-        file={message.file} 
-        onClose={() => setShowFilePreview(false)} 
-      />
-    )}
-  </>
-);
-}
-  
-  return null;
 };
 
   // Helper function to format file size

@@ -22,7 +22,8 @@ export interface Artifact {
 
 export interface ChatMessageType {
   text: string;
-  file?: File | string | null;  
+  file?: File | string | null;  // Keep for backward compatibility
+  files?: (File | string)[]; // Add new files array
   isUser: boolean;
   artifacts?: Artifact[];
   id: string;
@@ -117,26 +118,35 @@ const loadConversation = (id: string) => {
   const convo = stored[id];
   if (convo) {
     // Process messages to handle file metadata
-    const messages: ChatMessageType[] = convo.messages.map((msg: any) => {
-      // Create a copy of the message
-      const processedMsg = { ...msg };
-      
-      // Check if the file is our metadata string format
-      if (typeof processedMsg.file === 'string' && processedMsg.file.startsWith('FILE_METADATA:')) {
-        // Extract just the filename from our metadata format
-        const parts = processedMsg.file.split(':');
-        if (parts.length >= 2) {
-          processedMsg.file = parts[1]; // Just use the filename for display
-        }
+    // In the loadConversation function, update the message processing:
+const messages: ChatMessageType[] = convo.messages.map((msg: any) => {
+  const processedMsg = { ...msg };
+  
+  // Handle single file (backward compatibility)
+  if (typeof processedMsg.file === 'string' && processedMsg.file.startsWith('FILE_METADATA:')) {
+    const parts = processedMsg.file.split(':');
+    if (parts.length >= 2) {
+      processedMsg.file = parts[1];
+    }
+  }
+  
+  // Handle files array
+  if (processedMsg.files && Array.isArray(processedMsg.files)) {
+    processedMsg.files = processedMsg.files.map((file: string) => {
+      if (typeof file === 'string' && file.startsWith('FILE_METADATA:')) {
+        const parts = file.split(':');
+        return parts.length >= 2 ? parts[1] : file;
       }
-      
-      // Add the loaded_ prefix to message IDs
-      processedMsg.id = processedMsg.id.startsWith('loaded_') 
-        ? processedMsg.id 
-        : `loaded_${processedMsg.id}`;
-        
-      return processedMsg;
-    }) || [];
+      return file;
+    });
+  }
+  
+  processedMsg.id = processedMsg.id.startsWith('loaded_') 
+    ? processedMsg.id 
+    : `loaded_${processedMsg.id}`;
+    
+  return processedMsg;
+}) || [];
     
     const allArtifacts: Artifact[] = [];
     messages.forEach((msg) => {
@@ -234,33 +244,37 @@ const loadConversation = (id: string) => {
   }, []); // Remove all dependencies to ensure fresh event listener
 
 const saveConversationToLocalStorage = (id: string, messages: ChatMessageType[], artifacts: Artifact[]) => {
-  if (typeof window === 'undefined') return; // Guard against SSR
+  if (typeof window === 'undefined') return;
   
-  // We need to serialize the messages for localStorage
-  // File objects can't be serialized directly, so we'll replace them with string metadata
   const serializableMessages = messages.map(message => {
-    // Create a new object to avoid mutating the original
     const serializableMessage = { ...message };
     
-    // If file is a File object, replace it with a string representation
+    // Handle both single file (backward compatibility) and files array
     if (serializableMessage.file && typeof serializableMessage.file === 'object' && serializableMessage.file instanceof File) {
-      // Replace File object with a string in format "FILE_METADATA:name:type:size"
-      // This way we maintain type compatibility with string | null
       const fileMetadata = `FILE_METADATA:${serializableMessage.file.name}:${serializableMessage.file.type}:${serializableMessage.file.size}`;
       serializableMessage.file = fileMetadata;
+    }
+    
+    // Handle files array
+    if (serializableMessage.files && Array.isArray(serializableMessage.files)) {
+      serializableMessage.files = serializableMessage.files.map(file => {
+        if (typeof file === 'object' && file instanceof File) {
+          return `FILE_METADATA:${file.name}:${file.type}:${file.size}`;
+        }
+        return file; // Already a string
+      });
     }
     
     return serializableMessage;
   });
   
   const allConversations = JSON.parse(localStorage.getItem('conversations') || '{}');
-allConversations[id] = {
-  messages: serializableMessages,
-  artifacts: artifacts.map(a => ({ ...a, originConversationId: id })), 
-  lastUpdated: new Date().toISOString(),
-};
-localStorage.setItem('conversations', JSON.stringify(allConversations));
-
+  allConversations[id] = {
+    messages: serializableMessages,
+    artifacts: artifacts.map(a => ({ ...a, originConversationId: id })), 
+    lastUpdated: new Date().toISOString(),
+  };
+  localStorage.setItem('conversations', JSON.stringify(allConversations));
 };
 
   const startNewConversation = () => {
@@ -283,8 +297,7 @@ localStorage.setItem('conversations', JSON.stringify(allConversations));
     }
   };
   
-
-const handleSendMessage = async ({ text, file }: { text: string, file: File | string | null }) => {
+const handleSendMessage = async ({ text, files = [] }: { text: string, files?: (File | string)[] }) => {
   if (isNewConversation) {
     setIsNewConversation(false);
   }
@@ -292,7 +305,7 @@ const handleSendMessage = async ({ text, file }: { text: string, file: File | st
   const userMessageId = `user_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
   const userMessage: ChatMessageType = { 
     text, 
-    file, // Pass the file object or string directly 
+    files, // Use files array instead of single file
     isUser: true, 
     id: userMessageId 
   };
@@ -301,22 +314,22 @@ const handleSendMessage = async ({ text, file }: { text: string, file: File | st
   setIsLoading(true);
   prevArtifactsLength.current = artifacts.length;
   await new Promise(resolve => setTimeout(resolve, 1000));
+  
   try {
-    // For API calls, we need to handle File objects differently
-    // If file is a File object, we may need to extract metadata
-    let fileInfo = null;
-    if (file) {
-      if (typeof file === 'object' && file instanceof File) {
-        // For API JSON, just pass file metadata
-        fileInfo = {
-          name: file.name,
-          type: file.type,
-          size: file.size
-        };
-      } else {
-        // If it's a string, pass it directly
-        fileInfo = file;
-      }
+    // Process files for API call
+    let filesInfo = null;
+    if (files && files.length > 0) {
+      filesInfo = files.map(file => {
+        if (typeof file === 'object' && file instanceof File) {
+          return {
+            name: file.name,
+            type: file.type,
+            size: file.size
+          };
+        } else {
+          return file; // String filename
+        }
+      });
     }
     
     const response = await fetch('/api/chat', {
@@ -324,7 +337,7 @@ const handleSendMessage = async ({ text, file }: { text: string, file: File | st
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         message: text,
-        fileInfo: fileInfo
+        filesInfo: filesInfo // Changed from fileInfo to filesInfo
       }),
     });
   
@@ -338,6 +351,7 @@ const handleSendMessage = async ({ text, file }: { text: string, file: File | st
       isUser: false,
       id: assistantMessageId,
     };
+    
     if (data.artifacts && data.artifacts.length > 0) {
       const enrichedArtifacts = data.artifacts.map((a: Artifact) => ({
         ...a,
@@ -357,7 +371,6 @@ const handleSendMessage = async ({ text, file }: { text: string, file: File | st
         }
       });      
     }
-    
     
     const updatedMessages = [...messages, userMessage, botMessage];
     
@@ -488,7 +501,7 @@ const handleDeleteArtifact = (artifactId: string) => {
           touchAction: 'none',
           width: '16px',
           margin: '0 -8px', // Center the wider area
-          zIndex: 50, // High z-index to ensure it's above other elements
+          zIndex: 2, // High z-index to ensure it's above other elements
           userSelect: 'none',
           position: 'relative',
           cursor: isDragging ? 'ew-resize' : 'col-resize'

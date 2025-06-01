@@ -32,7 +32,7 @@ interface ChatWindowProps {
   messages: ChatMessageType[];
   setMessages: React.Dispatch<React.SetStateAction<ChatMessageType[]>>;
   isLoading: boolean;
-  onSendMessage: ({ text, file }: { text: string, file: File | string | null }) => Promise<void>; // Updated
+  onSendMessage: ({ text, files }: { text: string, files?: (File | string)[] }) => Promise<void>; // Updated
   isCentered?: boolean;
   sidebarOpen: boolean;
   setSidebarOpen?: React.Dispatch<React.SetStateAction<boolean>>;

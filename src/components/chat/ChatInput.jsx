@@ -4,7 +4,7 @@ import FilePreviewModal from '../FilePreviewModal';
 
 export default function ChatInput({ onSendMessage, setActiveFeedbackMessageId  }) {
   const [message, setMessage] = useState('');
-  const [uploadedFile, setUploadedFile] = useState(null);
+const [uploadedFiles, setUploadedFiles] = useState([]);
   const [showPreview, setShowPreview] = useState(false);
   const textareaRef = useRef(null);
 
@@ -18,36 +18,70 @@ export default function ChatInput({ onSendMessage, setActiveFeedbackMessageId  }
     }
   }, [message]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (message.trim() || uploadedFile) {
-      const messagePayload = {
-        text: message,
-        file: uploadedFile // Pass the actual file object
-      };
-      onSendMessage(messagePayload);
-      setMessage('');
-      setUploadedFile(null);
-      setActiveFeedbackMessageId(null);
-    }
-  };
+ const handleSubmit = (e) => {
+  e.preventDefault();
+  if (message.trim() || uploadedFiles.length > 0) {
+    const messagePayload = {
+      text: message,
+      files: uploadedFiles // Changed from 'file' to 'files' array
+    };
+    onSendMessage(messagePayload);
+    setMessage('');
+    setUploadedFiles([]); // Clear array instead of single file
+    setActiveFeedbackMessageId(null);
+  }
+};
 
   const handleFileUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const allowedTypes = [
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'image/png',
-      'image/jpeg'
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+  
+  const allowedTypes = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'image/png',
+    'image/jpeg',
+    'application/x-esri-shape', // .shp
+    'application/dbase', // .dbf
+    'application/x-shx', // .shx
+    'text/plain', // .prj files
+    'application/octet-stream', 
+    'application/xml',
+    'application/geo+json',
+    'application/json',
+    'text/csv',
+    'application/vnd.google-earth.kml+xml',
+    'application/xml'
+  ];
+  
+  const isValidFile = (file) => {
+    if (allowedTypes.includes(file.type)) return true;
+    
+    const extension = file.name.toLowerCase().split('.').pop();
+    const validExtensions = [
+      'pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg',
+      'shp', 'dbf', 'shx', 'prj', 'cpg',
+      'geojson', 'json', 'csv', 'kml', 'xml'
     ];
-    if (allowedTypes.includes(file.type)) {
-      setUploadedFile(file);
-    } else {
-      alert('Only PDFs, DOC/DOCX, and images are allowed.');
-    }
+    
+    return validExtensions?.includes(extension || '');
   };
+  
+  const validFiles = files.filter(isValidFile);
+  const totalFiles = uploadedFiles.length + validFiles.length;
+  
+  if (totalFiles > 10) {
+    alert(`You can only upload up to 10 files. You have ${uploadedFiles.length} files and tried to add ${validFiles.length} more.`);
+    return;
+  }
+  
+  if (validFiles.length !== files.length) {
+    alert('Some files were skipped. Only supported file types are allowed.');
+  }
+  
+  setUploadedFiles(prev => [...prev, ...validFiles]);
+};
 
   // Handle Enter key to send message (Shift+Enter for new line)
   const handleKeyDown = (e) => {
@@ -104,24 +138,29 @@ export default function ChatInput({ onSendMessage, setActiveFeedbackMessageId  }
           </button>
         </div>
 
-        {uploadedFile && (
-  <div 
-    className="mt-2 inline-flex items-center px-2 py-1 rounded-full border border-[#008080] bg-white text-[#008080] shadow-sm cursor-pointer hover:bg-[#008080] transition-colors text-xs font-medium truncate max-w-[120px] group"
-    onClick={() => setShowPreview(true)}
-  >
-    <span className="truncate group-hover:text-white">{uploadedFile.name}</span>
-    
-    <button
-      type="button"
-      onClick={(e) => {
-        e.stopPropagation();
-        setUploadedFile(null);
-      }}
-      className="p-1 ml-1 rounded-full text-[#008080] transition group-hover:text-white hover:text-red-500"
-      data-tooltip="Remove file"
-    >
-      <X size={14} />
-    </button>
+{uploadedFiles.length > 0 && (
+  <div className="mt-2 flex flex-wrap gap-2">
+    {uploadedFiles.map((file, index) => (
+      <div 
+        key={index}
+        className="inline-flex items-center px-2 py-1 rounded-full border border-[#008080] bg-white text-[#008080] shadow-sm cursor-pointer hover:bg-[#008080] transition-colors text-xs font-medium truncate max-w-[120px] group"
+        onClick={() => setShowPreview(true)}
+      >
+        <span className="truncate group-hover:text-white">{file.name}</span>
+        
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+          }}
+          className="p-1 ml-1 rounded-full text-[#008080] transition group-hover:text-white hover:text-red-500"
+          data-tooltip="Remove file"
+        >
+          <X size={14} />
+        </button>
+      </div>
+    ))}
   </div>
 )}
 
@@ -135,12 +174,13 @@ export default function ChatInput({ onSendMessage, setActiveFeedbackMessageId  }
               <Upload className="h-4 w-4 text-[#008080] group-hover:text-white" />
             </div>
             <input
-              id="file-upload"
-              type="file"
-              className="hidden"
-              accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-              onChange={handleFileUpload}
-            />
+  id="file-upload"
+  type="file"
+  className="hidden"
+  accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.shp,.dbf,.shx,.prj,.cpg,.geojson,.json,.kml,.kmz,.gml,.csv,.gpx,.zip,.txt,.xml,.xls,.xlsx"
+  onChange={handleFileUpload}
+  multiple
+/>
           </label>
           <div className="text-gray-500 text-xs">
             Neuracities can make mistakes. Please double-check responses.
@@ -148,13 +188,13 @@ export default function ChatInput({ onSendMessage, setActiveFeedbackMessageId  }
         </div>
       </form>
       
-      {/* File Preview Modal */}
-      {showPreview && uploadedFile && (
-        <FilePreviewModal 
-          file={uploadedFile} 
-          onClose={() => setShowPreview(false)} 
-        />
-      )}
+      {showPreview && uploadedFiles.length > 0 && (
+  <FilePreviewModal 
+    file={uploadedFiles[0]}
+    files={uploadedFiles} // Add this line
+    onClose={() => setShowPreview(false)} 
+  />
+)}
     </div>
   );
 }

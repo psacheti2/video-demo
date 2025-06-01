@@ -13,7 +13,7 @@ interface Artifact {
 }
 
 interface WelcomeCardProps {
-  onSendMessage: (params: { text: string; file: File | null }) => void;
+  onSendMessage: (params: { text: string; files: File[] }) => void; 
   savedArtifacts?: Artifact[];
   setModalArtifact?: (artifact: Artifact) => void;
 }
@@ -24,8 +24,9 @@ export default function WelcomeCard({
   setModalArtifact,
 }: WelcomeCardProps) {
   const [message, setMessage] = useState('');
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+const [previewFiles, setPreviewFiles] = useState<File[] | null>(null);  
+const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [showFilePreview, setShowFilePreview] = useState(false);
 
   useEffect(() => {
@@ -36,22 +37,67 @@ export default function WelcomeCard({
   }, [message]);
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (message.trim() || uploadedFile) {
-      onSendMessage({
-        text: message,
-        file: uploadedFile, // Pass the entire file object
-      });
-      setMessage('');
-      setUploadedFile(null);
-    }
-  };
+  e.preventDefault();
+  if (message.trim() || uploadedFiles.length > 0) {
+    onSendMessage({
+      text: message,
+      files: uploadedFiles, // Pass the files array
+    });
+    setMessage('');
+    setUploadedFiles([]);
+  }
+};
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadedFile(file);
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+  
+  const allowedTypes = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'image/png',
+    'image/jpeg',
+    'application/x-esri-shape', // .shp
+    'application/dbase', // .dbf
+    'application/x-shx', // .shx
+    'text/plain', // .prj files
+    'application/octet-stream', 
+  'application/geo+json',
+    'application/geo+json',
+    'application/json',
+    'text/csv',
+    'application/vnd.google-earth.kml+xml',
+    'application/xml'
+  ];
+  
+  const isValidFile = (file: File) => {
+    if (allowedTypes.includes(file.type)) return true;
+    
+    const extension = file.name.toLowerCase().split('.').pop();
+    const validExtensions = [
+      'pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg',
+      'shp', 'dbf', 'shx', 'prj', 'cpg',
+      'geojson', 'json', 'csv', 'kml', 'xml'
+    ];
+    
+    return validExtensions?.includes(extension || '');
   };
+  
+  const validFiles = files.filter(isValidFile);
+  const totalFiles = uploadedFiles.length + validFiles.length;
+  
+  if (totalFiles > 10) {
+    alert(`You can only upload up to 10 files. You have ${uploadedFiles.length} files and tried to add ${validFiles.length} more.`);
+    return;
+  }
+  
+  if (validFiles.length !== files.length) {
+    alert('Some files were skipped. Only supported file types are allowed.');
+  }
+  
+  setUploadedFiles(prev => [...prev, ...validFiles]);
+};
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -92,32 +138,43 @@ export default function WelcomeCard({
               <SendHorizontal className="h-4 w-4 text-[#008080] group-hover:text-white" />
             </button>
           </div>
-
-          {/* Uploaded File Preview */}
-{uploadedFile && (
+{/* Uploaded Files Preview */}
+{uploadedFiles.length > 0 && (
   <>
-   <div 
-  className="inline-flex items-center px-2 py-1 rounded-full border border-[#008080] bg-white text-[#008080] shadow-sm cursor-pointer hover:bg-[#008080] transition-colors text-xs font-medium truncate max-w-[120px] group"
-  onClick={() => setShowFilePreview(true)}
->
-<span className="text-xs font-medium truncate group-hover:text-white">{uploadedFile.name}</span>
-<button
-  type="button"
-  onClick={(e) => {
-    e.stopPropagation();
-    setUploadedFile(null);
-  }}
-  className="p-1 ml-1 rounded-full group-hover:text-white hover:text-red-500 text-[#008080] transition"
-  data-tooltip="Remove file"
->
-  <X size={14} />
-</button>
-
-</div>
-    {showFilePreview && (
+    <div className="flex flex-wrap gap-2">
+      {uploadedFiles.map((file, index) => (
+        <div 
+          key={index}
+          className="inline-flex items-center px-2 py-1 rounded-full border border-[#008080] bg-white text-[#008080] shadow-sm cursor-pointer hover:bg-[#008080] transition-colors text-xs font-medium truncate max-w-[120px] group"
+          onClick={() => {
+            setPreviewFiles(uploadedFiles);
+            setShowFilePreview(true);
+          }}
+        >
+          <span className="text-xs font-medium truncate group-hover:text-white">{file.name}</span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+            }}
+            className="p-1 ml-1 rounded-full group-hover:text-white hover:text-red-500 text-[#008080] transition"
+            data-tooltip="Remove file"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      ))}
+    </div>
+    
+    {showFilePreview && previewFiles && (
       <FilePreviewModal 
-        file={uploadedFile} 
-        onClose={() => setShowFilePreview(false)} 
+        file={previewFiles[0]}
+        files={previewFiles}
+        onClose={() => {
+          setShowFilePreview(false);
+          setPreviewFiles(null);
+        }} 
       />
     )}
   </>
@@ -134,12 +191,13 @@ export default function WelcomeCard({
 </div>
 
               <input
-                id="welcome-file-upload"
-                type="file"
-                className="hidden"
-                accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-                onChange={handleFileUpload}
-              />
+  id="welcome-file-upload"
+  type="file"
+  className="hidden"
+  accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.shp,.dbf,.shx,.prj,.cpg,.geojson,.json,.csv,.kml,.xml"
+  onChange={handleFileUpload}
+  multiple
+/>
             </label>
 
             <p className="text-xs text-gray-400">
