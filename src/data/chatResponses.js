@@ -215,7 +215,7 @@ export const chatResponses = {
   }]
 },
 "What parameters should I consider for data center site selection in Greater Madrid?": {
-    text: "For data center site selection in Greater Madrid, key parameters include: Power Infrastructure** (grid capacity, substation proximity), **Connectivity** (fiber routes, latency), **Environmental Risks** (flood zones, seismic activity), **Regulatory Compliance** (zoning, permits), and **Economic Factors** (land costs, incentives). I've identified 8 preliminary potential sites based on basic infrastructure availability. Would you like me to perform detailed analysis on these locations or add additional parameters?",
+    text: "For data center site selection in Greater Madrid, key parameters include: \n\nPower Infrastructure (grid capacity, substation proximity), \nConnectivity (fiber routes, latency), \nEnvironmental Risks (flood zones, seismic activity), \nRegulatory Compliance (zoning, permits), and \nEconomic Factors (land costs, incentives). \n\nI've identified 8 preliminary potential sites based on basic infrastructure availability. Would you like me to perform detailed analysis on these locations or add additional parameters?",
     timing: [2000, 2000, 1000, 1000, 1000, 1500], // Timing for each line
   artifacts: [{
     type: "map",
@@ -228,7 +228,7 @@ export const chatResponses = {
   }]
 },
 "I just got this list from my client with specific locations to analyze. Can you do Power, Infrastructure and Connectivity analysis first?": {
-    text: "I've loaded your client's 5 locations and performed power & connectivity analysis. **Location A** shows excellent power capacity (85MW available) with dual fiber routes. **Location C** has power constraints (30MW max) but superior connectivity. **Location E** offers balanced infrastructure with moderate power (60MW) and good fiber access. The analysis reveals 3 locations meet your 50MW requirement with adequate connectivity redundancy.",
+    text: "I've loaded your client's 5 locations and performed power & connectivity analysis. \n\nLocation A shows excellent power capacity (85MW available) with dual fiber routes. \nLocation B has power constraints (30MW max) but superior connectivity. \nLocation C offers balanced infrastructure with moderate power (60MW) and good fiber access. The analysis reveals 3 locations meet your 50MW requirement with adequate connectivity redundancy.",
     timing: [2000, 2000, 1000, 1000, 1000, 1500], // Timing for each line
   artifacts: [{
     type: "map",
@@ -241,7 +241,7 @@ export const chatResponses = {
   }]
 },
 "Let's also do environmental and regulatory analysis on these locations": {
-    text: "Environmental and regulatory analysis complete. **Critical finding**: All sites have a high aggregated environmental risk score. **Location D** faces zoning restrictions requiring 18-month permit process. **Location A** shows optimal regulatory status with industrial zoning and streamlined permits (6-month timeline). Environmental risks of wilderfires, extreme heat and water scarcity was very high and river flooding risk was medium.",
+    text: "Environmental and regulatory analysis complete. \n\nCritical finding: All sites have a high aggregated environmental risk score. \nLocation D faces zoning restrictions requiring 18-month permit process. \nLocation A shows optimal regulatory status with industrial zoning and streamlined permits (6-month timeline). \nEnvironmental risks of wilderfires, extreme heat and water scarcity was very high and river flooding risk was medium.",
     timing: [2000, 2000, 1000, 1000, 1000, 1500], // Timing for each line
   artifacts: [{
     type: "map",
@@ -254,7 +254,7 @@ export const chatResponses = {
   }]
 },
 "Can you do a preliminary economic analysis and create an aggregated index with more weight on infrastructure and regulatory factors?": {
-    text: "Economic analysis shows Location A as the clear winner with lowest environmental concern and highest weighted score (8.7/10). Location B ranks second (score: 8) despite higher land costs due to excellent infrastructure. The weighted index prioritizes infrastructure (40%) and regulatory (30%) over environmental (20%) and economic (10%) factors as requested. Location D eliminated due to wildfire and water scarcity risk despite low acquisition costs.",
+    text: "Economic analysis shows Location A as the clear winner with lowest environmental concern and highest weighted score (8.7/10). \nLocation B ranks second (score: 8) despite higher land costs due to excellent infrastructure. The weighted index prioritizes infrastructure (40%) and regulatory (30%) over environmental (20%) and economic (10%) factors as requested. \nLocation D eliminated due to wildfire and water scarcity risk despite low acquisition costs.",
     timing: [2000, 2000, 1000, 1000, 1000, 1500], // Timing for each line
   artifacts: [{
     type: "map",
