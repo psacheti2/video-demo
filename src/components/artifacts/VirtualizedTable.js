@@ -679,25 +679,25 @@ const Row = useCallback(({ index, style }) => {
         <GripHorizontal size={12} className="text-gray-400" />
       </div>
 
-      {/* Table header with tabs */}
-      <div className="flex justify-between items-center p-1 bg-white text-gray-800 border-b border-gray-200 h-10 px-4">
-        {/* Tabs on the left */}
-        <div className="flex space-x-1">
+      <div className="flex justify-between items-end bg-white text-gray-800 border-b border-gray-200 px-4 pt-2 pb-1">
+  {/* Tabs on the left */}
+  <div className="flex space-x-1 items-end">
           {tableTitles.map((title, index) => (
             <button
-              key={index}
-              className={`px-2 py-1 border rounded-t-md text-xs font-medium transition-all duration-200
-                ${currentTableIndex === index
-                  ? 'bg-[#008080] text-white border-[#008080]'
-                  : 'bg-white text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white'}
-              `}
-              onClick={() => {
-                setCurrentTableIndex(index);
-                setIsModified(false);
-              }}
-            >
-              {title}
-            </button>
+  key={index}
+  className={`px-2 py-1 border rounded-t-md text-xs font-medium transition-all duration-200 min-h-[24px] max-w-[120px] text-ellipsis text-center
+    ${currentTableIndex === index
+      ? 'bg-[#008080] text-white border-[#008080]'
+      : 'bg-white text-[#008080] border-[#008080] hover:bg-[#008080] hover:text-white'}
+  `}
+  onClick={() => {
+    setCurrentTableIndex(index);
+    setIsModified(false);
+  }}
+>
+  <span className="block truncate">{title}</span>
+</button>
+
           ))}
         </div>
       </div>
@@ -716,48 +716,52 @@ const Row = useCallback(({ index, style }) => {
               
               <div style={{ width: `${totalWidth}px`, minWidth: '100%' }}>
                 
-                
 
-                {/* Actual column names (Name, Age, etc.) */}
-                <div className="flex border-b border-gray-200">
-                  <div className="sticky left-0 z-10 w-10 min-w-[40px] bg-white"></div>
-                  {currentTable.headers.map((header, idx) => (
-                    <div
-                      key={`label-${idx}`}
-                      data-column={header}
-                      className="text-center text-xs font-semibold border-r border-gray-300 bg-gray-100 flex items-center justify-center"
-                      style={{
-                        width: `${columnWidths[idx]}px`,
-                        minWidth: `${columnWidths[idx]}px`,
-                        flex: '0 0 auto',
-                        height: '36px', 
-                        zIndex: 2
-                      }}                      
-                      onClick={() => setSelectedColIndex(idx)}
-                      onContextMenu={(e) => {
-                        e.preventDefault();
-                        handleRightClick(e, 'column', idx, header);
-                      }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="overflow-hidden text-ellipsis whitespace-nowrap block max-w-full">
-                          {header}
-                        </span>
-                        {showFilterIcons && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleShowFilter(header);
-                            }}
-                            className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none"
-                          >
-                            <ListFilter size={10} />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+<div 
+  ref={headerContainerRef}
+  className="overflow-x-auto w-full border-b border-gray-200 mt-2"
+  onScroll={syncScroll}
+>
+  <div style={{ width: `${totalWidth}px`, minWidth: '100%' }} className="flex">
+    <div className="sticky left-0 z-10 w-10 min-w-[40px] bg-white"></div>
+    {currentTable.headers.map((header, idx) => (
+      <div
+        key={`label-${idx}`}
+        data-column={header}
+        className="text-center text-xs font-semibold border-r border-gray-300 bg-gray-100 flex items-center justify-center"
+        style={{
+          width: `${columnWidths[idx]}px`,
+          minWidth: `${columnWidths[idx]}px`,
+          flex: '0 0 auto',
+          height: '36px', 
+          zIndex: 2
+        }}                      
+        onClick={() => setSelectedColIndex(idx)}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          handleRightClick(e, 'column', idx, header);
+        }}
+      >
+        <div className="flex items-center justify-between px-1 w-full">
+          <span className="overflow-hidden text-ellipsis whitespace-nowrap block max-w-full">
+            {header}
+          </span>
+          {showFilterIcons && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleShowFilter(header);
+              }}
+              className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none"
+            >
+              <ListFilter size={10} />
+            </button>
+          )}
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
 
                 <List
   ref={listRef}

@@ -37,7 +37,11 @@ const FilePreviewModal = ({ file, files, onClose }) => {
       return ['shp', 'dbf', 'shx', 'prj', 'cpg'].includes(ext);
     });
   };
-
+useEffect(() => {
+  if (file && isShapefileComponent(file.name) && isShapefileCollection()) {
+    setShowShapefilePreview(true);
+  }
+}, [file, files]);
   useEffect(() => {
     const currentFiles = files || (file ? [file] : []);
     setAllFiles(currentFiles);
@@ -84,22 +88,21 @@ const FilePreviewModal = ({ file, files, onClose }) => {
     } else if (file.type === 'application/pdf') {
       return <PDFViewer file={file} />;
     } else if (isShapefileComponent(file.name)) {
-      return (
-        <div className="flex flex-col items-center justify-center text-center p-10">
-          <Map size={48} className="text-green-500 mb-3" />
-          <p className="text-base font-semibold text-gray-800">{file.name}</p>
-          <p className="text-sm text-gray-500 mt-1">Shapefile component detected</p>
-          {isShapefileCollection() && (
-            <button
-              onClick={() => setShowShapefilePreview(true)}
-              className="mt-4 px-4 py-2 bg-[#008080] text-white rounded-lg hover:bg-[#006666] transition flex items-center"
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              View Shapefile Map
-            </button>
-          )}
-        </div>
-      );
+  if (isShapefileCollection()) {
+    // Automatically show shapefile preview if it's a collection
+    if (!showShapefilePreview) {
+      setShowShapefilePreview(true);
+    }
+    return null; // Don't render anything here, let the conditional rendering handle it
+  }
+  // Keep the existing dialog for single shapefile components
+  return (
+    <div className="flex flex-col items-center justify-center text-center p-10">
+      <Map size={48} className="text-green-500 mb-3" />
+      <p className="text-base font-semibold text-gray-800">{file.name}</p>
+      <p className="text-sm text-gray-500 mt-1">Shapefile component detected</p>
+    </div>
+  );
     } else {
       return (
         <div className="flex flex-col items-center justify-center text-center p-10">

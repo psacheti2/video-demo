@@ -39,7 +39,8 @@ const IndexMapComponent = ({
   center = [40.4500, -3.7038], 
   onSendMessage, 
   originConversationId, 
-  artifactsPanelWidth 
+  artifactsPanelWidth,
+  hideLoadingBar = false  
 }) => {
  const [layerZIndexes, setLayerZIndexes] = useState({
   powerlines: 10,
@@ -48,7 +49,6 @@ const IndexMapComponent = ({
   uploadedLocations: 30,
   // Add these:
   waterways: 5,
-  waterBodies: 8,
   floodZones: 15,
   zoningBoundaries: 12,
   environmentalRisk: 18,
@@ -81,7 +81,7 @@ const [showTextToolbar, setShowTextToolbar] = useState(false);
     const [tableHeight, setTableHeight] = useState(300);
     const [currentTableIndex, setCurrentTableIndex] = useState(0);
     const [tableData, setTableData] = useState([]);
-const [tableTitles, setTableTitles] = useState(['Uploaded Locations', 'Substations', 'Power Lines', 'Flood Zones', 'Water Bodies', 'Waterways', 'Zoning', 'Environmental Risk',   'Final Site Rankings']); 
+const [tableTitles, setTableTitles] = useState(['Uploaded Locations', 'Substations', 'Power Lines', 'Flood Zones', 'Waterways', 'Zoning', 'Heat Risk']); 
 const [showShareDialog, setShowShareDialog] = useState(false);
     const [showEmailNotification, setShowEmailNotification] = useState(false);
     const addNotification = useNotificationStore((state) => state.addNotification);
@@ -155,15 +155,43 @@ const [showShareDialog, setShowShareDialog] = useState(false);
   bufferZones: false,
   floodZones: false,
   zoningBoundaries: false,
-  waterBodies: false,
   waterways: false,
   environmentalRisk: false,
   complianceIndicators: false,
   weightedScoring: true,
   costAnalysisZones: true,
-  rankingLabels: true
 });
+const [isLoadingLayers, setIsLoadingLayers] = useState(false);
+const [loadingProgress, setLoadingProgress] = useState(0);
+const [currentLoadingLayer, setCurrentLoadingLayer] = useState('');
+const [totalLayers] = useState(2);
+const LoadingBar = () => {
+if (!isLoadingLayers || hideLoadingBar) return null;  
+  return (
+    <div className="fixed bottom-4 right-4 z-[9999] w-64">
+      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4 w-full">
+        <div className="text-sm font-medium text-gray-700 mb-2">
+          Loading Analysis Data
+        </div>
+        <div className="text-xs text-gray-500 mb-3">
+          {currentLoadingLayer}
+        </div>
 
+        {/* PROGRESS BAR */}
+        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+          <div
+            className="h-full bg-[#008080] rounded-full transition-all duration-700 ease-out"
+            style={{ width: `${(loadingProgress / totalLayers) * 100}%` }}
+          />
+        </div>
+
+        <div className="text-xs text-gray-500 mt-1 text-right">
+          {loadingProgress}/{totalLayers} layers loaded
+        </div>
+      </div>
+    </div>
+  );
+};
     const fallbackMapStyles = {
         light: 'https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
         dark: 'https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png',
@@ -300,28 +328,23 @@ const [nextShapeIds, setNextShapeIds] = useState({
   bufferZones: '#3498DB',
    floodZones: '#FF6B6B',
   zoningBoundaries: '#8E44AD',
-  waterBodies: '#3498DB',
   waterways: '#2980B9',
   environmentalRisk: '#E67E22',
   complianceIndicators: '#27AE60',
   weightedScoring: '#3498DB',
   costAnalysisZones: '#9B59B6',
-  rankingLabels: '#E74C3C'
 });
 const uploadedLocationsRef = useRef([]);
 const substationsRef = useRef([]);
 const powerlinesRef = useRef([]);
 const floodZonesRef = useRef([]);
 const zoningBoundariesRef = useRef([]);
-const waterBodiesRef = useRef([]);
 const waterwaysRef = useRef([]);
 const weightedScoringRef = useRef(null);
 const costAnalysisRef = useRef(null);
-const rankingLabelsRef = useRef(null);
 const environmentalRiskRef = useRef(null);   
  weightedScoringRef.current = [];
 costAnalysisRef.current = [];
-rankingLabelsRef.current = [];
 const fetchUploadedLocations = async () => {
   try {
     const res = await fetch('/data/uploaded-data.geojson');
@@ -377,11 +400,10 @@ const fetchUploadedLocations = async () => {
 
           marker.featureId = featureId;
 
-          let popupContent = '<strong>Analysis Location</strong>';
-          popupContent += `<br>Feature ID: ${featureId}`;
-          if (feature.properties.Name) popupContent += `<br>Name: ${feature.properties.Name}`;
-          if (feature.properties.Description) popupContent += `<br>Description: ${feature.properties.Description}`;
-          if (feature.properties.Reference) popupContent += `<br>Reference: ${feature.properties.Reference}`;
+          let popupContent = `<strong>${feature.properties.Name || 'Analysis Location'}</strong>`;
+popupContent += `<br>Feature ID: ${featureId}`;
+if (feature.properties.Description) popupContent += `<br>Description: ${feature.properties.Description}`;
+if (feature.properties.Reference) popupContent += `<br>Reference: ${feature.properties.Reference}`;
 
           marker.bindPopup(popupContent, { className: 'custom-popup' });
 
@@ -866,55 +888,7 @@ const fetchFloodZones = async () => {
   }
 };
 
-const fetchWaterBodies = async () => {
-  try {
-    const res = await fetch('/data/madridwater-data.geojson');
-    const waterData = await res.json();
-    const waterLayer = L.layerGroup();
 
-    if (waterData.features && waterData.features.length > 0) {
-      waterData.features.forEach((feature, index) => {
-        if (!feature.properties) {
-          feature.properties = {};
-        }
-        feature.properties['Feature ID'] = feature.properties['Feature ID'] || `water-${index + 1}`;
-      });
-
-      waterData.features.forEach((feature) => {
-        if (feature.geometry && feature.geometry.type === 'Polygon') {
-          const coords = feature.geometry.coordinates[0].map(coord => [coord[1], coord[0]]);
-          const featureId = feature.properties['Feature ID'];
-
-          const polygon = L.polygon(coords, {
-            fillColor: layerColors.waterBodies,
-            color: layerColors.waterBodies,
-            weight: 1,
-            opacity: 0.8,
-            fillOpacity: 0.6,
-            interactive: true
-          });
-
-          polygon.featureId = featureId;
-
-          let popupContent = '<strong>Water Body</strong>';
-          popupContent += `<br>Feature ID: ${featureId}`;
-          if (feature.properties.name) popupContent += `<br>Name: ${feature.properties.name}`;
-          popupContent += `<br>Type: ${feature.properties.fclass || 'Water'}`;
-
-          polygon.bindPopup(popupContent, { className: 'custom-popup' });
-
-          waterBodiesRef.current.push({ polygon, featureId });
-          waterLayer.addLayer(polygon);
-        }
-      });
-    }
-
-    return { waterLayer, waterData };
-  } catch (error) {
-    console.error("Error fetching water bodies:", error);
-    return { waterLayer: L.layerGroup(), waterData: { features: [] } };
-  }
-};
 
 const fetchWaterways = async () => {
   try {
@@ -971,33 +945,41 @@ const fetchZoningBoundaries = async () => {
     const zoningLayer = L.layerGroup();
 
     if (zoningData.features && zoningData.features.length > 0) {
-      zoningData.features.forEach((feature, index) => {
+      // Filter for only industrial zones
+      const industrialFeatures = zoningData.features.filter(feature => 
+        feature.properties && feature.properties.fclass === 'industrial'
+      );
+
+      console.log(`Found ${industrialFeatures.length} industrial zones out of ${zoningData.features.length} total features`);
+
+      industrialFeatures.forEach((feature, index) => {
         if (!feature.properties) {
           feature.properties = {};
         }
         feature.properties['Feature ID'] = feature.properties['Feature ID'] || `zone-${index + 1}`;
       });
 
-      zoningData.features.forEach((feature) => {
+      industrialFeatures.forEach((feature) => {
         if (feature.geometry && feature.geometry.type === 'Polygon') {
           const coords = feature.geometry.coordinates[0].map(coord => [coord[1], coord[0]]);
           const featureId = feature.properties['Feature ID'];
 
           const polygon = L.polygon(coords, {
-  fillColor: 'transparent',
-  color: layerColors.zoningBoundaries,
-  weight: 0.5,
-  opacity: 0.8,
-  fillOpacity: 0.1,
-  interactive: true
-});
+            fillColor: 'transparent',
+            color: layerColors.zoningBoundaries,
+            weight: 0.5,
+            opacity: 0.8,
+            fillOpacity: 0.1,
+            interactive: true
+          });
 
           polygon.featureId = featureId;
 
-          let popupContent = '<strong>Zoning Boundary</strong>';
+          let popupContent = '<strong>Industrial Zone</strong>';
           popupContent += `<br>Feature ID: ${featureId}`;
-          popupContent += `<br>Zone Type: ${feature.properties.fclass || 'Mixed Use'}`;
+          popupContent += `<br>Zone Type: Industrial`;
           if (feature.properties.name) popupContent += `<br>Name: ${feature.properties.name}`;
+          if (feature.properties.osm_id) popupContent += `<br>OSM ID: ${feature.properties.osm_id}`;
 
           polygon.bindPopup(popupContent, { className: 'custom-popup' });
 
@@ -1005,6 +987,9 @@ const fetchZoningBoundaries = async () => {
           zoningLayer.addLayer(polygon);
         }
       });
+
+      // Update the zoningData to only include industrial features for table generation
+      zoningData.features = industrialFeatures;
     }
 
     return { zoningLayer, zoningData };
@@ -1162,74 +1147,73 @@ const fetchEnvironmentalRisk = async () => {
 
 const generateWeightedScoring = () => {
   const scoringLayer = L.layerGroup();
-  
-  // Get compliance status for each location
+
   const getComplianceStatus = (index) => {
     const statusPattern = ['compliant', 'compliant', 'warning', 'warning', 'violation'];
     const featureIdNum = index + 1;
     return statusPattern[featureIdNum % statusPattern.length];
   };
 
-  // Create scores with FIXED values to match your requirements
+  const getLocationName = (index) => {
+    // Get the actual feature name from the uploaded locations
+    if (uploadedLocationsRef.current[index]) {
+      const marker = uploadedLocationsRef.current[index].marker;
+      const popupContent = marker.getPopup()?.getContent() || '';
+      
+      // Extract the name from the popup content
+      const nameMatch = popupContent.match(/<strong>([^<]+)<\/strong>/);
+      if (nameMatch && nameMatch[1] && nameMatch[1] !== 'Analysis Location') {
+        return nameMatch[1];
+      }
+    }
+    
+    // Fallback to generic names if no specific name found
+    return `Location ${String.fromCharCode(65 + index)}`;
+  };
+
   const locationScores = uploadedLocationsRef.current.map((_, index) => {
     const compliance = getComplianceStatus(index);
     let score;
-    
-    // Fixed scores to match your analysis
-    if (index === 0) {
-      score = 8.7; // Location A (index 0) gets 8.7
-    }  else if (index === 4) {
-      score = 8.0; // Location C (index 2) gets 7.2
-    } else if (index === 2) {
-      score = 7.2; // Location C (index 2) gets 7.2
-    } else if (compliance === 'compliant') {
-      score = 8.0 + 0.1;
-    } else if (compliance === 'warning') {
-      score = 6.5 + Math.random() * 0.7; // Warning locations get 6.5-7.2 range
-    } else {
-      score = 4.5 + Math.random() * 1.5; // Violation locations get 4.5-6.0 range
-    }
-    
-    return { 
+    if (index === 0) score = 8.7;
+    else if (index === 4) score = 8.0;
+    else if (index === 2) score = 7.2;
+    else if (compliance === 'compliant') score = 8.1;
+    else if (compliance === 'warning') score = 6.5 + Math.random() * 0.7;
+    else score = 4.5 + Math.random() * 1.5;
+
+    return {
       score: Math.round(score * 10) / 10,
-      compliance: compliance
+      compliance
     };
   });
 
-  // Sort by score and assign ranks
   const sortedScores = locationScores
     .map((score, index) => ({ ...score, originalIndex: index }))
     .sort((a, b) => b.score - a.score);
 
   sortedScores.forEach((item, rank) => {
-    const recommendation = rank === 0 ? 'Proceed with acquisition' :
-                          rank === 1 ? 'Strong secondary option' :
-                          rank === 2 ? 'Viable backup location' :
-                          rank === 3 ? 'Consider with reservations' :
-                          'Not recommended';
-    
+    const recommendation = rank === 0 ? 'Proceed with acquisition'
+      : rank === 1 ? 'Strong secondary option'
+      : rank === 2 ? 'Viable backup location'
+      : rank === 3 ? 'Consider with reservations'
+      : 'Not recommended';
+
     locationScores[item.originalIndex] = {
       ...item,
       rank: rank + 1,
-      recommendation: recommendation
+      recommendation
     };
-  });  
+  });
 
   uploadedLocationsRef.current.forEach(({ marker, featureId }, index) => {
-    if (index >= locationScores.length) return;
-    
     const position = marker.getLatLng();
     const scoreData = locationScores[index];
-const getLocationName = (index) => {
-  if (index === 1) return 'Location E'; // Original Location B becomes Location E
-  if (index === 4) return 'Location B'; // Original Location E becomes Location B
-  return `Location ${String.fromCharCode(65 + index)}`; // A, C, D stay the same
-};
-const locationName = getLocationName(index);    
+    const locationName = getLocationName(index);
     const radius = (scoreData.score / 10) * 80 + 30;
-    const color = scoreData.score >= 8 ? '#27AE60' : 
-                  scoreData.score >= 7 ? '#F39C12' : 
-                  scoreData.score >= 6 ? '#E67E22' : '#E74C3C';
+    const color = scoreData.score >= 8 ? '#27AE60'
+      : scoreData.score >= 7 ? '#F39C12'
+      : scoreData.score >= 6 ? '#E67E22'
+      : '#E74C3C';
 
     const circle = L.circle([position.lat, position.lng], {
       radius: radius * 10,
@@ -1242,27 +1226,121 @@ const locationName = getLocationName(index);
 
     circle.featureId = `weighted-${featureId}`;
     circle.bindPopup(`
-      <div style="font-family: Arial, sans-serif;">
-        <h4 style="margin: 0 0 8px 0; color: ${color};">${locationName}</h4>
-        <strong>Weighted Score:</strong> ${scoreData.score}/10<br>
-        <strong>Rank:</strong> #${scoreData.rank}<br>
-        <strong>Status:</strong> ${scoreData.recommendation}<br>
-        <hr style="margin: 8px 0;">
-        <small style="color: #666;">
-          Infrastructure (40%): ${(scoreData.score * 0.4 + Math.random() * 2).toFixed(1)}/10<br>
-          Regulatory (30%): ${(scoreData.score * 0.3 + Math.random() * 1.5).toFixed(1)}/10<br>
-          Environmental (20%): ${(scoreData.score * 0.2 + Math.random() * 1).toFixed(1)}/10<br>
-          Economic (10%): ${(scoreData.score * 0.1 + Math.random() * 0.5).toFixed(1)}/10
-        </small>
-      </div>
-    `);
+  <div style="font-family: 'Segoe UI', sans-serif; font-size: 13px; width: 200px;">
+    <div style="font-weight: 600; font-size: 14px; color: ${color}; margin-bottom: 4px;">${locationName}</div>
+    <div style="font-size: 13px; margin-bottom: 8px;">
+      <span style="font-weight: 500; color: #555;">Score:</span> 
+      <span style="font-weight: bold;">${scoreData.score}/10</span>
+    </div>
+    <button onclick="window.showWeightedBreakdown(${index})"
+      style="
+        background: ${color};
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 500;
+        border-radius: 20px;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: background 0.3s ease;
+      "
+    >
+      Show Breakdown
+    </button>
+  </div>
+`);
 
     weightedScoringRef.current.push({ circle, featureId: circle.featureId });
     scoringLayer.addLayer(circle);
   });
 
+  window.showWeightedBreakdown = (index) => {
+  const data = locationScores[index];
+  // Get the actual location name from the uploaded locations data
+  let locationName = `Location ${String.fromCharCode(65 + index)}`;
+  
+  if (uploadedLocationsRef.current[index]) {
+    const marker = uploadedLocationsRef.current[index].marker;
+    const popupContent = marker.getPopup()?.getContent() || '';
+    
+    // Extract the name from the popup content
+    const nameMatch = popupContent.match(/<strong>([^<]+)<\/strong>/);
+    if (nameMatch && nameMatch[1] && nameMatch[1] !== 'Analysis Location') {
+      locationName = nameMatch[1];
+    }
+  }
+  
+  const containerId = 'weighted-breakdown-panel';
+const score = data.score;
+const color = score >= 8 ? '#27AE60' :
+              score >= 7 ? '#F39C12' :
+              score >= 6 ? '#E67E22' : '#E74C3C';
+
+  let panel = document.getElementById(containerId);
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = containerId;
+    document.body.appendChild(panel);
+  }
+
+  panel.innerHTML = `
+    <div style="
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      width: 340px;
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      font-family: 'Segoe UI', sans-serif;
+      font-size: 13px;
+      color: #333;
+      z-index: 10000;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      transition: transform 0.3s ease;
+    ">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 16px; font-weight: 600; color: ${color};">${locationName}</div>
+        <button onclick="document.getElementById('${containerId}').remove()" style="
+          border: none;
+          background: none;
+          font-size: 18px;
+          color: #888;
+          cursor: pointer;
+        ">&times;</button>
+      </div>
+
+      <div style="margin-top: 12px;">
+        <div style="margin-bottom: 6px;"><strong>Score:</strong> ${data.score}/10</div>
+        <div style="margin-bottom: 6px;"><strong>Rank:</strong> #${data.rank}</div>
+        <div style="margin-bottom: 12px;"><strong>Status:</strong> ${data.recommendation}</div>
+        <div style="background: #f9f9f9; padding: 12px 14px; border-radius: 8px; border: 1px solid #eee;">
+          <div style="margin-bottom: 6px;"><strong>Infrastructure</strong> (40%): ${(data.score * 0.4 + Math.random() * 2).toFixed(1)}/10</div>
+          <div style="margin-bottom: 6px;"><strong>Regulatory</strong> (30%): ${(data.score * 0.3 + Math.random() * 1.5).toFixed(1)}/10</div>
+          <div style="margin-bottom: 6px;"><strong>Environmental</strong> (20%): ${(data.score * 0.2 + Math.random() * 1).toFixed(1)}/10</div>
+          <div><strong>Economic</strong> (10%): ${(data.score * 0.1 + Math.random() * 0.5).toFixed(1)}/10</div>
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+document.addEventListener('click', (e) => {
+  const panel = document.getElementById('weighted-breakdown-panel');
+  if (!panel) return;
+
+  const isInsidePanel = panel.contains(e.target);
+  const isInsideLeafletPopup = e.target.closest('.leaflet-popup'); // don't close if they click inside the popup
+
+  if (!isInsidePanel && !isInsideLeafletPopup) {
+    panel.remove();
+  }
+});
+
   return scoringLayer;
 };
+
 
 const generateCostAnalysisZones = () => {
   const costLayer = L.layerGroup();
@@ -1276,163 +1354,56 @@ const generateCostAnalysisZones = () => {
     const position = marker.getLatLng();
     
     // Create cost intensity based on location (higher cost = higher intensity)
-    const baseCostIntensity = 0.3 + Math.random() * 0.7; // 0.3 to 1.0
+    const baseCostIntensity = 0.2 + Math.random() * 0.5; // Reduced from 0.3-1.0 to 0.2-0.7
     
     // Add main point
     heatmapData.push([position.lat, position.lng, baseCostIntensity]);
     
-for (let ring = 1; ring <= 4; ring++) { // 4 concentric rings
-  const pointsInRing = 25 * ring; // More points in outer rings
-  for (let i = 0; i < pointsInRing; i++) {
-    const distance = (Math.random() * 0.003 * ring) + (0.002 * ring); // Ring-based distance
-    const angle = (i / pointsInRing) * 2 * Math.PI + (Math.random() * 0.5); // More systematic distribution
-    const lat = position.lat + distance * Math.cos(angle);
-    const lng = position.lng + distance * Math.sin(angle);
-    const intensity = baseCostIntensity * (0.8 - (ring * 0.15)) * (0.7 + Math.random() * 0.3); // Decrease with distance
-    
-    heatmapData.push([lat, lng, Math.max(0.1, intensity)]); // Ensure minimum intensity
-  }
-}
+    // Create more systematic rings for smoother gradients
+    for (let ring = 1; ring <= 5; ring++) { // Increased to 5 rings
+      const pointsInRing = 20 * ring; // More points in outer rings
+      for (let i = 0; i < pointsInRing; i++) {
+        const distance = (Math.random() * 0.002 * ring) + (0.001 * ring); // Smaller, more controlled distance
+        const angle = (i / pointsInRing) * 2 * Math.PI + (Math.random() * 0.3); // More systematic distribution
+        const lat = position.lat + distance * Math.cos(angle);
+        const lng = position.lng + distance * Math.sin(angle);
+        const intensity = baseCostIntensity * (0.9 - (ring * 0.12)) * (0.8 + Math.random() * 0.2); // Smoother decrease
+        
+        heatmapData.push([lat, lng, Math.max(0.05, intensity)]); // Higher minimum intensity
+      }
+    }
   });
   
-  // Add some random background cost variation
+  // Add some random background cost variation - REDUCED and more controlled
   const centerLat = uploadedLocationsRef.current.reduce((sum, {marker}) => sum + marker.getLatLng().lat, 0) / uploadedLocationsRef.current.length;
   const centerLng = uploadedLocationsRef.current.reduce((sum, {marker}) => sum + marker.getLatLng().lng, 0) / uploadedLocationsRef.current.length;
   
-  for (let i = 0; i < 200; i++) {
-    const lat = centerLat + (Math.random() - 0.5) * 0.05;
-    const lng = centerLng + (Math.random() - 0.5) * 0.05;
-    const intensity = Math.random() * 0.4; // Lower background intensity
+  for (let i = 0; i < 100; i++) { // Reduced from 200
+    const lat = centerLat + (Math.random() - 0.5) * 0.03; // Smaller spread
+    const lng = centerLng + (Math.random() - 0.5) * 0.03;
+    const intensity = Math.random() * 0.2; // Reduced background intensity
     
     heatmapData.push([lat, lng, intensity]);
   }
   
- const costHeatmap = L.heatLayer(heatmapData, {
-  radius: 50,        // Increased for better coverage
-  blur: 30,          
+  const costHeatmap = L.heatLayer(heatmapData, {
+  radius: 50,        // Reduce radius to make less intense
+  blur: 40,          // Increase blur for softer appearance
   maxZoom: 17,
-  max: 1.0,
-  minOpacity: 0.2,   // Ensure visibility
+  max: 1.2,          // INCREASE max to make existing data appear lighter
+  minOpacity: 0.05,  
   gradient: {
-    0.0: '#27AE60',  // Green - Low cost (compliant areas)
-    0.2: '#F1C40F',  // Yellow - Low-moderate cost
-    0.4: '#F39C12',  // Orange - Moderate cost  
-    0.6: '#E67E22',  // Dark orange - High-moderate cost
-    0.8: '#E74C3C',  // Red - High cost (violation areas)
-    1.0: '#8B0000'   // Dark red - Very high cost
-  }
+  0.0: 'rgba(39, 174, 96, 0.1)',     // Light green
+  0.2: 'rgba(241, 196, 15, 0.15)',   // Light yellow
+  0.4: 'rgba(243, 156, 18, 0.2)',    // Light orange
+  0.6: 'rgba(230, 126, 34, 0.25)',   // Medium orange
+  0.8: 'rgba(231, 76, 60, 0.2)',     // Light coral red
+  1.0: 'rgba(231, 76, 60, 0.2)'      // SAME as 0.8 to avoid sharp contrast
+}
 });
   
   costLayer.addLayer(costHeatmap);
   return costLayer;
-};
-
-const generateRankingLabels = () => {
-  const rankingLayer = L.layerGroup();
-  
-  // Get compliance status for each location (same logic as in generateWeightedScoring)
-  const getComplianceStatus = (index) => {
-    const statusPattern = ['compliant', 'compliant', 'warning', 'warning', 'violation'];
-    const featureIdNum = index + 1;
-    return statusPattern[featureIdNum % statusPattern.length];
-  };
-
-  // Create scores with FIXED values to match your requirements
-  const locationScores = uploadedLocationsRef.current.map((_, index) => {
-    const compliance = getComplianceStatus(index);
-    let score;
-    
-    // Fixed scores to match your analysis
-    if (index === 0) {
-      score = 8.7; 
-    } else if (index === 2) {
-      score = 7.2; 
-    } else if (index === 1) {
-      score = 6.5; 
-    } 
-    else if (compliance === 'compliant') {
-      score = 8.0 + Math.random() * 0.7; // Other compliant locations get 8.0-8.7 range
-    } else if (compliance === 'warning') {
-      score = 6.5 + Math.random() * 0.7; // Warning locations get 6.5-7.2 range
-    } else {
-      score = 4.5 + Math.random() * 1.5; // Violation locations get 4.5-6.0 range
-    }
-    
-    return { 
-      score: Math.round(score * 10) / 10,
-      compliance: compliance,
-      originalIndex: index
-    };
-  });
-
-  // Sort by score and get top 2 ONLY
-  const sortedScores = locationScores
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 2); // Only take top 2
-
-  const rankings = [
-    { rank: '1st', color: '#27AE60' },
-    { rank: '2nd', color: '#F39C12' }
-  ];
-
-  sortedScores.forEach((scoreData, rankIndex) => {
-    const locationRef = uploadedLocationsRef.current[scoreData.originalIndex];
-    if (!locationRef) return;
-
-    const { marker, featureId } = locationRef;
-    const position = marker.getLatLng();
-    const ranking = rankings[rankIndex];
-    
-    // Use the ORIGINAL index to determine location letter
-const getLocationName = (index) => {
-  if (index === 1) return 'Location E'; // Original Location B becomes Location E
-  if (index === 4) return 'Location B'; // Original Location E becomes Location B
-  return `Location ${String.fromCharCode(65 + index)}`; // A, C, D stay the same
-};
-const locationName = getLocationName(scoreData.originalIndex);
-    const rankingMarker = L.marker([position.lat, position.lng], {
-      icon: L.divIcon({
-        html: `
-          <div style="
-            background-color: ${ranking.color};
-            color: white;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 14px;
-            border: 3px solid white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            position: relative;
-            top: -15px;
-            left: 25px;
-          ">
-            ${ranking.rank}
-          </div>
-        `,
-        className: '',
-        iconSize: [40, 40],
-        iconAnchor: [20, 35]
-      })
-    });
-
-    rankingMarker.featureId = `ranking-${featureId}`;
-    rankingMarker.bindPopup(`
-      <div>
-        <strong>${ranking.rank} Choice: ${locationName}</strong><br>
-        <strong>Score:</strong> ${scoreData.score}/10<br>
-        <small>Based on weighted analysis</small>
-      </div>
-    `);
-
-    rankingLabelsRef.current.push({ marker: rankingMarker, featureId: rankingMarker.featureId });
-    rankingLayer.addLayer(rankingMarker);
-  });
-
-  return rankingLayer;
 };
 
 const createRankingTableData = () => {
@@ -1473,12 +1444,22 @@ const createRankingTableData = () => {
   const sortedScores = locationScores.sort((a, b) => b.score - a.score);
 
   const rows = sortedScores.map((scoreData, rankIndex) => {
-    // Use the ORIGINAL index to determine location letter
-    const getLocationName = (index) => {
-  if (index === 1) return 'Location E'; // Original Location B becomes Location E
-  if (index === 4) return 'Location B'; // Original Location E becomes Location B
-  return `Location ${String.fromCharCode(65 + index)}`; // A, C, D stay the same
-};
+   const getLocationName = (index) => {
+    // Get the actual feature name from the uploaded locations
+    if (uploadedLocationsRef.current[index]) {
+      const marker = uploadedLocationsRef.current[index].marker;
+      const popupContent = marker.getPopup()?.getContent() || '';
+      
+      // Extract the name from the popup content
+      const nameMatch = popupContent.match(/<strong>([^<]+)<\/strong>/);
+      if (nameMatch && nameMatch[1] && nameMatch[1] !== 'Analysis Location') {
+        return nameMatch[1];
+      }
+    }
+    
+    // Fallback to generic names if no specific name found
+    return `Location ${String.fromCharCode(65 + index)}`;
+  };
 const locationName = getLocationName(scoreData.originalIndex);    
     // Generate component scores that add up to the total
     const infra = (scoreData.score * 0.4 + Math.random() * 2).toFixed(1);
@@ -2412,15 +2393,7 @@ if (map.floodLayer) {
   }
 }
 
-// Handle water bodies layer
-if (map.waterBodiesLayer) {
-  if (activeLayers.waterBodies) {
-    map.addLayer(map.waterBodiesLayer);
-    map.waterBodiesLayer.setZIndex(layerZIndexes.waterBodies);
-  } else {
-    map.removeLayer(map.waterBodiesLayer);
-  }
-}
+
 
 // Handle waterways layer
 if (map.waterwaysLayer) {
@@ -2475,16 +2448,6 @@ if (map.costAnalysisLayer) {
     map.costAnalysisLayer.setZIndex(layerZIndexes.costAnalysisZones);
   } else {
     map.removeLayer(map.costAnalysisLayer);
-  }
-}
-
-// Handle ranking labels layer
-if (map.rankingLabelsLayer) {
-  if (activeLayers.rankingLabels) {
-    map.addLayer(map.rankingLabelsLayer);
-    map.rankingLabelsLayer.setZIndex(layerZIndexes.rankingLabels);
-  } else {
-    map.removeLayer(map.rankingLabelsLayer);
   }
 }
 
@@ -3161,32 +3124,69 @@ leafletMap.on(L.Draw.Event.CREATED, function(e) {
                 leafletMap.fitBounds(poly.getBounds());
             });
 
-        const [uploadedLocationsResult, substationsResult, powerlinesResult, floodZonesResult, waterBodiesResult, waterwaysResult, zoningResult, environmentalRiskResult] = await Promise.all([
+        const [uploadedLocationsResult, substationsResult, powerlinesResult, floodZonesResult, waterwaysResult, zoningResult, environmentalRiskResult] = await Promise.all([
   fetchUploadedLocations(),
   fetchSubstations(),
   fetchPowerlines(),
   fetchFloodZones(),
-  fetchWaterBodies(),
   fetchWaterways(),
   fetchZoningBoundaries(),
   fetchEnvironmentalRisk(), 
 ]);
+
 const complianceLayer = generateComplianceIndicators();
+
+// Load compliance layer immediately (no loading bar for this one)
+complianceLayer.setZIndex(layerZIndexes.complianceIndicators);
+if (activeLayers.complianceIndicators) {
+    complianceLayer.addTo(leafletMap);
+}
+leafletMap.complianceLayer = complianceLayer;
+
+// START SEQUENTIAL LOADING FOR ANALYSIS LAYERS
+setIsLoadingLayers(true);
+setLoadingProgress(0);
+
+// 1. Generate and load weighted scoring layer
+setCurrentLoadingLayer('Generating weighted scoring analysis...');
 const weightedScoringLayer = generateWeightedScoring();
+weightedScoringLayer.setZIndex(layerZIndexes.weightedScoring);
+if (activeLayers.weightedScoring) {
+    weightedScoringLayer.addTo(leafletMap);
+}
+leafletMap.weightedScoringLayer = weightedScoringLayer;
+setLoadingProgress(1);
+
+await new Promise(resolve => setTimeout(resolve, 2000));
+
+// 2. Generate and load cost analysis zones
+setCurrentLoadingLayer('Generating cost analysis zones...');
 const costAnalysisLayer = generateCostAnalysisZones();
-const rankingLabelsLayer = generateRankingLabels();
+costAnalysisLayer.setZIndex(layerZIndexes.costAnalysisZones);
+if (activeLayers.costAnalysisZones) {
+    costAnalysisLayer.addTo(leafletMap);
+}
+leafletMap.costAnalysisLayer = costAnalysisLayer;
+setLoadingProgress(2);
+
+await new Promise(resolve => setTimeout(resolve, 2000));
+
+setCurrentLoadingLayer('Analysis complete!');
+
+// Finish loading
+setIsLoadingLayers(false);
+setCurrentLoadingLayer('');
 
 if (uploadedLocationsResult.locationData) {
   const locationTable = convertGeoJSONToTable(uploadedLocationsResult.locationData, 'uploadedLocations');
   const substationTable = convertGeoJSONToTable(substationsResult.substationData, 'substations');
   const powerlineTable = convertGeoJSONToTable(powerlinesResult.powerlineData, 'powerlines');
   const floodTable = convertGeoJSONToTable(floodZonesResult.floodData, 'floodZones');
-  const waterTable = convertGeoJSONToTable(waterBodiesResult.waterData, 'waterBodies');
   const waterwayTable = convertGeoJSONToTable(waterwaysResult.waterwayData, 'waterways');
   const zoningTable = convertGeoJSONToTable(zoningResult.zoningData, 'zoning');
   const rankingTable = createRankingTableData();
 
-  setTableData([locationTable, substationTable, powerlineTable, floodTable, waterTable, waterwayTable, zoningTable, rankingTable]); 
+  setTableData([locationTable, substationTable, powerlineTable, floodTable, waterwayTable, zoningTable, rankingTable]); 
 }
            
 const allLayers = L.layerGroup();
@@ -3194,16 +3194,13 @@ uploadedLocationsResult.locationLayer.setZIndex(layerZIndexes.uploadedLocations)
 substationsResult.substationLayer.setZIndex(layerZIndexes.substations);
 powerlinesResult.powerlineLayer.setZIndex(layerZIndexes.powerlines);
 floodZonesResult.floodLayer.setZIndex(layerZIndexes.floodZones);
-waterBodiesResult.waterLayer.setZIndex(layerZIndexes.waterBodies);
 waterwaysResult.waterwayLayer.setZIndex(layerZIndexes.waterways);
 zoningResult.zoningLayer.setZIndex(layerZIndexes.zoningBoundaries);
 
  if (activeLayers.floodZones) {
     floodZonesResult.floodLayer.addTo(leafletMap);
   }
-if (activeLayers.waterBodies) {
-    waterBodiesResult.waterLayer.addTo(leafletMap);
-  }
+
 
 if (activeLayers.waterways) {
     waterwaysResult.waterwayLayer.addTo(leafletMap);
@@ -3226,17 +3223,9 @@ if (activeLayers.substations) {
 if (activeLayers.powerlines) {
     powerlinesResult.powerlineLayer.addTo(leafletMap);
   }
-  if (activeLayers.weightedScoring) {
-  weightedScoringLayer.addTo(leafletMap);
-}
-if (activeLayers.costAnalysisZones) {
-  costAnalysisLayer.addTo(leafletMap);
-}
-if (activeLayers.rankingLabels) {
-  rankingLabelsLayer.addTo(leafletMap);
-}
+ 
+
   leafletMap.floodLayer = floodZonesResult.floodLayer;
-leafletMap.waterBodiesLayer = waterBodiesResult.waterLayer;
 leafletMap.waterwaysLayer = waterwaysResult.waterwayLayer;
 leafletMap.zoningLayer = zoningResult.zoningLayer;
 leafletMap.complianceLayer = complianceLayer;
@@ -3244,9 +3233,7 @@ leafletMap.uploadedLocationsLayer = uploadedLocationsResult.locationLayer;
 leafletMap.substationsLayer = substationsResult.substationLayer;
 leafletMap.powerlinesLayer = powerlinesResult.powerlineLayer;
 leafletMap.environmentalRiskLayer = environmentalRiskResult.riskLayer;
-leafletMap.weightedScoringLayer = weightedScoringLayer;
-leafletMap.costAnalysisLayer = costAnalysisLayer;
-leafletMap.rankingLabelsLayer = rankingLabelsLayer;
+
 
             if (onLayersReady) {
                 onLayersReady();
@@ -3542,8 +3529,8 @@ if (map && map.environmentalRiskLayer && map.environmentalRiskLayer.setOptions) 
           const topPosition = Math.min(windowHeight / 2 - 200, windowHeight - 400);
           
           setToolbarPosition({
-            top: Math.max(80, topPosition),
-            left: 80 // Left margin from the edge
+            top: 70,
+            left: 20 
           });
         }
       }, [isFullscreen, toolbarPosition]);
@@ -4061,6 +4048,7 @@ uploadedLocationsRef={uploadedLocationsRef}
                 </div>
             )}
 
+<LoadingBar />
 
 
         </div>

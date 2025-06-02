@@ -2194,8 +2194,8 @@ background-color: ${layerColors.existingDataCenter || '#008080'};
           const topPosition = Math.min(windowHeight / 2 - 200, windowHeight - 400);
           
           setToolbarPosition({
-            top: Math.max(80, topPosition),
-            left: 80 // Left margin from the edge
+            top: 70,
+            left: 20 
           });
         }
       }, [isFullscreen, toolbarPosition]);

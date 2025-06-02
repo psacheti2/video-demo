@@ -130,9 +130,9 @@ const sections = [
   { id: 'locations', name: 'Location Overview' },
   { id: 'chart', name: 'Weighted Scoring Analysis' },
   { id: 'map', name: 'Site Locations' },
-  { id: 'locationa', name: 'Location A: Detailed Profile' },
-  { id: 'locationb', name: 'Location B: Detailed Profile' },
-  { id: 'locationc', name: 'Location C: Detailed Profile' },
+  { id: 'locationa', name: 'San Fernando: Detailed Profile' },
+  { id: 'locationb', name: 'Valdebebas: Detailed Profile' },
+  { id: 'locationc', name: 'Las Rozas: Detailed Profile' },
   { id: 'infrastructure', name: 'Power & Connectivity Assessment' },
   { id: 'environmental', name: 'Environmental & Regulatory Analysis' },
   { id: 'economic', name: 'Economic Analysis' },
@@ -182,9 +182,9 @@ const sampleContent = {
         <thead>
           <tr>
             <th class="text-left p-2 border-b-2" style="color: #2C3E50; border-color: #008080;"></th>
-            <th class="text-left p-2 border-b-2" style="color: #2C3E50; border-color: #008080;">Location A</th>
-            <th class="text-left p-2 border-b-2" style="color: #2C3E50; border-color: #008080;">Location B</th>
-            <th class="text-left p-2 border-b-2" style="color: #2C3E50; border-color: #008080;">Location C</th>
+            <th class="text-left p-2 border-b-2" style="color: #2C3E50; border-color: #008080;">San Fernando Industrial Park</th>
+            <th class="text-left p-2 border-b-2" style="color: #2C3E50; border-color: #008080;">Valdebebas Extension</th>
+            <th class="text-left p-2 border-b-2" style="color: #2C3E50; border-color: #008080;">Las Rozas NTT Madrid 1</th>
           </tr>
         </thead>
         <tbody style="color: #34495E;">
@@ -223,7 +223,7 @@ const sampleContent = {
     </div>
   `,
   locationa: `
-    <h2 class="text-xl font-bold mb-4" style="color: #008080;">Location A: Detailed Profile</h2>
+    <h2 class="text-xl font-bold mb-4" style="color: #008080;">San Fernando de Henares Industrial Park: Detailed Profile</h2>
     <p class="mb-4" style="color: #34495E;">
       Location A represents the optimal balance of infrastructure capacity, regulatory efficiency, and operational resilience:
     </p>
@@ -239,7 +239,7 @@ const sampleContent = {
     </p>
   `,
   locationb: `
-    <h2 class="text-xl font-bold mb-4" style="color: #008080;">Location B: Detailed Profile</h2>
+    <h2 class="text-xl font-bold mb-4" style="color: #008080;">Valdebebas – New Urban Extension: Detailed Profile</h2>
     <p class="mb-4" style="color: #34495E;">
       Location B offers strong infrastructure capabilities but requires careful environmental risk management:
     </p>
@@ -255,7 +255,7 @@ const sampleContent = {
     </p>
   `,
   locationc: `
-    <h2 class="text-xl font-bold mb-4" style="color: #008080;">Location C: Detailed Profile</h2>
+    <h2 class="text-xl font-bold mb-4" style="color: #008080;">Las Rozas de Madrid – NTT Madrid 1: Detailed Profile</h2>
     <p class="mb-4" style="color: #34495E;">
       Location C excels in connectivity infrastructure but faces power capacity limitations for large-scale deployment:
     </p>
@@ -278,9 +278,9 @@ infrastructure: `
     <div class="mb-4">
       <h3 class="text-lg font-semibold mb-2" style="color: #2C3E50;">Power Infrastructure Summary</h3>
       <ul class="list-disc pl-5" style="color: #34495E;">
-        <li><strong>Location A:</strong> 85MW capacity with dedicated substation access and dual utility feeds ensuring 99.9% uptime</li>
-        <li><strong>Location B:</strong> 70MW available capacity with reliable grid connection and backup power options</li>
-        <li><strong>Location C:</strong> 30MW maximum capacity limitation requiring future grid investment for expansion</li>
+        <li><strong>San Fernando Industrial Park:</strong> 85MW capacity with dedicated substation access and dual utility feeds ensuring 99.9% uptime</li>
+        <li><strong>Valdebebas Extension:</strong> 70MW available capacity with reliable grid connection and backup power options</li>
+        <li><strong>Las Rozas NTT Madrid 1:</strong> 30MW maximum capacity limitation requiring future grid investment for expansion</li>
         <li><strong>Location D:</strong> 45MW capacity but aging infrastructure requiring modernization</li>
         <li><strong>Location E:</strong> 60MW capacity with standard utility connections and moderate reliability</li>
       </ul>
@@ -311,8 +311,8 @@ infrastructure: `
     <div class="mb-4">
       <h3 class="text-lg font-semibold mb-2" style="color: #2C3E50;">Regulatory Environment</h3>
       <ul class="list-disc pl-5" style="color: #34495E;">
-        <li><strong>Location A:</strong> Industrial zoning approved, 6-month streamlined permitting process</li>
-        <li><strong>Location D:</strong> Significant zoning restrictions requiring 18-month approval timeline</li>
+        <li><strong>San Fernando Industrial Park:</strong> Industrial zoning approved, 6-month streamlined permitting process</li>
+        <li><strong>Alcalá de Henares:</strong> Significant zoning restrictions requiring 18-month approval timeline</li>
         <li><strong>Others:</strong> Standard 8-12 month permitting processes with moderate complexity</li>
       </ul>
     </div>
@@ -325,11 +325,11 @@ infrastructure: `
     <div class="mb-4">
       <h3 class="text-lg font-semibold mb-2" style="color: #2C3E50;">Land Acquisition Costs</h3>
       <ul class="list-disc pl-5" style="color: #34495E;">
-        <li><strong>Location A:</strong> €120/m² - competitive pricing for excellent infrastructure access</li>
-        <li><strong>Location B:</strong> €95/m² - lowest acquisition cost but requires environmental mitigation investment</li>
-        <li><strong>Location C:</strong> €180/m² - premium pricing justified by superior connectivity</li>
-        <li><strong>Location D:</strong> €110/m² - moderate cost offset by regulatory delays and infrastructure needs</li>
-        <li><strong>Location E:</strong> €135/m² - mid-range pricing with balanced infrastructure capabilities</li>
+        <li><strong>San Fernando Industrial Park:</strong> €120/m² - competitive pricing for excellent infrastructure access</li>
+        <li><strong>Valdebebas Extension:</strong> €95/m² - lowest acquisition cost but requires environmental mitigation investment</li>
+        <li><strong>Las Rozas NTT Madrid 1:</strong> €180/m² - premium pricing justified by superior connectivity</li>
+        <li><strong>Alcalá de Henares:</strong> €110/m² - moderate cost offset by regulatory delays and infrastructure needs</li>
+        <li><strong>Alcobendas Equinix MD2:</strong> €135/m² - mid-range pricing with balanced infrastructure capabilities</li>
       </ul>
     </div>
     <div class="mb-4">
@@ -362,9 +362,9 @@ infrastructure: `
       Based on comprehensive weighted analysis prioritizing infrastructure and regulatory factors, we recommend:
     </p>
     <ul class="list-disc pl-5 mb-4" style="color: #34495E;">
-      <li><strong>Primary Recommendation:</strong> Proceed with Location A for optimal balance of power capacity, connectivity, and regulatory efficiency</li>
-      <li><strong>Secondary Option:</strong> Location B offers cost advantages but requires enhanced environmental risk mitigation strategies</li>
-      <li><strong>Connectivity-Focused Alternative:</strong> Location C for scenarios prioritizing maximum carrier diversity over power capacity</li>
+      <li><strong>Primary Recommendation:</strong> Proceed with San Fernando de Henares Industrial Park for optimal balance of power capacity, connectivity, and regulatory efficiency</li>
+      <li><strong>Secondary Option:</strong> Valdebebas New Urban Extension offers cost advantages but requires enhanced environmental risk mitigation strategies</li>
+      <li><strong>Connectivity-Focused Alternative:</strong> Las Rozas NTT Madrid 1 for scenarios prioritizing maximum carrier diversity over power capacity</li>
       <li><strong>Risk Mitigation:</strong> Implement comprehensive environmental monitoring and cooling redundancy across all sites</li>
       <li><strong>Expansion Strategy:</strong> Reserve adjacent parcels at Location A for future capacity scaling beyond initial 50MW requirement</li>
     </ul>
@@ -1691,9 +1691,9 @@ const handleDownloadFallback = () => {
               >
 
     {section.id === 'map' ? (
-<div className="w-full h-[400px] sm:h-[500px] md:h-[600px] my-6 rounded-lg overflow-hidden">
-        <IndexMap onLayersReady={onLayersReady} />
-      </div>
+  <div className="w-full h-[400px] sm:h-[500px] md:h-[600px] my-6 rounded-lg overflow-hidden">
+    <IndexMap onLayersReady={onLayersReady} hideLoadingBar={true} />
+  </div>
     ) : section.id === 'chart' ? (
 <div className="w-full my-6 chart-container" ref={chartRef}>
 <BarChartComponent onLayersReady={onLayersReady} />
@@ -2128,9 +2128,9 @@ const handleDownloadFallback = () => {
                
 
 {section.id === 'map' ? (
-      <div className="w-full h-[600px] my-6 rounded-lg overflow-hidden">
-        <IndexMap onLayersReady={onLayersReady} />
-      </div>
+  <div className="w-full h-[400px] sm:h-[500px] md:h-[600px] my-6 rounded-lg overflow-hidden">
+    <IndexMap onLayersReady={onLayersReady} hideLoadingBar={true} />
+  </div>
     ) : section.id === 'chart' ? (
       <div className="w-full my-6">
         <BarChartComponent onLayersReady={onLayersReady} />

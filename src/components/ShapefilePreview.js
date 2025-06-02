@@ -31,9 +31,14 @@ const ShapefilePreview = () => {
     // Only load if not already loaded
     const loadLeaflet = () => {
       if (window.L) {
-        initializeMap();
-        return;
-      }
+      initializeMap();
+      setTimeout(() => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.invalidateSize();
+        }
+      }, 300);
+      return;
+    }
 
       // Load Leaflet CSS only if not present
       if (!document.querySelector('link[href*="leaflet.min.css"]')) {
@@ -64,14 +69,19 @@ const ShapefilePreview = () => {
   }, []);
 
   const initializeMap = () => {
-    if (!window.L || !mapRef.current || mapInstanceRef.current) return;
+  if (!window.L || !mapRef.current || mapInstanceRef.current) return;
 
-    // Initialize map centered on Madrid
-    const map = window.L.map(mapRef.current).setView([40.4168, -3.7038], 10);
-    mapInstanceRef.current = map;
+  // Initialize map centered on Madrid
+  const map = window.L.map(mapRef.current).setView([40.4168, -3.7038], 10);
+  mapInstanceRef.current = map;
 
-    // Add CartoDB Positron tiles
-    window.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  // Force map to recalculate size after a brief delay
+  setTimeout(() => {
+    map.invalidateSize();
+  }, 100);
+
+  // Add CartoDB Positron tiles
+  window.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       attribution: '© OpenStreetMap contributors © CARTO',
       subdomains: 'abcd',
       maxZoom: 19
@@ -92,16 +102,16 @@ const ShapefilePreview = () => {
     });
   };
 
-  return (
-    <div className="w-full h-screen">
-      
-      <div 
-        ref={mapRef} 
-        className="w-full"
-        style={{ height: 'calc(100vh - 80px)' }}
-      />
-    </div>
-  );
+  
+ return (
+  <div className="w-full h-full min-h-[500px] relative">
+    <div 
+      ref={mapRef} 
+      className="absolute inset-0"
+    />
+  </div>
+);
+
 };
 
 export default ShapefilePreview;

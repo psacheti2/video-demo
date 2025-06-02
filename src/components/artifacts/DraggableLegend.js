@@ -229,7 +229,7 @@ useEffect(() => {
     ]
   },
   environmentalRisk: {
-    name: customLayerNames['environmentalRisk'] || 'Environmental Risk',
+    name: customLayerNames['environmentalRisk'] || 'Heat Risk',
     icon: <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: layerColors.environmentalRisk || '#E67E22' }} />,
     legend: [
       {

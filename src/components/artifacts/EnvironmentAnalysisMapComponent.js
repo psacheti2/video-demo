@@ -48,7 +48,6 @@ const EnvironmentAnalysisMapComponent = ({
   uploadedLocations: 30,
   // Add these:
   waterways: 5,
-  waterBodies: 8,
   floodZones: 15,
   zoningBoundaries: 12,
   environmentalRisk: 18,
@@ -66,6 +65,38 @@ const [showTextToolbar, setShowTextToolbar] = useState(false);
       textAlign: 'center',
       color: '#000000'
     });
+    const [isLoadingLayers, setIsLoadingLayers] = useState(false);
+const [loadingProgress, setLoadingProgress] = useState(0);
+const [currentLoadingLayer, setCurrentLoadingLayer] = useState('');
+const [totalLayers] = useState(5);
+const LoadingBar = () => {
+  if (!isLoadingLayers) return null;
+  
+  return (
+    <div className="fixed bottom-4 right-4 z-[9999] w-64">
+      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4 w-full">
+        <div className="text-sm font-medium text-gray-700 mb-2">
+          Loading Heat Data
+        </div>
+        <div className="text-xs text-gray-500 mb-3">
+          {currentLoadingLayer}
+        </div>
+
+        {/* PROGRESS BAR */}
+        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+          <div
+            className="h-full bg-[#008080] rounded-full transition-all duration-700 ease-out"
+            style={{ width: `${(loadingProgress / totalLayers) * 100}%` }}
+          />
+        </div>
+
+        <div className="text-xs text-gray-500 mt-1 text-right">
+          {loadingProgress}/{totalLayers} layers loaded
+        </div>
+      </div>
+    </div>
+  );
+};
     const bufferCirclesRef = useRef([]);
     const mapContainerRef = useRef(null);
     const [map, setMap] = useState(null);
@@ -78,7 +109,7 @@ const [showTextToolbar, setShowTextToolbar] = useState(false);
     const [tableHeight, setTableHeight] = useState(300);
     const [currentTableIndex, setCurrentTableIndex] = useState(0);
     const [tableData, setTableData] = useState([]);
-const [tableTitles, setTableTitles] = useState(['Uploaded Locations', 'Substations', 'Power Lines', 'Flood Zones', 'Water Bodies', 'Waterways', 'Zoning', 'Environmental Risk']); 
+const [tableTitles, setTableTitles] = useState(['Uploaded Locations', 'Substations', 'Power Lines', 'Flood Zones', 'Waterways', 'Zoning']); 
 const [showShareDialog, setShowShareDialog] = useState(false);
     const [showEmailNotification, setShowEmailNotification] = useState(false);
     const addNotification = useNotificationStore((state) => state.addNotification);
@@ -153,7 +184,6 @@ const [showShareDialog, setShowShareDialog] = useState(false);
   bufferZones: false,
   floodZones: true,
   zoningBoundaries: true,
-  waterBodies: true,
   waterways: true,
   environmentalRisk: true,
   complianceIndicators: true
@@ -295,7 +325,6 @@ const [nextShapeIds, setNextShapeIds] = useState({
   bufferZones: '#3498DB',
    floodZones: '#FF6B6B',
   zoningBoundaries: '#8E44AD',
-  waterBodies: '#3498DB',
   waterways: '#2980B9',
   environmentalRisk: '#E67E22',
   complianceIndicators: '#27AE60'
@@ -305,7 +334,6 @@ const substationsRef = useRef([]);
 const powerlinesRef = useRef([]);
 const floodZonesRef = useRef([]);
 const zoningBoundariesRef = useRef([]);
-const waterBodiesRef = useRef([]);
 const waterwaysRef = useRef([]);
 const environmentalRiskRef = useRef(null);   
  
@@ -363,12 +391,10 @@ const fetchUploadedLocations = async () => {
 });
 
           marker.featureId = featureId;
-
-          let popupContent = '<strong>Analysis Location</strong>';
-          popupContent += `<br>Feature ID: ${featureId}`;
-          if (feature.properties.Name) popupContent += `<br>Name: ${feature.properties.Name}`;
-          if (feature.properties.Description) popupContent += `<br>Description: ${feature.properties.Description}`;
-          if (feature.properties.Reference) popupContent += `<br>Reference: ${feature.properties.Reference}`;
+let popupContent = `<strong>${feature.properties.Name || 'Analysis Location'}</strong>`;
+popupContent += `<br>Feature ID: ${featureId}`;
+if (feature.properties.Description) popupContent += `<br>Description: ${feature.properties.Description}`;
+if (feature.properties.Reference) popupContent += `<br>Reference: ${feature.properties.Reference}`;
 
           marker.bindPopup(popupContent, { className: 'custom-popup' });
 
@@ -654,11 +680,14 @@ const fetchFloodZones = async () => {
     const floodData = await res.json();
     const floodLayer = L.layerGroup();
 
-    // Simplified coordinate transformation from EPSG:25830 (UTM Zone 30N) to WGS84
-    const transformCoordinate = (utmX, utmY) => {
-      const lat = 40.0 + (utmY - 4400000) / 111000;
-      const lng = -4.0 + (utmX - 440000) / 85000;
-      return [lat, lng];
+    console.log('Flood data loaded:', floodData); // Debug log
+
+    // Check if coordinates are already in WGS84 format
+    const isWGS84 = (coord) => {
+      // WGS84 longitude is typically between -180 and 180
+      // WGS84 latitude is typically between -90 and 90
+      // Madrid coordinates: lng around -3.7, lat around 40.4
+      return coord[0] >= -180 && coord[0] <= 180 && coord[1] >= -90 && coord[1] <= 90;
     };
 
     // Risk level definitions with better distribution
@@ -697,25 +726,19 @@ const fetchFloodZones = async () => {
 
     // Function to determine risk based on geographic factors
     const calculateRiskLevel = (feature, index, totalFeatures) => {
-      // Method 1: Use geographic position (closer to river center = higher risk)
+      // Use geographic position and other factors to determine risk
       const bounds = feature.geometry.coordinates[0];
       const centerX = bounds.reduce((sum, coord) => sum + coord[0], 0) / bounds.length;
       const centerY = bounds.reduce((sum, coord) => sum + coord[1], 0) / bounds.length;
       
-      // Method 2: Use polygon area (larger areas might be lower risk as they're buffer zones)
-      const area = calculatePolygonArea(bounds);
-      
-      // Method 3: Use position in dataset (assuming data is ordered by some risk factor)
-      const positionFactor = index / totalFeatures;
-      
-      // Combine factors to create a risk score
+      // Use position in dataset and geographic clustering
       let riskScore = 0;
       
-      // Geographic clustering - create risk hotspots
+      // Geographic clustering - create risk hotspots around Madrid
       const hotspots = [
-        { x: 447000, y: 4462500, intensity: 0.8 },
-        { x: 446800, y: 4463000, intensity: 0.6 },
-        { x: 447200, y: 4462200, intensity: 0.7 }
+        { x: -3.692, y: 40.430, intensity: 0.8 },
+        { x: -3.715, y: 40.408, intensity: 0.6 },
+        { x: -3.698, y: 40.395, intensity: 0.7 }
       ];
       
       let maxProximityRisk = 0;
@@ -723,21 +746,15 @@ const fetchFloodZones = async () => {
         const distance = Math.sqrt(
           Math.pow(centerX - hotspot.x, 2) + Math.pow(centerY - hotspot.y, 2)
         );
-        const proximityRisk = hotspot.intensity * Math.exp(-distance / 50000);
+        const proximityRisk = hotspot.intensity * Math.exp(-distance / 0.01); // Adjusted for WGS84 scale
         maxProximityRisk = Math.max(maxProximityRisk, proximityRisk);
       });
       
       riskScore += maxProximityRisk * 0.4;
       
-      // Area factor (smaller polygons = higher risk, assuming they're closer to river)
-      const areaFactor = Math.max(0, 1 - (area / 1000000)); // Normalize area
-      riskScore += areaFactor * 0.3;
-      
-      // Add some controlled randomness
+      // Add controlled randomness and position factor
       riskScore += (Math.random() - 0.5) * 0.3;
-      
-      // Position factor
-      riskScore += positionFactor * 0.1;
+      riskScore += (index / totalFeatures) * 0.1;
       
       // Clamp between 0 and 1
       riskScore = Math.max(0, Math.min(1, riskScore));
@@ -751,24 +768,12 @@ const fetchFloodZones = async () => {
         }
       }
       
-      return riskLevels[riskLevels.length - 1]; // Default to last level
-    };
-
-    // Helper function to calculate polygon area (approximate)
-    const calculatePolygonArea = (coordinates) => {
-      let area = 0;
-      const n = coordinates.length;
-      
-      for (let i = 0; i < n; i++) {
-        const j = (i + 1) % n;
-        area += coordinates[i][0] * coordinates[j][1];
-        area -= coordinates[j][0] * coordinates[i][1];
-      }
-      
-      return Math.abs(area) / 2;
+      return riskLevels[riskLevels.length - 1];
     };
 
     if (floodData.features && floodData.features.length > 0) {
+      console.log(`Processing ${floodData.features.length} flood zone features`); // Debug log
+      
       // Add feature IDs
       floodData.features.forEach((feature, index) => {
         if (!feature.properties) {
@@ -780,11 +785,25 @@ const fetchFloodZones = async () => {
       // Process each feature
       floodData.features.forEach((feature, index) => {
         if (feature.geometry && feature.geometry.type === 'Polygon') {
-          // Transform coordinates
-          const coords = feature.geometry.coordinates[0].map(coord => {
-            const [lat, lng] = transformCoordinate(coord[0], coord[1]);
-            return [lat, lng];
-          });
+          let coords;
+          
+          // Check if coordinates need transformation or are already in WGS84
+          const firstCoord = feature.geometry.coordinates[0][0];
+          
+          if (isWGS84(firstCoord)) {
+            // Already in WGS84, just swap to [lat, lng] format for Leaflet
+            coords = feature.geometry.coordinates[0].map(coord => [coord[1], coord[0]]);
+            console.log('Using WGS84 coordinates directly'); // Debug log
+          } else {
+            // Need transformation from UTM or other projection
+            coords = feature.geometry.coordinates[0].map(coord => {
+              // Original transformation logic for UTM coordinates
+              const lat = 40.0 + (coord[1] - 4400000) / 111000;
+              const lng = -4.0 + (coord[0] - 440000) / 85000;
+              return [lat, lng];
+            });
+            console.log('Transformed coordinates from UTM'); // Debug log
+          }
 
           const featureId = feature.properties['Feature ID'];
           
@@ -793,9 +812,9 @@ const fetchFloodZones = async () => {
           
           // Create polygon with risk-based styling
           const polygon = L.polygon(coords, {
-            fillColor: riskData.color,
-            color: riskData.color,
-            weight: riskData.level === 'Very High' ? 3 : 2,
+            fillColor: '#000053',
+            color: '#000053',
+            weight: riskData.level === 'Very High' ? 1 : 0.7,
             opacity: riskData.level === 'Very High' ? 0.9 : 0.7,
             fillOpacity: riskData.level === 'Very High' ? 0.6 : 0.4,
             interactive: true
@@ -828,7 +847,7 @@ const fetchFloodZones = async () => {
 
           polygon.on('mouseout', function(e) {
             this.setStyle({
-              weight: riskData.level === 'Very High' ? 3 : 2,
+            weight: riskData.level === 'Very High' ? 1 : 0.7,
               opacity: riskData.level === 'Very High' ? 0.9 : 0.7,
               fillOpacity: riskData.level === 'Very High' ? 0.6 : 0.4
             });
@@ -842,64 +861,19 @@ const fetchFloodZones = async () => {
           });
           
           floodLayer.addLayer(polygon);
+          console.log(`Added flood zone polygon ${featureId}`); // Debug log
         }
       });
+      
+      console.log(`Successfully processed ${floodZonesRef.current.length} flood zones`); // Debug log
+    } else {
+      console.warn('No flood zone features found in the data');
     }
 
     return { floodLayer, floodData };
   } catch (error) {
     console.error("Error fetching flood zones:", error);
     return { floodLayer: L.layerGroup(), floodData: { features: [] } };
-  }
-};
-
-const fetchWaterBodies = async () => {
-  try {
-    const res = await fetch('/data/madridwater-data.geojson');
-    const waterData = await res.json();
-    const waterLayer = L.layerGroup();
-
-    if (waterData.features && waterData.features.length > 0) {
-      waterData.features.forEach((feature, index) => {
-        if (!feature.properties) {
-          feature.properties = {};
-        }
-        feature.properties['Feature ID'] = feature.properties['Feature ID'] || `water-${index + 1}`;
-      });
-
-      waterData.features.forEach((feature) => {
-        if (feature.geometry && feature.geometry.type === 'Polygon') {
-          const coords = feature.geometry.coordinates[0].map(coord => [coord[1], coord[0]]);
-          const featureId = feature.properties['Feature ID'];
-
-          const polygon = L.polygon(coords, {
-            fillColor: layerColors.waterBodies,
-            color: layerColors.waterBodies,
-            weight: 1,
-            opacity: 0.8,
-            fillOpacity: 0.6,
-            interactive: true
-          });
-
-          polygon.featureId = featureId;
-
-          let popupContent = '<strong>Water Body</strong>';
-          popupContent += `<br>Feature ID: ${featureId}`;
-          if (feature.properties.name) popupContent += `<br>Name: ${feature.properties.name}`;
-          popupContent += `<br>Type: ${feature.properties.fclass || 'Water'}`;
-
-          polygon.bindPopup(popupContent, { className: 'custom-popup' });
-
-          waterBodiesRef.current.push({ polygon, featureId });
-          waterLayer.addLayer(polygon);
-        }
-      });
-    }
-
-    return { waterLayer, waterData };
-  } catch (error) {
-    console.error("Error fetching water bodies:", error);
-    return { waterLayer: L.layerGroup(), waterData: { features: [] } };
   }
 };
 
@@ -958,33 +932,41 @@ const fetchZoningBoundaries = async () => {
     const zoningLayer = L.layerGroup();
 
     if (zoningData.features && zoningData.features.length > 0) {
-      zoningData.features.forEach((feature, index) => {
+      // Filter for only industrial zones
+      const industrialFeatures = zoningData.features.filter(feature => 
+        feature.properties && feature.properties.fclass === 'industrial'
+      );
+
+      console.log(`Found ${industrialFeatures.length} industrial zones out of ${zoningData.features.length} total features`);
+
+      industrialFeatures.forEach((feature, index) => {
         if (!feature.properties) {
           feature.properties = {};
         }
         feature.properties['Feature ID'] = feature.properties['Feature ID'] || `zone-${index + 1}`;
       });
 
-      zoningData.features.forEach((feature) => {
+      industrialFeatures.forEach((feature) => {
         if (feature.geometry && feature.geometry.type === 'Polygon') {
           const coords = feature.geometry.coordinates[0].map(coord => [coord[1], coord[0]]);
           const featureId = feature.properties['Feature ID'];
 
           const polygon = L.polygon(coords, {
-  fillColor: 'transparent',
-  color: layerColors.zoningBoundaries,
-  weight: 0.5,
-  opacity: 0.8,
-  fillOpacity: 0.1,
-  interactive: true
-});
+            fillColor: 'transparent',
+            color: layerColors.zoningBoundaries,
+            weight: 2,
+            opacity: 0.8,
+            fillOpacity: 0.1,
+            interactive: true
+          });
 
           polygon.featureId = featureId;
 
-          let popupContent = '<strong>Zoning Boundary</strong>';
+          let popupContent = '<strong>Industrial Zone</strong>';
           popupContent += `<br>Feature ID: ${featureId}`;
-          popupContent += `<br>Zone Type: ${feature.properties.fclass || 'Mixed Use'}`;
+          popupContent += `<br>Zone Type: Industrial`;
           if (feature.properties.name) popupContent += `<br>Name: ${feature.properties.name}`;
+          if (feature.properties.osm_id) popupContent += `<br>OSM ID: ${feature.properties.osm_id}`;
 
           polygon.bindPopup(popupContent, { className: 'custom-popup' });
 
@@ -992,6 +974,9 @@ const fetchZoningBoundaries = async () => {
           zoningLayer.addLayer(polygon);
         }
       });
+
+      // Update the zoningData to only include industrial features for table generation
+      zoningData.features = industrialFeatures;
     }
 
     return { zoningLayer, zoningData };
@@ -2049,15 +2034,7 @@ if (map.floodLayer) {
   }
 }
 
-// Handle water bodies layer
-if (map.waterBodiesLayer) {
-  if (activeLayers.waterBodies) {
-    map.addLayer(map.waterBodiesLayer);
-    map.waterBodiesLayer.setZIndex(layerZIndexes.waterBodies);
-  } else {
-    map.removeLayer(map.waterBodiesLayer);
-  }
-}
+
 
 // Handle waterways layer
 if (map.waterwaysLayer) {
@@ -2587,269 +2564,308 @@ const updateDrawnLayerColor = (layerId, newColor) => {
 
     useEffect(() => {
         const initializeMap = async () => {
-            const L = await import('leaflet');
-            await import('leaflet/dist/leaflet.css');
+    const L = await import('leaflet');
+    await import('leaflet/dist/leaflet.css');
 
-            if (map || !mapContainerRef.current) return;
+    if (map || !mapContainerRef.current) return;
 
+    // Initialize base map
+    const leafletMap = L.map(mapContainerRef.current, {
+        zoomControl: false,
+        attributionControl: false,
+        minZoom: 5,
+        maxZoom: 18,
+        doubleClickZoom: false
+    }).setView([40.4168, -3.7038], 10);
 
-            // Initialize base map
-            const leafletMap = L.map(mapContainerRef.current, {
-                zoomControl: false,
-                attributionControl: false,
-                minZoom: 5,
-                maxZoom: 18,
-                doubleClickZoom: false
-            }).setView([40.4168, -3.7038], 10);
+    mapContainerRef.current.style.backgroundColor = '#FFFFFF';
+    mapContainerRef.current.style.background = '#FFFFFF';
 
-            mapContainerRef.current.style.backgroundColor = '#FFFFFF';
-mapContainerRef.current.style.background = '#FFFFFF';
+    // Optional: Add a white background tile layer
+    const whiteBackground = L.tileLayer('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=', {
+        attribution: '',
+        minZoom: 0,
+        maxZoom: 22
+    });
+    whiteBackground.addTo(leafletMap);
+    whiteBackground.setZIndex(-1000);
 
-// Optional: Add a white background tile layer
-const whiteBackground = L.tileLayer('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=', {
-  attribution: '',
-  minZoom: 0,
-  maxZoom: 22
-});
-whiteBackground.addTo(leafletMap);
-whiteBackground.setZIndex(-1000);
+    // Initialize drawnItems and other setup code...
+    const drawnItems = new L.FeatureGroup();
+    drawnItems.setZIndex(650);
+    leafletMap.addLayer(drawnItems);
+    leafletMap.drawnItems = drawnItems;
+    leafletMap.createPane('drawPane');
+    leafletMap.getPane('drawPane').style.zIndex = 100000000000;
 
-            // Initialize drawnItems and other setup code...
-            const drawnItems = new L.FeatureGroup();
-            drawnItems.setZIndex(650);
-            leafletMap.addLayer(drawnItems);
-            leafletMap.drawnItems = drawnItems;
-            leafletMap.createPane('drawPane');
-            leafletMap.getPane('drawPane').style.zIndex = 100000000000;
+    const drawControl = new L.Control.Draw({
+        draw: {
+            polygon: false,
+            polyline: false,
+            rectangle: false,
+            circle: false,
+            marker: false,
+            circlemarker: false
+        },
+        edit: {
+            featureGroup: drawnItems,
+            remove: true
+        }
+    });
 
-            const drawControl = new L.Control.Draw({
-                draw: {
-                    polygon: false,
-                    polyline: false,
-                    rectangle: false,
-                    circle: false,
-                    marker: false,
-                    circlemarker: false
-                },
-                edit: {
-                    featureGroup: drawnItems,
-                    remove: true
-                }
-            });
+    leafletMap.drawControl = drawControl;
 
-            leafletMap.drawControl = drawControl;
-// Set up event handlers for layer deletion
-leafletMap.on(L.Draw.Event.DELETED, function(e) {
-    const layers = e.layers;
-    
-    layers.eachLayer(layer => {
-      if (layer.layerId) {
-        // Remove from drawn layers state
+    // Set up event handlers for layer deletion
+    leafletMap.on(L.Draw.Event.DELETED, function(e) {
+        const layers = e.layers;
+        
+        layers.eachLayer(layer => {
+            if (layer.layerId) {
+                // Remove from drawn layers state
+                setDrawnLayers(prev => {
+                    const updated = { ...prev };
+                    delete updated[layer.layerId];
+                    return updated;
+                });
+                
+                // Remove from order array instead of adding
+                setDrawnLayersOrder(prev => {
+                    // Ensure prev is an array
+                    const prevArray = Array.isArray(prev) ? prev : [];
+                    const newOrder = prevArray.filter(id => id !== layer.layerId);
+                    drawnLayersRef.current = newOrder; // Store in a ref for debugging
+                    console.log("Updated drawn layers order:", newOrder);
+                    return newOrder;
+                });
+            }
+        });
+    });
+
+    // In the main map event handler:
+    leafletMap.on(L.Draw.Event.CREATED, function(e) {
+        const layer = e.layer;
+        const layerType = e.layerType || (layer.layerType || 'shape');
+        
+        // Generate a unique ID for this shape if not already present
+        if (!layer.layerId) {
+            const nextId = nextShapeIds[layerType] || 1;
+            const layerId = `${layerType}-${nextId}`;
+            layer.layerId = layerId;
+            
+            // Update next IDs
+            setNextShapeIds(prev => ({
+                ...prev,
+                [layerType]: nextId + 1
+            }));
+        }
+        
+        // Safely add to drawn items if available
+        if (leafletMap.drawnItems) {
+            if (!leafletMap.drawnItems.hasLayer(layer)) {
+                leafletMap.drawnItems.addLayer(layer);
+            }
+        }
+        
+        console.log("Shape created:", {
+            layerId: layer.layerId,
+            layerType: layerType,
+            shape: layer
+        });
+
+        // Update drawn layers state
         setDrawnLayers(prev => {
-          const updated = { ...prev };
-          delete updated[layer.layerId];
-          return updated;
+            const updated = { ...prev };
+            updated[layer.layerId] = {
+                layer: layer,
+                type: layerType,
+                visible: true,
+                name: `${layerType.charAt(0).toUpperCase() + layerType.slice(1)} ${nextShapeIds[layerType] || 1}`
+            };
+            return updated;
         });
         
-        // Remove from order array instead of adding
+        // Add to the order array
         setDrawnLayersOrder(prev => {
-          // Ensure prev is an array
-          const prevArray = Array.isArray(prev) ? prev : [];
-          const newOrder = prevArray.filter(id => id !== layer.layerId);
-          drawnLayersRef.current = newOrder; // Store in a ref for debugging
-          console.log("Updated drawn layers order:", newOrder);
-          return newOrder;
+            // Ensure prev is an array
+            const prevArray = Array.isArray(prev) ? prev : [];
+            const newOrder = [...prevArray, layer.layerId];
+            return newOrder;
         });
-      }
     });
-  });
-            // In the main map event handler:
-leafletMap.on(L.Draw.Event.CREATED, function(e) {
-    const layer = e.layer;
-    const layerType = e.layerType || (layer.layerType || 'shape');
-    
-    // Generate a unique ID for this shape if not already present
-    if (!layer.layerId) {
-      const nextId = nextShapeIds[layerType] || 1;
-      const layerId = `${layerType}-${nextId}`;
-      layer.layerId = layerId;
-      
-      // Update next IDs
-      setNextShapeIds(prev => ({
-        ...prev,
-        [layerType]: nextId + 1
-      }));
+
+    // Add the initial base tile layer - light theme by default
+    const initialBaseLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 19
+    }).addTo(leafletMap);
+
+    // Store the base layer reference for later replacement
+    setBaseMapLayer(initialBaseLayer)
+    setMap(leafletMap);
+
+    // Initialize geocoder
+    const geocoderControl = L.Control.geocoder({
+        defaultMarkGeocode: false
+    });
+    geocoderRef.current = geocoderControl;
+
+    geocoderControl.on('markgeocode', function (e) {
+        const bbox = e.geocode.bbox;
+        const poly = L.polygon([
+            bbox.getSouthEast(),
+            bbox.getNorthEast(),
+            bbox.getNorthWest(),
+            bbox.getSouthWest()
+        ]);
+        leafletMap.fitBounds(poly.getBounds());
+    });
+
+    // START SEQUENTIAL LAYER LOADING
+    setIsLoadingLayers(true);
+    setLoadingProgress(0);
+
+    // 1. Load uploaded locations first
+    const uploadedLocationsResult = await fetchUploadedLocations();
+    // Add uploaded locations layer immediately after loading
+    uploadedLocationsResult.locationLayer.setZIndex(layerZIndexes.uploadedLocations);
+    if (activeLayers.uploadedLocations) {
+        uploadedLocationsResult.locationLayer.addTo(leafletMap);
     }
-    
-    // Safely add to drawn items if available
-    if (leafletMap.drawnItems) {
-      if (!leafletMap.drawnItems.hasLayer(layer)) {
-        leafletMap.drawnItems.addLayer(layer);
-      }
+    leafletMap.uploadedLocationsLayer = uploadedLocationsResult.locationLayer;
+
+    // Small delay for visual effect
+
+    // 2. Load substations
+    const substationsResult = await fetchSubstations();
+
+    substationsResult.substationLayer.setZIndex(layerZIndexes.substations);
+    if (activeLayers.substations) {
+        substationsResult.substationLayer.addTo(leafletMap);
     }
-    
-    console.log("Shape created:", {
-      layerId: layer.layerId,
-      layerType: layerType,
-      shape: layer
-    });
-  
-    // Update drawn layers state
-    setDrawnLayers(prev => {
-      const updated = { ...prev };
-      updated[layer.layerId] = {
-        layer: layer,
-        type: layerType,
-        visible: true,
-        name: `${layerType.charAt(0).toUpperCase() + layerType.slice(1)} ${nextShapeIds[layerType] || 1}`
-      };
-      return updated;
-    });
-    
-    // Add to the order array
-    setDrawnLayersOrder(prev => {
-      // Ensure prev is an array
-      const prevArray = Array.isArray(prev) ? prev : [];
-      const newOrder = [...prevArray, layer.layerId];
-      return newOrder;
-    });
-  });
-  
-  // Add handler for when layers are removed
-  leafletMap.on(L.Draw.Event.DELETED, function(e) {
-    const layers = e.layers;
-    
-    layers.eachLayer(layer => {
-      if (layer.layerId) {
-        // Remove from drawn layers state
-        setDrawnLayers(prev => {
-          const updated = { ...prev };
-          delete updated[layer.layerId];
-          return updated;
-        });
+    leafletMap.substationsLayer = substationsResult.substationLayer;
+
+
+    // 3. Load powerlines
+    const powerlinesResult = await fetchPowerlines();
+
+    powerlinesResult.powerlineLayer.setZIndex(layerZIndexes.powerlines);
+    if (activeLayers.powerlines) {
+        powerlinesResult.powerlineLayer.addTo(leafletMap);
+    }
+    leafletMap.powerlinesLayer = powerlinesResult.powerlineLayer;
+
+
+    // 4. Load flood zones
+    setCurrentLoadingLayer('Loading flood zones...');
+    const floodZonesResult = await fetchFloodZones();
+    setLoadingProgress(1);
+
+    floodZonesResult.floodLayer.setZIndex(layerZIndexes.floodZones);
+    if (activeLayers.floodZones) {
+        floodZonesResult.floodLayer.addTo(leafletMap);
+    }
+    leafletMap.floodLayer = floodZonesResult.floodLayer;
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+
+    // 6. Load waterways
+    setCurrentLoadingLayer('Loading waterways...');
+    const waterwaysResult = await fetchWaterways();
+    setLoadingProgress(2);
+
+    waterwaysResult.waterwayLayer.setZIndex(layerZIndexes.waterways);
+    if (activeLayers.waterways) {
+        waterwaysResult.waterwayLayer.addTo(leafletMap);
+    }
+    leafletMap.waterwaysLayer = waterwaysResult.waterwayLayer;
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // 7. Load zoning boundaries
+    setCurrentLoadingLayer('Loading zoning boundaries...');
+    const zoningResult = await fetchZoningBoundaries();
+    setLoadingProgress(3);
+
+    zoningResult.zoningLayer.setZIndex(layerZIndexes.zoningBoundaries);
+    if (activeLayers.zoningBoundaries) {
+        zoningResult.zoningLayer.addTo(leafletMap);
+    }
+    leafletMap.zoningLayer = zoningResult.zoningLayer;
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // 8. Load environmental risk
+    setCurrentLoadingLayer('Loading heat risk data...');
+    const environmentalRiskResult = await fetchEnvironmentalRisk();
+    setLoadingProgress(4);
+
+    if (activeLayers.environmentalRisk) {
+        environmentalRiskResult.riskLayer.addTo(leafletMap);
+    }
+    leafletMap.environmentalRiskLayer = environmentalRiskResult.riskLayer;
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // 9. Generate compliance indicators
+    setCurrentLoadingLayer('Generating compliance indicators...');
+    const complianceLayer = generateComplianceIndicators();
+    setLoadingProgress(5);
+
+    complianceLayer.setZIndex(layerZIndexes.complianceIndicators);
+    if (activeLayers.complianceIndicators) {
+        complianceLayer.addTo(leafletMap);
+    }
+    leafletMap.complianceLayer = complianceLayer;
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    setCurrentLoadingLayer('Finalizing map...');
+
+    // Generate table data from all loaded layers
+    if (uploadedLocationsResult.locationData) {
+        const locationTable = convertGeoJSONToTable(uploadedLocationsResult.locationData, 'uploadedLocations');
+        const substationTable = convertGeoJSONToTable(substationsResult.substationData, 'substations');
+        const powerlineTable = convertGeoJSONToTable(powerlinesResult.powerlineData, 'powerlines');
+        const floodTable = convertGeoJSONToTable(floodZonesResult.floodData, 'floodZones');
+        const waterwayTable = convertGeoJSONToTable(waterwaysResult.waterwayData, 'waterways');
+        const zoningTable = convertGeoJSONToTable(zoningResult.zoningData, 'zoning');
         
-        // Remove from order array instead of adding
-        setDrawnLayersOrder(prev => {
-          // Ensure prev is an array
-          const prevArray = Array.isArray(prev) ? prev : [];
-          const newOrder = prevArray.filter(id => id !== layer.layerId);
-          drawnLayersRef.current = newOrder; // Store in a ref for debugging
-          console.log("Updated drawn layers order:", newOrder);
-          return newOrder;
-        });
-      }
-    });
-  });
-  
-
-            // Add the initial base tile layer - light theme by default
-            const initialBaseLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-                subdomains: 'abcd',
-                maxZoom: 19
-            }).addTo(leafletMap);
-
-            // Store the base layer reference for later replacement
-            setBaseMapLayer(initialBaseLayer)
-            setMap(leafletMap);
-
-            // Initialize geocoder
-            const geocoderControl = L.Control.geocoder({
-                defaultMarkGeocode: false
-            });
-            geocoderRef.current = geocoderControl;
-
-            geocoderControl.on('markgeocode', function (e) {
-                const bbox = e.geocode.bbox;
-                const poly = L.polygon([
-                    bbox.getSouthEast(),
-                    bbox.getNorthEast(),
-                    bbox.getNorthWest(),
-                    bbox.getSouthWest()
-                ]);
-                leafletMap.fitBounds(poly.getBounds());
-            });
-
-            const [uploadedLocationsResult, substationsResult, powerlinesResult, floodZonesResult, waterBodiesResult, waterwaysResult, zoningResult, environmentalRiskResult] = await Promise.all([
-  fetchUploadedLocations(),
-  fetchSubstations(),
-  fetchPowerlines(),
-  fetchFloodZones(),
-  fetchWaterBodies(),
-  fetchWaterways(),
-  fetchZoningBoundaries(),
-    fetchEnvironmentalRisk(), 
-
-]);
-const complianceLayer = generateComplianceIndicators();
-
-if (uploadedLocationsResult.locationData) {
-  const locationTable = convertGeoJSONToTable(uploadedLocationsResult.locationData, 'uploadedLocations');
-  const substationTable = convertGeoJSONToTable(substationsResult.substationData, 'substations');
-  const powerlineTable = convertGeoJSONToTable(powerlinesResult.powerlineData, 'powerlines');
-  const floodTable = convertGeoJSONToTable(floodZonesResult.floodData, 'floodZones');
-  const waterTable = convertGeoJSONToTable(waterBodiesResult.waterData, 'waterBodies');
-  const waterwayTable = convertGeoJSONToTable(waterwaysResult.waterwayData, 'waterways');
-  const zoningTable = convertGeoJSONToTable(zoningResult.zoningData, 'zoning');
-
-  setTableData([locationTable, substationTable, powerlineTable, floodTable, waterTable, waterwayTable, zoningTable]); 
-}
-           
-const allLayers = L.layerGroup();
-uploadedLocationsResult.locationLayer.setZIndex(layerZIndexes.uploadedLocations);
-substationsResult.substationLayer.setZIndex(layerZIndexes.substations);
-powerlinesResult.powerlineLayer.setZIndex(layerZIndexes.powerlines);
-floodZonesResult.floodLayer.setZIndex(layerZIndexes.floodZones);
-waterBodiesResult.waterLayer.setZIndex(layerZIndexes.waterBodies);
-waterwaysResult.waterwayLayer.setZIndex(layerZIndexes.waterways);
-zoningResult.zoningLayer.setZIndex(layerZIndexes.zoningBoundaries);
-
- if (activeLayers.floodZones) {
-    floodZonesResult.floodLayer.addTo(leafletMap);
-  }
-if (activeLayers.waterBodies) {
-    waterBodiesResult.waterLayer.addTo(leafletMap);
-  }
-
-if (activeLayers.waterways) {
-    waterwaysResult.waterwayLayer.addTo(leafletMap);
-  }
-if (activeLayers.zoningBoundaries) {
-    zoningResult.zoningLayer.addTo(leafletMap);
-  }
-if (activeLayers.complianceIndicators) {
-    complianceLayer.addTo(leafletMap);
-  }
-if (activeLayers.uploadedLocations) {
-    uploadedLocationsResult.locationLayer.addTo(leafletMap);
-  }
-if (activeLayers.environmentalRisk) {
-  environmentalRiskResult.riskLayer.addTo(leafletMap);
-}
-if (activeLayers.substations) {
-    substationsResult.substationLayer.addTo(leafletMap);
-  }
-if (activeLayers.powerlines) {
-    powerlinesResult.powerlineLayer.addTo(leafletMap);
-  }
-  leafletMap.floodLayer = floodZonesResult.floodLayer;
-leafletMap.waterBodiesLayer = waterBodiesResult.waterLayer;
-leafletMap.waterwaysLayer = waterwaysResult.waterwayLayer;
-leafletMap.zoningLayer = zoningResult.zoningLayer;
-leafletMap.complianceLayer = complianceLayer;
-leafletMap.uploadedLocationsLayer = uploadedLocationsResult.locationLayer;
-leafletMap.substationsLayer = substationsResult.substationLayer;
-leafletMap.powerlinesLayer = powerlinesResult.powerlineLayer;
-leafletMap.environmentalRiskLayer = environmentalRiskResult.riskLayer;
-
-            if (onLayersReady) {
-                onLayersReady();
-            }
-
-            if (window.setResponseReady) {
-                window.setResponseReady(true);
-            }
+        // Create a table for environmental risk data
+        const environmentalRiskTable = {
+            headers: ['Feature ID', 'Risk Level', 'Location', 'Risk Score'],
+            rows: environmentalRiskResult.riskData.features.map(feature => ({
+                'Feature ID': feature.properties['Feature ID'],
+                'Risk Level': feature.properties['Risk Level'],
+                'Location': feature.properties['Location'],
+                'Risk Score': feature.properties['Risk Score']
+            }))
         };
+
+        setTableData([
+            locationTable, 
+            substationTable, 
+            powerlineTable, 
+            floodTable, 
+            waterwayTable, 
+            zoningTable,
+            environmentalRiskTable
+        ]); 
+    }
+
+    // Finish loading
+    setIsLoadingLayers(false);
+    setCurrentLoadingLayer('');
+
+    if (onLayersReady) {
+        onLayersReady();
+    }
+
+    if (window.setResponseReady) {
+        window.setResponseReady(true);
+    }
+};
 
         initializeMap();
 
@@ -3136,8 +3152,8 @@ if (map && map.environmentalRiskLayer && map.environmentalRiskLayer.setOptions) 
           const topPosition = Math.min(windowHeight / 2 - 200, windowHeight - 400);
           
           setToolbarPosition({
-            top: Math.max(80, topPosition),
-            left: 80 // Left margin from the edge
+            top: 70,
+            left: 20 
           });
         }
       }, [isFullscreen, toolbarPosition]);
@@ -3570,6 +3586,7 @@ uploadedLocationsRef={uploadedLocationsRef}
     }}
   />
 )}
+<LoadingBar />
 
 
                 <ToolbarComponent

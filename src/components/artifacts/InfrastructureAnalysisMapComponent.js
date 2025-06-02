@@ -89,6 +89,42 @@ const [tableTitles, setTableTitles] = useState(['Uploaded Locations', 'Substatio
     const [activeDrawTool, setActiveDrawTool] = useState(null);
     const snapLayersRef = useRef([]);
     const pencilRef = useRef(null);
+    const [isLoadingLayers, setIsLoadingLayers] = useState(false);
+const [loadingProgress, setLoadingProgress] = useState(0);
+const [currentLoadingLayer, setCurrentLoadingLayer] = useState('');
+const [totalLayers] = useState(3);
+const LoadingBar = () => {
+  if (!isLoadingLayers) return null;
+  
+  const progressPercentage = (loadingProgress / totalLayers) * 100;
+  
+  return (
+  <div className="fixed bottom-4 right-4 z-[9999] w-64">
+    <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4 w-full">
+      <div className="text-sm font-medium text-gray-700 mb-2">
+        Loading Infrastructure Data
+      </div>
+      <div className="text-xs text-gray-500 mb-3">
+        {currentLoadingLayer}
+      </div>
+
+      {/* PROGRESS BAR */}
+      <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+        <div
+          className="h-full bg-[#008080] rounded-full transition-all duration-700 ease-out"
+          style={{ width: `${(loadingProgress / totalLayers) * 100}%` }}
+        />
+      </div>
+
+      <div className="text-xs text-gray-500 mt-1 text-right">
+        {loadingProgress}/{totalLayers} layers loaded
+      </div>
+    </div>
+  </div>
+);
+
+
+};
     const [drawDialogPos, setDrawDialogPos] = useState({ top: 0, left: 0 });
     const [selectedRowIndices, setSelectedRowIndices] = useState([]);
     const [selectedColIndex, setSelectedColIndex] = useState(null);
@@ -337,11 +373,10 @@ const powerlinesRef = useRef([]);
 
           marker.featureId = featureId;
 
-          let popupContent = '<strong>Analysis Location</strong>';
-          popupContent += `<br>Feature ID: ${featureId}`;
-          if (feature.properties.Name) popupContent += `<br>Name: ${feature.properties.Name}`;
-          if (feature.properties.Description) popupContent += `<br>Description: ${feature.properties.Description}`;
-          if (feature.properties.Reference) popupContent += `<br>Reference: ${feature.properties.Reference}`;
+          let popupContent = `<strong>${feature.properties.Name || 'Analysis Location'}</strong>`;
+popupContent += `<br>Feature ID: ${featureId}`;
+if (feature.properties.Description) popupContent += `<br>Description: ${feature.properties.Description}`;
+if (feature.properties.Reference) popupContent += `<br>Reference: ${feature.properties.Reference}`;
 
           marker.bindPopup(popupContent, { className: 'custom-popup' });
 
@@ -2185,31 +2220,60 @@ leafletMap.on(L.Draw.Event.CREATED, function(e) {
                 leafletMap.fitBounds(poly.getBounds());
             });
 
-            const [uploadedLocationsResult, substationsResult, powerlinesResult] = await Promise.all([
-  fetchUploadedLocations(),
-  fetchSubstations(),
-  fetchPowerlines()
-]);
+        setIsLoadingLayers(true);
+setLoadingProgress(0);
 
+// Load uploaded locations first
+setCurrentLoadingLayer('Loading analysis locations...');
+const uploadedLocationsResult = await fetchUploadedLocations();
+setLoadingProgress(1);
+
+// Add uploaded locations layer immediately after loading
+uploadedLocationsResult.locationLayer.setZIndex(layerZIndexes.uploadedLocations);
+uploadedLocationsResult.locationLayer.addTo(leafletMap);
+leafletMap.uploadedLocationsLayer = uploadedLocationsResult.locationLayer;
+
+// Small delay for visual effect
+await new Promise(resolve => setTimeout(resolve, 2000));
+
+// Load substations second
+setCurrentLoadingLayer('Loading substations...');
+const substationsResult = await fetchSubstations();
+setLoadingProgress(2);
+
+// Add substations layer immediately after loading
+substationsResult.substationLayer.setZIndex(layerZIndexes.substations);
+substationsResult.substationLayer.addTo(leafletMap);
+leafletMap.substationsLayer = substationsResult.substationLayer;
+
+await new Promise(resolve => setTimeout(resolve, 2000));
+
+// Load powerlines last
+setCurrentLoadingLayer('Loading power lines...');
+const powerlinesResult = await fetchPowerlines();
+setLoadingProgress(3);
+
+// Add powerlines layer immediately after loading
+powerlinesResult.powerlineLayer.setZIndex(layerZIndexes.powerlines);
+powerlinesResult.powerlineLayer.addTo(leafletMap);
+leafletMap.powerlinesLayer = powerlinesResult.powerlineLayer;
+
+await new Promise(resolve => setTimeout(resolve, 2000));
+
+setCurrentLoadingLayer('Finalizing map...');
+
+// Generate table data from all loaded layers
 if (uploadedLocationsResult.locationData) {
   const locationTable = convertGeoJSONToTable(uploadedLocationsResult.locationData, 'uploadedLocations');
   const substationTable = convertGeoJSONToTable(substationsResult.substationData, 'substations');
   const powerlineTable = convertGeoJSONToTable(powerlinesResult.powerlineData, 'powerlines');
   setTableData([locationTable, substationTable, powerlineTable]);
 }
-           
-const allLayers = L.layerGroup();
-uploadedLocationsResult.locationLayer.setZIndex(layerZIndexes.uploadedLocations);
-substationsResult.substationLayer.setZIndex(layerZIndexes.substations);
-powerlinesResult.powerlineLayer.setZIndex(layerZIndexes.powerlines);
 
-uploadedLocationsResult.locationLayer.addTo(leafletMap);
-substationsResult.substationLayer.addTo(leafletMap);
-powerlinesResult.powerlineLayer.addTo(leafletMap);
+// Finish loading
+setIsLoadingLayers(false);
+setCurrentLoadingLayer('');
 
-leafletMap.uploadedLocationsLayer = uploadedLocationsResult.locationLayer;
-leafletMap.substationsLayer = substationsResult.substationLayer;
-leafletMap.powerlinesLayer = powerlinesResult.powerlineLayer;
 
             if (onLayersReady) {
                 onLayersReady();
@@ -2491,8 +2555,8 @@ bufferCirclesRef.current.forEach(({ circle }) => {
           const topPosition = Math.min(windowHeight / 2 - 200, windowHeight - 400);
           
           setToolbarPosition({
-            top: Math.max(80, topPosition),
-            left: 80 // Left margin from the edge
+            top: 70,
+            left: 20 
           });
         }
       }, [isFullscreen, toolbarPosition]);
@@ -2980,6 +3044,7 @@ uploadedLocationsRef={uploadedLocationsRef}
                     </div>
                 </div>
             )}
+<LoadingBar />
 
 
 
