@@ -86,7 +86,7 @@ useEffect(() => {
 
   const layerConfig = useMemo(() => ({
     uploadedLocations: {
-    name: customLayerNames['uploadedLocations'] || 'Analysis Locations',
+    name: customLayerNames['uploadedLocations'] || 'Client Sites',
     icon: <div className="w-4 h-4 rounded-full" style={{ backgroundColor: layerColors.uploadedLocations || '#FF6B35' }} />,
     legend: [
       { label: 'Client Locations', color: layerColors.uploadedLocations || '#FF6B35' },

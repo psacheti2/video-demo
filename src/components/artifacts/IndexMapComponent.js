@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import {X, ArrowLeft, MousePointerSquareDashed, TextCursorInput
+import {X, ArrowLeft, MousePointerSquareDashed, TextCursorInput, Check
 } from 'lucide-react';
 import { TbMapSearch } from "react-icons/tb";
 import html2canvas from 'html2canvas';
@@ -166,19 +166,37 @@ const [loadingProgress, setLoadingProgress] = useState(0);
 const [currentLoadingLayer, setCurrentLoadingLayer] = useState('');
 const [totalLayers] = useState(2);
 const LoadingBar = () => {
-if (!isLoadingLayers || hideLoadingBar) return null;  
+  if (!isLoadingLayers || hideLoadingBar) return null;
+
+  const stages = [
+    { key: 'Site Scores', label: 'Site Scores' },
+    { key: 'Cost Analysis Zones', label: 'Cost Zones' }
+  ];
+
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] w-64">
-      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4 w-full">
-        <div className="text-sm font-medium text-gray-700 mb-2">
-          Loading Analysis Data
-        </div>
-        <div className="text-xs text-gray-500 mb-3">
-          {currentLoadingLayer}
+    <div className="fixed bottom-4 right-4 z-[9999] w-72">
+      <div className="bg-white border border-gray-200 rounded-xl shadow-lg px-4 py-3">
+        <div className="text-sm font-semibold text-gray-800 mb-2">
+          Loading Layers
         </div>
 
-        {/* PROGRESS BAR */}
-        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+        <div className="flex flex-col space-y-2">
+          {stages.map((stage, index) => {
+            const isComplete = loadingProgress > index;
+            return (
+              <div key={stage.key} className="flex items-center justify-between text-xs">
+                <span className="text-gray-600">{stage.label}</span>
+                <Check
+                  size={16}
+                  className="transition-colors duration-500"
+                  color={isComplete ? '#008080' : '#FFFFFF'}
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="w-full bg-gray-200 rounded-full h-2 mt-3 overflow-hidden">
           <div
             className="h-full bg-[#008080] rounded-full transition-all duration-700 ease-out"
             style={{ width: `${(loadingProgress / totalLayers) * 100}%` }}
@@ -1215,17 +1233,19 @@ const generateWeightedScoring = () => {
       : scoreData.score >= 6 ? '#E67E22'
       : '#E74C3C';
 
-    const circle = L.circle([position.lat, position.lng], {
-      radius: radius * 10,
-      fillColor: color,
-      color: color,
-      weight: 3,
-      opacity: 0.8,
-      fillOpacity: 0.4
-    });
+    const pinIcon = new L.DivIcon({
+  className: 'custom-div-icon',
+  html: `<div class="pin-marker" style="background:${color};"></div>`,
+  iconSize: [18, 24],
+  iconAnchor: [9, 24]
+});
 
-    circle.featureId = `weighted-${featureId}`;
-    circle.bindPopup(`
+const scoringMarker = L.marker([position.lat, position.lng], {
+  icon: pinIcon
+});
+
+scoringMarker.featureId = `weighted-${featureId}`;
+scoringMarker.bindPopup(`
   <div style="font-family: 'Segoe UI', sans-serif; font-size: 13px; width: 200px;">
     <div style="font-weight: 600; font-size: 14px; color: ${color}; margin-bottom: 4px;">${locationName}</div>
     <div style="font-size: 13px; margin-bottom: 8px;">
@@ -1251,8 +1271,9 @@ const generateWeightedScoring = () => {
   </div>
 `);
 
-    weightedScoringRef.current.push({ circle, featureId: circle.featureId });
-    scoringLayer.addLayer(circle);
+weightedScoringRef.current.push({ circle: scoringMarker, featureId: scoringMarker.featureId });
+scoringLayer.addLayer(scoringMarker);
+
   });
 
   window.showWeightedBreakdown = (index) => {
@@ -1341,70 +1362,69 @@ document.addEventListener('click', (e) => {
   return scoringLayer;
 };
 
-
 const generateCostAnalysisZones = () => {
   const costLayer = L.layerGroup();
-  
   if (uploadedLocationsRef.current.length === 0) return costLayer;
-  
-  // Create heatmap data points based on uploaded locations
+
   const heatmapData = [];
-  
-  uploadedLocationsRef.current.forEach(({ marker }, index) => {
-    const position = marker.getLatLng();
-    
-    // Create cost intensity based on location (higher cost = higher intensity)
-    const baseCostIntensity = 0.2 + Math.random() * 0.5; // Reduced from 0.3-1.0 to 0.2-0.7
-    
-    // Add main point
-    heatmapData.push([position.lat, position.lng, baseCostIntensity]);
-    
-    // Create more systematic rings for smoother gradients
-    for (let ring = 1; ring <= 5; ring++) { // Increased to 5 rings
-      const pointsInRing = 20 * ring; // More points in outer rings
-      for (let i = 0; i < pointsInRing; i++) {
-        const distance = (Math.random() * 0.002 * ring) + (0.001 * ring); // Smaller, more controlled distance
-        const angle = (i / pointsInRing) * 2 * Math.PI + (Math.random() * 0.3); // More systematic distribution
-        const lat = position.lat + distance * Math.cos(angle);
-        const lng = position.lng + distance * Math.sin(angle);
-        const intensity = baseCostIntensity * (0.9 - (ring * 0.12)) * (0.8 + Math.random() * 0.2); // Smoother decrease
-        
-        heatmapData.push([lat, lng, Math.max(0.05, intensity)]); // Higher minimum intensity
-      }
+
+  // Slightly wider spread + more background noise
+uploadedLocationsRef.current.forEach(({ marker }, index) => {
+  const position = marker.getLatLng();
+  const baseCostIntensity = 0.3 + Math.random() * 0.4;
+
+  heatmapData.push([position.lat, position.lng, baseCostIntensity]);
+
+  for (let ring = 1; ring <= 6; ring++) { // Increase to 6 rings
+    const pointsInRing = 25 * ring; // Slightly more points
+    for (let i = 0; i < pointsInRing; i++) {
+      const distance = (Math.random() * 0.003 * ring) + (0.0015 * ring); // wider spread
+      const angle = (i / pointsInRing) * 2 * Math.PI + (Math.random() * 0.3);
+      const lat = position.lat + distance * Math.cos(angle);
+      const lng = position.lng + distance * Math.sin(angle);
+      const intensity = baseCostIntensity * (0.85 - (ring * 0.08)) * (0.9 + Math.random() * 0.2);
+      heatmapData.push([lat, lng, Math.max(0.04, intensity)]);
+    }
+  }
+});
+const centerLat = uploadedLocationsRef.current.reduce(
+  (sum, { marker }) => sum + marker.getLatLng().lat,
+  0
+) / uploadedLocationsRef.current.length;
+
+const centerLng = uploadedLocationsRef.current.reduce(
+  (sum, { marker }) => sum + marker.getLatLng().lng,
+  0
+) / uploadedLocationsRef.current.length;
+
+// Wider random background spread
+for (let i = 0; i < 180; i++) { // more points
+  const lat = centerLat + (Math.random() - 0.5) * 0.06; // wider radius
+  const lng = centerLng + (Math.random() - 0.5) * 0.06;
+  const intensity = Math.random() * 0.12;
+  heatmapData.push([lat, lng, intensity]);
+}
+
+
+  const costHeatmap = L.heatLayer(heatmapData, {
+    radius: 45,
+    blur: 35,
+    maxZoom: 17,
+    max: 1.1,
+    minOpacity: 0.07,
+    gradient: {
+      0.0: 'rgba(0, 128, 128, 0.05)',     
+      0.25: 'rgba(72, 219, 251, 0.1)',  
+      0.5: 'rgba(0, 168, 255, 0.2)',     
+      0.75: 'rgba(0, 117, 255, 0.25)',    
+      1.0: 'rgba(9, 132, 227, 0.3)'      
     }
   });
-  
-  // Add some random background cost variation - REDUCED and more controlled
-  const centerLat = uploadedLocationsRef.current.reduce((sum, {marker}) => sum + marker.getLatLng().lat, 0) / uploadedLocationsRef.current.length;
-  const centerLng = uploadedLocationsRef.current.reduce((sum, {marker}) => sum + marker.getLatLng().lng, 0) / uploadedLocationsRef.current.length;
-  
-  for (let i = 0; i < 100; i++) { // Reduced from 200
-    const lat = centerLat + (Math.random() - 0.5) * 0.03; // Smaller spread
-    const lng = centerLng + (Math.random() - 0.5) * 0.03;
-    const intensity = Math.random() * 0.2; // Reduced background intensity
-    
-    heatmapData.push([lat, lng, intensity]);
-  }
-  
-  const costHeatmap = L.heatLayer(heatmapData, {
-  radius: 50,        // Reduce radius to make less intense
-  blur: 40,          // Increase blur for softer appearance
-  maxZoom: 17,
-  max: 1.2,          // INCREASE max to make existing data appear lighter
-  minOpacity: 0.05,  
-  gradient: {
-  0.0: 'rgba(39, 174, 96, 0.1)',     // Light green
-  0.2: 'rgba(241, 196, 15, 0.15)',   // Light yellow
-  0.4: 'rgba(243, 156, 18, 0.2)',    // Light orange
-  0.6: 'rgba(230, 126, 34, 0.25)',   // Medium orange
-  0.8: 'rgba(231, 76, 60, 0.2)',     // Light coral red
-  1.0: 'rgba(231, 76, 60, 0.2)'      // SAME as 0.8 to avoid sharp contrast
-}
-});
-  
+
   costLayer.addLayer(costHeatmap);
   return costLayer;
 };
+
 
 const createRankingTableData = () => {
   // Get compliance status for each location (same logic as other functions)

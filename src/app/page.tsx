@@ -35,7 +35,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [isNewConversation, setIsNewConversation] = useState(true);
   const [artifacts, setArtifacts] = useState<Artifact[]>([]);
-  const [artifactsPanelWidth, setArtifactsPanelWidth] = useState(40);
+  const [artifactsPanelWidth, setArtifactsPanelWidth] = useState(60);
   const [isArtifactFullscreen, setIsArtifactFullscreen] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [lastMessageId, setLastMessageId] = useState<string>('');

@@ -19,6 +19,18 @@
     opacity: 0.8;
   }
 
+ .pin-marker {
+  width: 14px;
+  height: 14px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: -7px 0 0 -7px;
+  box-shadow: 0 0 0 1.5px white;
+}
+
   /* Add these styles to your CSS file or create a new one */
 @keyframes slideInFromRight {
   from {

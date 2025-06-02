@@ -256,90 +256,6 @@ const [nextShapeIds, setNextShapeIds] = useState({
 });
 const dataCentersRef = useRef([]);
 
-const fetchDataCenters = async () => {
-    try {
-        const res = await fetch('/data/location-data.geojson');
-        const dataCenterData = await res.json();
-        const dataCenterLayer = L.layerGroup();
-
-        if (dataCenterData.features && dataCenterData.features.length > 0) {
-            // Assign Feature IDs
-            dataCenterData.features.forEach((feature, index) => {
-                if (!feature.properties) {
-                    feature.properties = {};
-                }
-                feature.properties['Feature ID'] = feature.properties['Feature ID'] || `dc-${index + 1}`;
-            });
-
-            // Create markers for each data center
-            dataCenterData.features.forEach((feature) => {
-                if (feature.geometry && feature.geometry.type === 'Point') {
-                    const coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
-                    const featureId = feature.properties['Feature ID'];
-
-                    const marker = L.marker(coords, {
-  icon: L.divIcon({
-    html: `
-      <div style="
-        position: relative;
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #00b3b3, #008080);
-        border: 2px solid white;
-        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      ">
-        <div style="
-          width: 8px;
-          height: 8px;
-          background-color: white;
-          border-radius: 50%;
-        "></div>
-      </div>
-    `,
-    className: '',
-    iconSize: [24, 24],
-    iconAnchor: [12, 12]
-  }),
-  interactive: topInteractiveLayer === 'dataCenters'
-});
-
-
-                    marker.featureId = featureId;
-
-                    // Create popup
-                    let popupContent = '<strong>Data Center</strong>';
-                    popupContent += `<br>Feature ID: ${featureId}`;
-                    if (feature.properties.Name) popupContent += `<br>Name: ${feature.properties.Name}`;
-                    if (feature.properties.Address) popupContent += `<br>Address: ${feature.properties.Address}`;
-                    if (feature.properties.Region) popupContent += `<br>Region: ${feature.properties.Region}`;
-                    if (feature.properties.Notes) popupContent += `<br>Notes: ${feature.properties.Notes}`;
-
-                    marker.bindPopup(popupContent, { className: 'custom-popup' });
-
-                    marker.on('click', function (e) {
-                        console.log('Data center clicked:', featureId);
-                        if (e) L.DomEvent.stopPropagation(e);
-                        selectRowByFeatureProperties(feature.properties);
-                    });
-
-                    dataCentersRef.current.push({ marker, featureId });
-                    dataCenterLayer.addLayer(marker);
-                }
-            });
-        }
-
-        return { dataCenterLayer, dataCenterData };
-    } catch (error) {
-        console.error("Error fetching data center data:", error);
-        return { dataCenterLayer: L.layerGroup(), dataCenterData: { features: [] } };
-    }
-};
-
-    
 
     // 3. Add CSS for custom popups - Add this to your component or a separate CSS file
     useEffect(() => {
@@ -383,42 +299,7 @@ const fetchDataCenters = async () => {
         }
     };
 
-    const resetLayerHighlighting = () => {
-    // Reset data centers
-    dataCentersRef.current.forEach(({ marker }) => {
-       marker.setIcon(L.divIcon({
-    html: `
-  <div style="
-    position: relative;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-background-color: ${layerColors.existingDataCenter || '#008080'};
-    border: 2px solid white;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  ">
-    <div style="
-      width: 8px;
-      height: 8px;
-      background-color: white;
-      border-radius: 50%;
-    "></div>
-  </div>
-`,
-    className: '',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
-}));
-
-        // Close any open popups
-        if (marker.isPopupOpen()) {
-            marker.closePopup();
-        }
-    });        
-};    
+    
     const handleCellEdit = (selectedRowIndices, columnName, newValue) => {
         setTableData(prev => {
             const updated = [...prev];
@@ -601,65 +482,7 @@ const highlightDataCenter = (row, isMultiSelect = false) => {
 };
 
 
-    const highlightMarker = (marker, isMultiSelect = false) => {
-        // Change the marker's icon to make it stand out
-        marker.setIcon(L.divIcon({
-            html: `
-              <div style="
-                position: relative;
-                width: 28px;
-                height: 28px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-              ">
-                <div style="
-                  position: absolute;
-                  width: 24px;
-                  height: 24px;
-                  border: 3px solid #008080;
-                  border-radius: 50%;
-                  background-color: transparent;
-                  box-sizing: border-box;
-                "></div>
-                <div style="
-                  width: 12px;
-                  height: 12px;
-                  background-color: #CC6600;
-                  border-radius: 50%;
-                  z-index: 2;
-                "></div>
-              </div>
-            `,
-            className: '',
-            iconSize: [28, 28],
-            iconAnchor: [14, 14]
-          }));
-          
-          
-        if (!isMultiSelect) {
-            // Calculate visible map area when table is showing
-            const containerHeight = mapContainerRef.current.clientHeight;
-        
-            // Get marker position and calculate offset to center it in the visible area
-            const markerLatLng = marker.getLatLng();
-        
-            // Create a point that will be centered in the visible map area
-            // The offset calculation moves the point up to account for the table
-            const targetPoint = showTable
-              ? map.project(markerLatLng).add([0, tableHeight/1.6])
-              : map.project(markerLatLng);
-        
-            // Convert back to LatLng and pan the map to center on this point
-            const targetLatLng = map.unproject(targetPoint);
-        
-            // Zoom and pan to the adjusted center
-            map.setView(targetLatLng, 16, {
-              animate: true,
-              duration: 0.5
-            });
-          }
-        };
+  
         
     // Extract the coordinate-based highlighting into a separate function
     const highlightByCoordinates = (row) => {
@@ -2127,37 +1950,229 @@ leafletMap.dataCenterLayer = dataCenterResult.dataCenterLayer;
         }
     }, [map]);
     
-    useEffect(() => {
+  // Updated fetchDataCenters function with pin-style markers
+const fetchDataCenters = async () => {
+    try {
+        const res = await fetch('/data/location-data.geojson');
+        const dataCenterData = await res.json();
+        const dataCenterLayer = L.layerGroup();
+
+        if (dataCenterData.features && dataCenterData.features.length > 0) {
+            // Assign Feature IDs
+            dataCenterData.features.forEach((feature, index) => {
+                if (!feature.properties) {
+                    feature.properties = {};
+                }
+                feature.properties['Feature ID'] = feature.properties['Feature ID'] || `dc-${index + 1}`;
+            });
+
+            // Create markers for each data center
+            dataCenterData.features.forEach((feature) => {
+                if (feature.geometry && feature.geometry.type === 'Point') {
+                    const coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
+                    const featureId = feature.properties['Feature ID'];
+
+                    const marker = L.marker(coords, {
+                        icon: L.divIcon({
+                            html: `
+                                <div style="
+                                    position: relative;
+                                    width: 24px;
+                                    height: 30px;
+                                    display: flex;
+                                    align-items: flex-end;
+                                    justify-content: center;
+                                ">
+                                    <div style="
+                                        width: 20px;
+                                        height: 20px;
+                                        background-color: ${layerColors.existingDataCenter};
+                                        border: 2px solid white;
+                                        border-radius: 50% 50% 50% 0;
+                                        transform: rotate(-45deg);
+                                        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                    ">
+                                        
+                                    </div>
+                                </div>
+                            `,
+                            className: '',
+                            iconSize: [24, 30],
+                            iconAnchor: [12, 30]
+                        }),
+                        interactive: topInteractiveLayer === 'dataCenters'
+                    });
+
+                    marker.featureId = featureId;
+
+                    // Create popup
+                    let popupContent = '<strong>Data Center</strong>';
+                    popupContent += `<br>Feature ID: ${featureId}`;
+                    if (feature.properties.Name) popupContent += `<br>Name: ${feature.properties.Name}`;
+                    if (feature.properties.Address) popupContent += `<br>Address: ${feature.properties.Address}`;
+                    if (feature.properties.Region) popupContent += `<br>Region: ${feature.properties.Region}`;
+                    if (feature.properties.Notes) popupContent += `<br>Notes: ${feature.properties.Notes}`;
+
+                    marker.bindPopup(popupContent, { className: 'custom-popup' });
+
+                    marker.on('click', function (e) {
+                        console.log('Data center clicked:', featureId);
+                        if (e) L.DomEvent.stopPropagation(e);
+                        selectRowByFeatureProperties(feature.properties);
+                    });
+
+                    dataCentersRef.current.push({ marker, featureId });
+                    dataCenterLayer.addLayer(marker);
+                }
+            });
+        }
+
+        return { dataCenterLayer, dataCenterData };
+    } catch (error) {
+        console.error("Error fetching data center data:", error);
+        return { dataCenterLayer: L.layerGroup(), dataCenterData: { features: [] } };
+    }
+};
+
+// Updated resetLayerHighlighting function
+const resetLayerHighlighting = () => {
+    // Reset data centers
+    dataCentersRef.current.forEach(({ marker }) => {
+        marker.setIcon(L.divIcon({
+            html: `
+                <div style="
+                    position: relative;
+                    width: 24px;
+                    height: 30px;
+                    display: flex;
+                    align-items: flex-end;
+                    justify-content: center;
+                ">
+                    <div style="
+                        width: 20px;
+                        height: 20px;
+                        background-color: ${layerColors.existingDataCenter || '#008080'};
+                        border: 2px solid white;
+                        border-radius: 50% 50% 50% 0;
+                        transform: rotate(-45deg);
+                        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    ">
+                        
+                    </div>
+                </div>
+            `,
+            className: '',
+            iconSize: [24, 30],
+            iconAnchor: [12, 30]
+        }));
+
+        // Close any open popups
+        if (marker.isPopupOpen()) {
+            marker.closePopup();
+        }
+    });
+};
+
+// Updated highlightMarker function
+const highlightMarker = (marker, isMultiSelect = false) => {
+    // Change the marker's icon to make it stand out - using highlighted pin style
+    marker.setIcon(L.divIcon({
+        html: `
+            <div style="
+                position: relative;
+                width: 28px;
+                height: 34px;
+                display: flex;
+                align-items: flex-end;
+                justify-content: center;
+            ">
+                <div style="
+                    width: 24px;
+                    height: 24px;
+                    background-color: #FF6B35;
+                    border: 3px solid white;
+                    border-radius: 50% 50% 50% 0;
+                    transform: rotate(-45deg);
+                    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                ">
+                  
+                </div>
+            </div>
+        `,
+        className: '',
+        iconSize: [28, 34],
+        iconAnchor: [14, 34]
+    }));
+    
+    if (!isMultiSelect) {
+        // Calculate visible map area when table is showing
+        const containerHeight = mapContainerRef.current.clientHeight;
+    
+        // Get marker position and calculate offset to center it in the visible area
+        const markerLatLng = marker.getLatLng();
+    
+        // Create a point that will be centered in the visible map area
+        // The offset calculation moves the point up to account for the table
+        const targetPoint = showTable
+          ? map.project(markerLatLng).add([0, tableHeight/1.6])
+          : map.project(markerLatLng);
+    
+        // Convert back to LatLng and pan the map to center on this point
+        const targetLatLng = map.unproject(targetPoint);
+    
+        // Zoom and pan to the adjusted center
+        map.setView(targetLatLng, 16, {
+          animate: true,
+          duration: 0.5
+        });
+    }
+};
+
+// Updated useEffect for layer color changes
+useEffect(() => {
     if (!map) return;
 
     dataCentersRef.current.forEach(({ marker }) => {
-    marker.setIcon(L.divIcon({
-       html: `
-  <div style="
-    position: relative;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-background-color: ${layerColors.existingDataCenter || '#008080'};
-    border: 2px solid white;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  ">
-    <div style="
-      width: 8px;
-      height: 8px;
-      background-color: white;
-      border-radius: 50%;
-    "></div>
-  </div>
-`,
-        className: '',
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
-    }));
-});
+        marker.setIcon(L.divIcon({
+            html: `
+                <div style="
+                    position: relative;
+                    width: 24px;
+                    height: 30px;
+                    display: flex;
+                    align-items: flex-end;
+                    justify-content: center;
+                ">
+                    <div style="
+                        width: 20px;
+                        height: 20px;
+                        background-color: ${layerColors.existingDataCenter || '#008080'};
+                        border: 2px solid white;
+                        border-radius: 50% 50% 50% 0;
+                        transform: rotate(-45deg);
+                        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    ">
+                       
+                    </div>
+                </div>
+            `,
+            className: '',
+            iconSize: [24, 30],
+            iconAnchor: [12, 30]
+        }));
+    });
 
     setTimeout(() => {
         if (map) {

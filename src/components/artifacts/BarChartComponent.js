@@ -186,7 +186,7 @@ const BarChartComponent = ({ onLayersReady, setSavedArtifacts, title, onBack }) 
           />
           <YAxis 
             domain={[0, 10]}
-            label={{ value: 'Score (0-10)', angle: -90, position: 'insideLeft' }}
+            label={{ value: 'Total score', angle: -90, position: 'insideLeft' }}
           />
           <Tooltip 
             formatter={(value, name) => [value.toFixed(1), name.charAt(0).toUpperCase() + name.slice(1)]}

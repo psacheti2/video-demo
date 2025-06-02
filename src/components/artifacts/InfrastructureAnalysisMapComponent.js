@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import {X, ArrowLeft, MousePointerSquareDashed, TextCursorInput
+import {X, ArrowLeft, MousePointerSquareDashed, TextCursorInput, Check
 } from 'lucide-react';
 import { TbMapSearch } from "react-icons/tb";
 import html2canvas from 'html2canvas';
@@ -95,36 +95,51 @@ const [currentLoadingLayer, setCurrentLoadingLayer] = useState('');
 const [totalLayers] = useState(3);
 const LoadingBar = () => {
   if (!isLoadingLayers) return null;
-  
-  const progressPercentage = (loadingProgress / totalLayers) * 100;
-  
+
+  const stages = [
+    { key: 'Uploaded Locations', label: 'Locations' },
+    { key: 'Substations', label: 'Substations' },
+    { key: 'Power Lines', label: 'Power Lines' },
+  ];
+
   return (
-  <div className="fixed bottom-4 right-4 z-[9999] w-64">
-    <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4 w-full">
-      <div className="text-sm font-medium text-gray-700 mb-2">
-        Loading Infrastructure Data
-      </div>
-      <div className="text-xs text-gray-500 mb-3">
-        {currentLoadingLayer}
-      </div>
+    <div className="fixed bottom-4 right-4 z-[9999] w-72">
+      <div className="bg-white border border-gray-200 rounded-xl shadow-lg px-4 py-3">
+        <div className="text-sm font-semibold text-gray-800 mb-2">
+          Loading Layers
+        </div>
 
-      {/* PROGRESS BAR */}
-      <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-        <div
-          className="h-full bg-[#008080] rounded-full transition-all duration-700 ease-out"
-          style={{ width: `${(loadingProgress / totalLayers) * 100}%` }}
-        />
-      </div>
+        <div className="flex flex-col space-y-2">
+          {stages.map((stage, index) => {
+            const isComplete = loadingProgress > index;
+            return (
+              <div key={stage.key} className="flex items-center justify-between text-xs">
+                <span className="text-gray-600">{stage.label}</span>
+                <Check
+                  size={16}
+                  className={`transition-colors duration-500`}
+                  color={isComplete ? '#008080' : '#FFFFFF'}
+                />
+              </div>
+            );
+          })}
+        </div>
 
-      <div className="text-xs text-gray-500 mt-1 text-right">
-        {loadingProgress}/{totalLayers} layers loaded
+        <div className="w-full bg-gray-200 rounded-full h-2 mt-3">
+          <div
+            className="h-full bg-[#008080] rounded-full transition-all duration-500"
+            style={{ width: `${(loadingProgress / totalLayers) * 100}%` }}
+          />
+        </div>
+
+        <div className="text-xs text-gray-500 mt-1 text-right">
+          {loadingProgress}/{totalLayers} layers loaded
+        </div>
       </div>
     </div>
-  </div>
-);
-
-
+  );
 };
+
     const [drawDialogPos, setDrawDialogPos] = useState({ top: 0, left: 0 });
     const [selectedRowIndices, setSelectedRowIndices] = useState([]);
     const [selectedColIndex, setSelectedColIndex] = useState(null);
@@ -309,9 +324,9 @@ const [nextShapeIds, setNextShapeIds] = useState({
    const [layerColors, setLayerColors] = useState({
   uploadedLocations: '#008080',
   substations: '#4ECDC4',
-  powerlines400kv: '#E74C3C',
-  powerlines220kv: '#F39C12',
-  powerlinesOther: '#9B59B6',
+  powerlines400kv: '#577A9E',
+  powerlines220kv: '#89A3BE',
+  powerlinesOther: '#BDCCDB',
   bufferZones: '#3498DB',
 });
 const uploadedLocationsRef = useRef([]);

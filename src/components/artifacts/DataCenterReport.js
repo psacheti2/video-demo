@@ -146,10 +146,10 @@ const sampleContent = {
   executive: `
     <h2 class="text-xl font-bold mb-4" style="color: #008080;">Executive Summary</h2>
     <p class="mb-4" style="color: #34495E;">
-      This report analyzes five potential data center locations in Greater Madrid, evaluating each site against critical infrastructure, environmental, regulatory, and economic parameters for a 50MW facility requirement. After comprehensive weighted analysis, <strong>Location A</strong> emerges as the optimal choice with a score of 8.7/10, offering excellent power capacity (85MW available), dual fiber connectivity, streamlined regulatory approval (6-month timeline), and competitive land costs.
+      This report analyzes five potential data center locations in Greater Madrid, evaluating each site against critical infrastructure, environmental, regulatory, and economic parameters for a 50MW facility requirement. After comprehensive weighted analysis, <strong>San Fernando de Henares Industrial Park</strong> emerges as the optimal choice with a score of 8.7/10, offering excellent power capacity (85MW available), dual fiber connectivity, streamlined regulatory approval (6-month timeline), and competitive land costs.
     </p>
     <p class="mb-4" style="color: #34495E;">
-      Location B ranks second (8.0/10) with good infrastructure despite environmental considerations. Location C follows (7.2/10) with superior connectivity but power constraints. Location E (6.7/10) offers moderate capabilities while Location D (5.2/10) faces significant zoning and regulatory challenges. The weighted scoring model prioritized infrastructure (40%) and regulatory factors (30%) as requested.
+      Valdebebas Extension ranks second (8.0/10) with good infrastructure despite environmental considerations. Las Rozas NTT Madrid 1 follows (7.2/10) with superior connectivity but power constraints. Alcobendas – Equinix MD2 (6.7/10) offers moderate capabilities while Alcalá de Henares – Punto Com Park (5.2/10) faces significant zoning and regulatory challenges. The weighted scoring model prioritized infrastructure (40%) and regulatory factors (30%) as requested.
     </p>
 `,
   intro: `
@@ -176,7 +176,7 @@ const sampleContent = {
     </p>
   `,
   locations: `
-    <h2 class="text-xl font-bold mb-4" style="color: #008080;">Location Comparison Overview</h2>
+    <h2 class="text-xl font-bold mb-4" style="color: #008080;">Las Rozas NTT Madrid 1omparison Overview</h2>
     <div class="overflow-x-auto mb-6">
       <table class="w-full border-collapse">
         <thead>
@@ -225,7 +225,7 @@ const sampleContent = {
   locationa: `
     <h2 class="text-xl font-bold mb-4" style="color: #008080;">San Fernando de Henares Industrial Park: Detailed Profile</h2>
     <p class="mb-4" style="color: #34495E;">
-      Location A represents the optimal balance of infrastructure capacity, regulatory efficiency, and operational resilience:
+      San Fernando de Henares Industrial Park represents the optimal balance of infrastructure capacity, regulatory efficiency, and operational resilience:
     </p>
     <ul class="list-disc pl-5 mb-4" style="color: #34495E;">
       <li><strong>Power Infrastructure:</strong> 85MW grid capacity with dedicated substation 1.2km away, dual utility feeds, and 99.9% historical reliability</li>
@@ -235,13 +235,13 @@ const sampleContent = {
       <li><strong>Economic Advantage:</strong> Competitive land costs at €120/m², available tax incentives for digital infrastructure projects</li>
     </ul>
     <p class="mb-4" style="color: #34495E;">
-      Location A's comprehensive infrastructure capabilities and regulatory advantages make it the preferred choice for immediate development and long-term operational stability.
+      San Fernando de Henares Industrial Park's comprehensive infrastructure capabilities and regulatory advantages make it the preferred choice for immediate development and long-term operational stability.
     </p>
   `,
   locationb: `
-    <h2 class="text-xl font-bold mb-4" style="color: #008080;">Valdebebas – New Urban Extension: Detailed Profile</h2>
+    <h2 class="text-xl font-bold mb-4" style="color: #008080;">Valdebebas Extension: Detailed Profile</h2>
     <p class="mb-4" style="color: #34495E;">
-      Location B offers strong infrastructure capabilities but requires careful environmental risk management:
+      Valdebebas Extension offers strong infrastructure capabilities but requires careful environmental risk management:
     </p>
     <ul class="list-disc pl-5 mb-4" style="color: #34495E;">
       <li><strong>Power Infrastructure:</strong> 70MW available capacity, reliable grid connection with backup options, substation 2.1km distance</li>
@@ -251,13 +251,13 @@ const sampleContent = {
       <li><strong>Economic Position:</strong> Lower land acquisition costs at €95/m², potential for negotiated utility rates</li>
     </ul>
     <p class="mb-4" style="color: #34495E;">
-      Location B presents a viable alternative with cost advantages, though environmental mitigation measures would require additional capital investment.
+      Valdebebas Extension presents a viable alternative with cost advantages, though environmental mitigation measures would require additional capital investment.
     </p>
   `,
   locationc: `
     <h2 class="text-xl font-bold mb-4" style="color: #008080;">Las Rozas de Madrid – NTT Madrid 1: Detailed Profile</h2>
     <p class="mb-4" style="color: #34495E;">
-      Location C excels in connectivity infrastructure but faces power capacity limitations for large-scale deployment:
+      Las Rozas NTT Madrid 1 excels in connectivity infrastructure but faces power capacity limitations for large-scale deployment:
     </p>
     <ul class="list-disc pl-5 mb-4" style="color: #34495E;">
       <li><strong>Power Constraints:</strong> Limited to 30MW maximum capacity, requiring potential grid upgrades for expansion beyond initial phase</li>
@@ -267,7 +267,7 @@ const sampleContent = {
       <li><strong>Economic Factors:</strong> Premium land costs at €180/m² offset by excellent connectivity value proposition</li>
     </ul>
     <p class="mb-4" style="color: #34495E;">
-      Location C would be ideal for connectivity-focused operations but may require phased development approach due to power limitations.
+      Las Rozas NTT Madrid 1 would be ideal for connectivity-focused operations but may require phased development approach due to power limitations.
     </p>
   `,
 infrastructure: `
@@ -281,16 +281,16 @@ infrastructure: `
         <li><strong>San Fernando Industrial Park:</strong> 85MW capacity with dedicated substation access and dual utility feeds ensuring 99.9% uptime</li>
         <li><strong>Valdebebas Extension:</strong> 70MW available capacity with reliable grid connection and backup power options</li>
         <li><strong>Las Rozas NTT Madrid 1:</strong> 30MW maximum capacity limitation requiring future grid investment for expansion</li>
-        <li><strong>Location D:</strong> 45MW capacity but aging infrastructure requiring modernization</li>
-        <li><strong>Location E:</strong> 60MW capacity with standard utility connections and moderate reliability</li>
+        <li><strong>Alcalá de Henares – Punto Com Park:</strong> 45MW capacity but aging infrastructure requiring modernization</li>
+        <li><strong>Alcobendas – Equinix MD2:</strong> 60MW capacity with standard utility connections and moderate reliability</li>
       </ul>
     </div>
     <div class="mb-4">
       <h3 class="text-lg font-semibold mb-2" style="color: #2C3E50;">Connectivity Infrastructure</h3>
       <ul class="list-disc pl-5" style="color: #34495E;">
         <li><strong>Fiber Route Density:</strong> All locations have access to major carrier networks with varying levels of redundancy</li>
-        <li><strong>Latency Performance:</strong> Range from 3ms (Location C) to 8ms (Location D) to Madrid city center</li>
-        <li><strong>Carrier Diversity:</strong> Locations A and C offer the highest carrier diversity with 4+ options each</li>
+        <li><strong>Latency Performance:</strong> Range from 3ms (Las Rozas NTT Madrid 1) to 8ms (Alcalá de Henares – Punto Com Park) to Madrid city center</li>
+        <li><strong>Carrier Diversity:</strong> San Fernando de Henares Industrial Park and Las Rozas de Madrid offer the highest carrier diversity with 4+ options each</li>
       </ul>
     </div>
   `,
@@ -302,10 +302,10 @@ infrastructure: `
     <div class="mb-4">
       <h3 class="text-lg font-semibold mb-2" style="color: #2C3E50;">Environmental Risk Factors</h3>
       <ul class="list-disc pl-5" style="color: #34495E;">
-        <li><strong>Wildfire Risk:</strong> High across all sites with Location A showing lowest exposure due to defensible space</li>
+        <li><strong>Wildfire Risk:</strong> High across all sites with San Fernando de Henares Industrial Park showing lowest exposure due to defensible space</li>
         <li><strong>Water Scarcity:</strong> Moderate to high risk region-wide, with municipal supply agreements critical</li>
         <li><strong>Extreme Heat:</strong> All locations face increasing temperature challenges requiring enhanced cooling strategies</li>
-        <li><strong>Flood Risk:</strong> Medium exposure with Location C showing best drainage infrastructure</li>
+        <li><strong>Flood Risk:</strong> Medium exposure with Las Rozas NTT Madrid 1 showing best drainage infrastructure</li>
       </ul>
     </div>
     <div class="mb-4">
@@ -335,14 +335,14 @@ infrastructure: `
     <div class="mb-4">
       <h3 class="text-lg font-semibold mb-2" style="color: #2C3E50;">Total Cost of Ownership</h3>
       <p style="color: #34495E;">
-        When factoring construction costs, utility connections, regulatory compliance, and operational expenses, Location A provides the best economic value despite moderate land costs due to infrastructure readiness and regulatory efficiency.
+        When factoring construction costs, utility connections, regulatory compliance, and operational expenses, San Fernando de Henares Industrial Park provides the best economic value despite moderate land costs due to infrastructure readiness and regulatory efficiency.
       </p>
     </div>
   `,
   implementation: `
     <h2 class="text-xl font-bold mb-4" style="color: #008080;">Implementation Timeline</h2>
     <div class="mb-4" style="color: #34495E;">
-      <p class="mb-2">Recommended phased approach for Location A deployment:</p>
+      <p class="mb-2">Recommended phased approach for San Fernando de Henares Industrial Park deployment:</p>
       <ul class="list-disc pl-5">
         <li><strong>Months 1-3:</strong> Land acquisition, environmental impact assessment, detailed engineering design</li>
         <li><strong>Months 4-6:</strong> Permit submission and approval process, utility coordination, contractor selection</li>
@@ -366,10 +366,10 @@ infrastructure: `
       <li><strong>Secondary Option:</strong> Valdebebas New Urban Extension offers cost advantages but requires enhanced environmental risk mitigation strategies</li>
       <li><strong>Connectivity-Focused Alternative:</strong> Las Rozas NTT Madrid 1 for scenarios prioritizing maximum carrier diversity over power capacity</li>
       <li><strong>Risk Mitigation:</strong> Implement comprehensive environmental monitoring and cooling redundancy across all sites</li>
-      <li><strong>Expansion Strategy:</strong> Reserve adjacent parcels at Location A for future capacity scaling beyond initial 50MW requirement</li>
+      <li><strong>Expansion Strategy:</strong> Reserve adjacent parcels at San Fernando de Henares Industrial Park for future capacity scaling beyond initial 50MW requirement</li>
     </ul>
     <p class="mb-4" style="color: #34495E;">
-      Location A's superior infrastructure readiness, streamlined regulatory pathway, and balanced cost structure provide the foundation for successful data center operations in the competitive Madrid market.
+      San Fernando de Henares Industrial Park's superior infrastructure readiness, streamlined regulatory pathway, and balanced cost structure provide the foundation for successful data center operations in the competitive Madrid market.
     </p>
   `,
   sources: `

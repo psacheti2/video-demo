@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import {X, ArrowLeft, MousePointerSquareDashed, TextCursorInput
+import {X, ArrowLeft, MousePointerSquareDashed, TextCursorInput, Check
 } from 'lucide-react';
 import { TbMapSearch } from "react-icons/tb";
 import html2canvas from 'html2canvas';
@@ -46,8 +46,6 @@ const EnvironmentAnalysisMapComponent = ({
   substations: 20,
   bufferZones: 25,
   uploadedLocations: 30,
-  // Add these:
-  waterways: 5,
   floodZones: 15,
   zoningBoundaries: 12,
   environmentalRisk: 18,
@@ -68,22 +66,41 @@ const [showTextToolbar, setShowTextToolbar] = useState(false);
     const [isLoadingLayers, setIsLoadingLayers] = useState(false);
 const [loadingProgress, setLoadingProgress] = useState(0);
 const [currentLoadingLayer, setCurrentLoadingLayer] = useState('');
-const [totalLayers] = useState(5);
+const [totalLayers] = useState(4);
 const LoadingBar = () => {
   if (!isLoadingLayers) return null;
-  
+
+  const stages = [
+    { key: 'Flood Zones', label: 'Flood Zones' },
+    { key: 'Zoning Boundaries', label: 'Zoning' },
+    { key: 'Heat Risk Data', label: 'Heat Risk' },
+    { key: 'Compliance Indicators', label: 'Compliance' }
+  ];
+
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] w-64">
-      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4 w-full">
-        <div className="text-sm font-medium text-gray-700 mb-2">
-          Loading Heat Data
-        </div>
-        <div className="text-xs text-gray-500 mb-3">
-          {currentLoadingLayer}
+    <div className="fixed bottom-4 right-4 z-[9999] w-72">
+      <div className="bg-white border border-gray-200 rounded-xl shadow-lg px-4 py-3">
+        <div className="text-sm font-semibold text-gray-800 mb-2">
+          Loading Layers
         </div>
 
-        {/* PROGRESS BAR */}
-        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+        <div className="flex flex-col space-y-2">
+          {stages.map((stage, index) => {
+            const isComplete = loadingProgress > index;
+            return (
+              <div key={stage.key} className="flex items-center justify-between text-xs">
+                <span className="text-gray-600">{stage.label}</span>
+                <Check
+                  size={16}
+                  className="transition-colors duration-500"
+                  color={isComplete ? '#008080' : '#FFFFFF'}
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="w-full bg-gray-200 rounded-full h-2 mt-3 overflow-hidden">
           <div
             className="h-full bg-[#008080] rounded-full transition-all duration-700 ease-out"
             style={{ width: `${(loadingProgress / totalLayers) * 100}%` }}
@@ -109,7 +126,7 @@ const LoadingBar = () => {
     const [tableHeight, setTableHeight] = useState(300);
     const [currentTableIndex, setCurrentTableIndex] = useState(0);
     const [tableData, setTableData] = useState([]);
-const [tableTitles, setTableTitles] = useState(['Uploaded Locations', 'Substations', 'Power Lines', 'Flood Zones', 'Waterways', 'Zoning']); 
+const [tableTitles, setTableTitles] = useState(['Uploaded Locations', 'Substations', 'Power Lines', 'Flood Zones', 'Zoning']); 
 const [showShareDialog, setShowShareDialog] = useState(false);
     const [showEmailNotification, setShowEmailNotification] = useState(false);
     const addNotification = useNotificationStore((state) => state.addNotification);
@@ -184,7 +201,6 @@ const [showShareDialog, setShowShareDialog] = useState(false);
   bufferZones: false,
   floodZones: true,
   zoningBoundaries: true,
-  waterways: true,
   environmentalRisk: true,
   complianceIndicators: true
 });
@@ -323,9 +339,8 @@ const [nextShapeIds, setNextShapeIds] = useState({
   powerlines220kv: '#F39C12',
   powerlinesOther: '#9B59B6',
   bufferZones: '#3498DB',
-   floodZones: '#FF6B6B',
+   floodZones: '#2980B9',
   zoningBoundaries: '#8E44AD',
-  waterways: '#2980B9',
   environmentalRisk: '#E67E22',
   complianceIndicators: '#27AE60'
 });
@@ -334,7 +349,6 @@ const substationsRef = useRef([]);
 const powerlinesRef = useRef([]);
 const floodZonesRef = useRef([]);
 const zoningBoundariesRef = useRef([]);
-const waterwaysRef = useRef([]);
 const environmentalRiskRef = useRef(null);   
  
 const fetchUploadedLocations = async () => {
@@ -812,8 +826,8 @@ const fetchFloodZones = async () => {
           
           // Create polygon with risk-based styling
           const polygon = L.polygon(coords, {
-            fillColor: '#000053',
-            color: '#000053',
+            fillColor: '#2596BE',
+            color: '#2596BE',
             weight: riskData.level === 'Very High' ? 1 : 0.7,
             opacity: riskData.level === 'Very High' ? 0.9 : 0.7,
             fillOpacity: riskData.level === 'Very High' ? 0.6 : 0.4,
@@ -877,53 +891,7 @@ const fetchFloodZones = async () => {
   }
 };
 
-const fetchWaterways = async () => {
-  try {
-    const res = await fetch('/data/madridwaterwayss-data.geojson');
-    const waterwayData = await res.json();
-    const waterwayLayer = L.layerGroup();
 
-    if (waterwayData.features && waterwayData.features.length > 0) {
-      waterwayData.features.forEach((feature, index) => {
-        if (!feature.properties) {
-          feature.properties = {};
-        }
-        feature.properties['Feature ID'] = feature.properties['Feature ID'] || `waterway-${index + 1}`;
-      });
-
-      waterwayData.features.forEach((feature) => {
-        if (feature.geometry && feature.geometry.type === 'LineString') {
-          const coords = feature.geometry.coordinates.map(coord => [coord[1], coord[0]]);
-          const featureId = feature.properties['Feature ID'];
-
-          const polyline = L.polyline(coords, {
-            color: layerColors.waterways,
-            weight: 0.8,
-            opacity: 0.8,
-            interactive: true
-          });
-
-          polyline.featureId = featureId;
-
-          let popupContent = '<strong>Waterway</strong>';
-          popupContent += `<br>Feature ID: ${featureId}`;
-          if (feature.properties.name) popupContent += `<br>Name: ${feature.properties.name}`;
-          popupContent += `<br>Type: ${feature.properties.fclass || 'River'}`;
-
-          polyline.bindPopup(popupContent, { className: 'custom-popup' });
-
-          waterwaysRef.current.push({ polyline, featureId });
-          waterwayLayer.addLayer(polyline);
-        }
-      });
-    }
-
-    return { waterwayLayer, waterwayData };
-  } catch (error) {
-    console.error("Error fetching waterways:", error);
-    return { waterwayLayer: L.layerGroup(), waterwayData: { features: [] } };
-  }
-};
 
 const fetchZoningBoundaries = async () => {
   try {
@@ -1011,22 +979,11 @@ const colors = {
 
     const complianceMarker = L.marker(position, {
       icon: L.divIcon({
-        html: `
-          <div style="
-            position: relative;
-            width: 16px;
-            height: 16px;
-            background-color: ${colors[complianceStatus]};
-            border: 2px solid white;
-            border-radius: 50%;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-          ">
-          </div>
-        `,
-        className: '',
-        iconSize: [16, 16],
-        iconAnchor: [8, 8]
-      }),
+  className: 'custom-div-icon',
+  html: `<div class="pin-marker" style="background:${colors[complianceStatus]};"></div>`,
+  iconSize: [18, 24],
+  iconAnchor: [9, 24]
+}),
       interactive: true
     });
 
@@ -2036,16 +1993,6 @@ if (map.floodLayer) {
 
 
 
-// Handle waterways layer
-if (map.waterwaysLayer) {
-  if (activeLayers.waterways) {
-    map.addLayer(map.waterwaysLayer);
-    map.waterwaysLayer.setZIndex(layerZIndexes.waterways);
-  } else {
-    map.removeLayer(map.waterwaysLayer);
-  }
-}
-
 // Handle zoning layer
 if (map.zoningLayer) {
   if (activeLayers.zoningBoundaries) {
@@ -2769,24 +2716,10 @@ const updateDrawnLayerColor = (layerId, newColor) => {
 
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-
-    // 6. Load waterways
-    setCurrentLoadingLayer('Loading waterways...');
-    const waterwaysResult = await fetchWaterways();
-    setLoadingProgress(2);
-
-    waterwaysResult.waterwayLayer.setZIndex(layerZIndexes.waterways);
-    if (activeLayers.waterways) {
-        waterwaysResult.waterwayLayer.addTo(leafletMap);
-    }
-    leafletMap.waterwaysLayer = waterwaysResult.waterwayLayer;
-
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
     // 7. Load zoning boundaries
     setCurrentLoadingLayer('Loading zoning boundaries...');
     const zoningResult = await fetchZoningBoundaries();
-    setLoadingProgress(3);
+    setLoadingProgress(2);
 
     zoningResult.zoningLayer.setZIndex(layerZIndexes.zoningBoundaries);
     if (activeLayers.zoningBoundaries) {
@@ -2799,7 +2732,7 @@ const updateDrawnLayerColor = (layerId, newColor) => {
     // 8. Load environmental risk
     setCurrentLoadingLayer('Loading heat risk data...');
     const environmentalRiskResult = await fetchEnvironmentalRisk();
-    setLoadingProgress(4);
+    setLoadingProgress(3);
 
     if (activeLayers.environmentalRisk) {
         environmentalRiskResult.riskLayer.addTo(leafletMap);
@@ -2811,7 +2744,7 @@ const updateDrawnLayerColor = (layerId, newColor) => {
     // 9. Generate compliance indicators
     setCurrentLoadingLayer('Generating compliance indicators...');
     const complianceLayer = generateComplianceIndicators();
-    setLoadingProgress(5);
+    setLoadingProgress(4);
 
     complianceLayer.setZIndex(layerZIndexes.complianceIndicators);
     if (activeLayers.complianceIndicators) {
@@ -2829,7 +2762,6 @@ const updateDrawnLayerColor = (layerId, newColor) => {
         const substationTable = convertGeoJSONToTable(substationsResult.substationData, 'substations');
         const powerlineTable = convertGeoJSONToTable(powerlinesResult.powerlineData, 'powerlines');
         const floodTable = convertGeoJSONToTable(floodZonesResult.floodData, 'floodZones');
-        const waterwayTable = convertGeoJSONToTable(waterwaysResult.waterwayData, 'waterways');
         const zoningTable = convertGeoJSONToTable(zoningResult.zoningData, 'zoning');
         
         // Create a table for environmental risk data
@@ -2848,7 +2780,6 @@ const updateDrawnLayerColor = (layerId, newColor) => {
             substationTable, 
             powerlineTable, 
             floodTable, 
-            waterwayTable, 
             zoningTable,
             environmentalRiskTable
         ]); 

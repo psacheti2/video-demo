@@ -219,7 +219,7 @@ export const chatResponses = {
     timing: [2000, 2000, 1000, 1000, 1000, 1500], // Timing for each line
   artifacts: [{
     type: "map",
-    title: "Madrid Location Analysis",
+    title: "Madrid Data Center locations",
     component: "DataCenterMap",
     data: {
       layers: ["data_centers"],
@@ -245,7 +245,7 @@ export const chatResponses = {
     timing: [2000, 2000, 1000, 1000, 1000, 1500], // Timing for each line
   artifacts: [{
     type: "map",
-    title: "Environment Analysis Map",
+    title: "Environment and Regulatory Analysis",
     component: "EnvironmentAnalysisMap",
     data: {
       layers: ["data_centers"],
@@ -258,7 +258,7 @@ export const chatResponses = {
     timing: [2000, 2000, 1000, 1000, 1000, 1500], // Timing for each line
   artifacts: [{
     type: "map",
-    title: "Investment Analysis Map",
+    title: "Scored Index",
     component: "IndexMap",
     data: {
       layers: ["data_centers"],
