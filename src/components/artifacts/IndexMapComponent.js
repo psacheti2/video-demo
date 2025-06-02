@@ -54,7 +54,6 @@ const IndexMapComponent = ({
   environmentalRisk: 18,
   complianceIndicators: 35,
   weightedScoring: 40,
-  costAnalysisZones: 5,
   rankingLabels: 45
 });
 const [showTextToolbar, setShowTextToolbar] = useState(false);
@@ -159,18 +158,16 @@ const [showShareDialog, setShowShareDialog] = useState(false);
   environmentalRisk: false,
   complianceIndicators: false,
   weightedScoring: true,
-  costAnalysisZones: true,
 });
 const [isLoadingLayers, setIsLoadingLayers] = useState(false);
 const [loadingProgress, setLoadingProgress] = useState(0);
 const [currentLoadingLayer, setCurrentLoadingLayer] = useState('');
-const [totalLayers] = useState(2);
+const [totalLayers] = useState(1);
 const LoadingBar = () => {
   if (!isLoadingLayers || hideLoadingBar) return null;
 
   const stages = [
     { key: 'Site Scores', label: 'Site Scores' },
-    { key: 'Cost Analysis Zones', label: 'Cost Zones' }
   ];
 
   return (
@@ -350,7 +347,6 @@ const [nextShapeIds, setNextShapeIds] = useState({
   environmentalRisk: '#E67E22',
   complianceIndicators: '#27AE60',
   weightedScoring: '#3498DB',
-  costAnalysisZones: '#9B59B6',
 });
 const uploadedLocationsRef = useRef([]);
 const substationsRef = useRef([]);
@@ -359,10 +355,8 @@ const floodZonesRef = useRef([]);
 const zoningBoundariesRef = useRef([]);
 const waterwaysRef = useRef([]);
 const weightedScoringRef = useRef(null);
-const costAnalysisRef = useRef(null);
 const environmentalRiskRef = useRef(null);   
  weightedScoringRef.current = [];
-costAnalysisRef.current = [];
 const fetchUploadedLocations = async () => {
   try {
     const res = await fetch('/data/uploaded-data.geojson');
@@ -1361,70 +1355,6 @@ document.addEventListener('click', (e) => {
 
   return scoringLayer;
 };
-
-const generateCostAnalysisZones = () => {
-  const costLayer = L.layerGroup();
-  if (uploadedLocationsRef.current.length === 0) return costLayer;
-
-  const heatmapData = [];
-
-  // Slightly wider spread + more background noise
-uploadedLocationsRef.current.forEach(({ marker }, index) => {
-  const position = marker.getLatLng();
-  const baseCostIntensity = 0.3 + Math.random() * 0.4;
-
-  heatmapData.push([position.lat, position.lng, baseCostIntensity]);
-
-  for (let ring = 1; ring <= 6; ring++) { // Increase to 6 rings
-    const pointsInRing = 25 * ring; // Slightly more points
-    for (let i = 0; i < pointsInRing; i++) {
-      const distance = (Math.random() * 0.003 * ring) + (0.0015 * ring); // wider spread
-      const angle = (i / pointsInRing) * 2 * Math.PI + (Math.random() * 0.3);
-      const lat = position.lat + distance * Math.cos(angle);
-      const lng = position.lng + distance * Math.sin(angle);
-      const intensity = baseCostIntensity * (0.85 - (ring * 0.08)) * (0.9 + Math.random() * 0.2);
-      heatmapData.push([lat, lng, Math.max(0.04, intensity)]);
-    }
-  }
-});
-const centerLat = uploadedLocationsRef.current.reduce(
-  (sum, { marker }) => sum + marker.getLatLng().lat,
-  0
-) / uploadedLocationsRef.current.length;
-
-const centerLng = uploadedLocationsRef.current.reduce(
-  (sum, { marker }) => sum + marker.getLatLng().lng,
-  0
-) / uploadedLocationsRef.current.length;
-
-// Wider random background spread
-for (let i = 0; i < 180; i++) { // more points
-  const lat = centerLat + (Math.random() - 0.5) * 0.06; // wider radius
-  const lng = centerLng + (Math.random() - 0.5) * 0.06;
-  const intensity = Math.random() * 0.12;
-  heatmapData.push([lat, lng, intensity]);
-}
-
-
-  const costHeatmap = L.heatLayer(heatmapData, {
-    radius: 45,
-    blur: 35,
-    maxZoom: 17,
-    max: 1.1,
-    minOpacity: 0.07,
-    gradient: {
-      0.0: 'rgba(0, 128, 128, 0.05)',     
-      0.25: 'rgba(72, 219, 251, 0.1)',  
-      0.5: 'rgba(0, 168, 255, 0.2)',     
-      0.75: 'rgba(0, 117, 255, 0.25)',    
-      1.0: 'rgba(9, 132, 227, 0.3)'      
-    }
-  });
-
-  costLayer.addLayer(costHeatmap);
-  return costLayer;
-};
-
 
 const createRankingTableData = () => {
   // Get compliance status for each location (same logic as other functions)
@@ -2461,16 +2391,6 @@ if (map.weightedScoringLayer) {
   }
 }
 
-// Handle cost analysis layer
-if (map.costAnalysisLayer) {
-  if (activeLayers.costAnalysisZones) {
-    map.addLayer(map.costAnalysisLayer);
-    map.costAnalysisLayer.setZIndex(layerZIndexes.costAnalysisZones);
-  } else {
-    map.removeLayer(map.costAnalysisLayer);
-  }
-}
-
   setTimeout(() => {
     if (map) map.invalidateSize();
   }, 10);
@@ -3176,18 +3096,6 @@ if (activeLayers.weightedScoring) {
 }
 leafletMap.weightedScoringLayer = weightedScoringLayer;
 setLoadingProgress(1);
-
-await new Promise(resolve => setTimeout(resolve, 2000));
-
-// 2. Generate and load cost analysis zones
-setCurrentLoadingLayer('Generating cost analysis zones...');
-const costAnalysisLayer = generateCostAnalysisZones();
-costAnalysisLayer.setZIndex(layerZIndexes.costAnalysisZones);
-if (activeLayers.costAnalysisZones) {
-    costAnalysisLayer.addTo(leafletMap);
-}
-leafletMap.costAnalysisLayer = costAnalysisLayer;
-setLoadingProgress(2);
 
 await new Promise(resolve => setTimeout(resolve, 2000));
 
