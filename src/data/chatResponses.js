@@ -215,7 +215,7 @@ export const chatResponses = {
   }]
 },
 "What parameters should I consider for data center site selection in Greater Madrid?": {
-    text: "For data center site selection in Greater Madrid, key parameters include: \n\nPower Infrastructure (grid capacity, substation proximity), \nConnectivity (fiber routes, latency), \nEnvironmental Risks (flood zones, seismic activity), \nRegulatory Compliance (zoning, permits), and \nEconomic Factors (land costs, incentives). \n\nI've identified 8 preliminary potential sites based on basic infrastructure availability. Would you like me to perform detailed analysis on these locations or add additional parameters?",
+    text: "For data center site selection in Greater Madrid, key parameters include: \n\nPower Infrastructure (grid capacity, substation proximity), \nConnectivity (fiber routes, latency), \nEnvironmental Risks (flood zones, heat islands), \nRegulatory Compliance (zoning, permits), and \nEconomic Factors (land costs, incentives). \n\nI've identified 4 preliminary potential sites based on basic infrastructure availability.\n Would you like me to perform detailed analysis on these locations or add additional parameters?",
     timing: [2000, 2000, 1000, 1000, 1000, 1500], // Timing for each line
   artifacts: [{
     type: "map",
@@ -227,8 +227,8 @@ export const chatResponses = {
     }
   }]
 },
-"I just got this list from my client with specific locations to analyze. Can you do Power, Infrastructure and Connectivity analysis first?": {
-    text: "I've loaded your client's 5 locations and performed power & connectivity analysis. \n\nSan Fernando de Henares Industrial Park shows excellent power capacity (85MW available) with dual fiber routes. \nLas Rozas NTT Madrid 1 has power constraints (30MW max) but superior connectivity. \nValdebebas New Urban Extension offers balanced infrastructure with moderate power (70MW) and good fiber access. The analysis reveals 3 locations meet your 50MW requirement with adequate connectivity redundancy.",
+"I just got this list from my client with specific locations to analyze. Can you do a power and infrastructure analysis first?": {
+    text: "I've loaded your client's 5 locations and performed power & infrastructure analysis. \n\nSan Fernando de Henares Industrial Park shows excellent power capacity (85MW available). \nLas Rozas NTT Madrid 1 has power constraints (30MW max) but superior connectivity. \nAlcobendas Equinix MD2 offers balanced infrastructure with moderate power (70MW) and good fiber access. \n\nThe analysis reveals 3 locations meet 50MW requirement with adequate connectivity redundancy.",
     timing: [2000, 2000, 1000, 1000, 1000, 1500], // Timing for each line
   artifacts: [{
     type: "map",
@@ -241,7 +241,7 @@ export const chatResponses = {
   }]
 },
 "Let's also do environmental and regulatory analysis on these locations": {
-    text: "Environmental and regulatory analysis complete. \n\nCritical finding: All sites have moderate to high aggregated environmental risk scores. \nAlcalá de Henares faces zoning restrictions requiring 18-month permit process. \nSan Fernando Industrial Park shows optimal regulatory status with industrial zoning and streamlined permits (6-month timeline). \nEnvironmental risks include flood zones, industrial proximity concerns, and regulatory compliance requirements across the Greater Madrid region.",
+    text: "Environmental and regulatory analysis complete. \n\nCritical finding: All sites have moderate to high environmental risk. \nSan Fernando Industrial Park shows optimal regulatory status with industrial zoning and streamlined permits (6-month timeline). \nEnvironmental risks include heat islands and water scarcity, industrial proximity concerns, and regulatory compliance requirements across the Greater Madrid region.",
     timing: [2000, 2000, 1000, 1000, 1000, 1500], // Timing for each line
   artifacts: [{
     type: "map",
@@ -254,7 +254,7 @@ export const chatResponses = {
   }]
 },
 "Can you do a preliminary economic analysis and create an aggregated index with more weight on infrastructure and regulatory factors?": {
-    text: "Economic analysis shows San Fernando de Henares Industrial Park as the clear winner with optimal infrastructure readiness and highest weighted score (8.7/10). \nValdebebas New Urban Extension ranks second (score: 8.0) with good infrastructure despite moderate environmental considerations. The weighted index prioritizes infrastructure (40%) and regulatory (30%) over environmental (20%) and economic (10%) factors as requested. \nAlcobendas Equinix MD2 scored lowest due to limited expansion capacity and higher regulatory complexity.",
+    text: "The weighted index prioritizes infrastructure (40%) and regulatory (30%) over environmental (20%) and economic (10%) factors as requested.\nSan Fernando de Henares Industrial Park is the clear winner with optimal infrastructure readiness and highest weighted score (8.7/10). \nValdebebas New Urban Extension ranks second (score: 8.0) with good infrastructure despite moderate environmental considerations.",
     timing: [2000, 2000, 1000, 1000, 1000, 1500], // Timing for each line
   artifacts: [{
     type: "map",
@@ -267,7 +267,7 @@ export const chatResponses = {
   }]
 },
 "Put this all together in a comprehensive report": {
-  text: "I've generated your comprehensive data center site selection report for Greater Madrid. The report includes executive summary, detailed facility analysis, infrastructure assessments, and implementation recommendations. \n\nKey recommendation: San Fernando de Henares Industrial Park offers the optimal balance of infrastructure capacity, regulatory efficiency, and cost-effectiveness for your 50MW requirement.",
+  text: "I've generated your comprehensive data center site selection report for Greater Madrid.\n\nKey recommendation: San Fernando de Henares Industrial Park offers the optimal balance of infrastructure capacity, regulatory efficiency, and cost-effectiveness.",
   timing: [3000], // Single paragraph timing
   artifacts: [{
     type: "report",

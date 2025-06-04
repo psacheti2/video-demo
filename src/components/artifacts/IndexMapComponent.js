@@ -1331,10 +1331,10 @@ const color = score >= 8 ? '#27AE60' :
         <div style="margin-bottom: 6px;"><strong>Rank:</strong> #${data.rank}</div>
         <div style="margin-bottom: 12px;"><strong>Status:</strong> ${data.recommendation}</div>
         <div style="background: #f9f9f9; padding: 12px 14px; border-radius: 8px; border: 1px solid #eee;">
-          <div style="margin-bottom: 6px;"><strong>Infrastructure</strong> (40%): ${(data.score * 0.4 + Math.random() * 2).toFixed(1)}/10</div>
-          <div style="margin-bottom: 6px;"><strong>Regulatory</strong> (30%): ${(data.score * 0.3 + Math.random() * 1.5).toFixed(1)}/10</div>
-          <div style="margin-bottom: 6px;"><strong>Environmental</strong> (20%): ${(data.score * 0.2 + Math.random() * 1).toFixed(1)}/10</div>
-          <div><strong>Economic</strong> (10%): ${(data.score * 0.1 + Math.random() * 0.5).toFixed(1)}/10</div>
+          <div style="margin-bottom: 6px;"><strong>Infrastructure</strong> (40%): 3.48</div>
+          <div style="margin-bottom: 6px;"><strong>Regulatory</strong> (30%): 2.61</div>
+          <div style="margin-bottom: 6px;"><strong>Environmental</strong> (20%): 1.74</div>
+          <div><strong>Economic</strong> (10%): ${(data.score * 0.1).toFixed(1)}</div>
         </div>
       </div>
     </div>
@@ -1412,10 +1412,10 @@ const createRankingTableData = () => {
   };
 const locationName = getLocationName(scoreData.originalIndex);    
     // Generate component scores that add up to the total
-    const infra = (scoreData.score * 0.4 + Math.random() * 2).toFixed(1);
-    const reg = (scoreData.score * 0.3 + Math.random() * 1.5).toFixed(1);
-    const env = (scoreData.score * 0.2 + Math.random() * 1).toFixed(1);
-    const econ = (scoreData.score * 0.1 + Math.random() * 0.5).toFixed(1);
+    const infra = (scoreData.score * 0.4).toFixed(1);
+    const reg = (scoreData.score * 0.3).toFixed(1);
+    const env = (scoreData.score * 0.2).toFixed(1);
+    const econ = (scoreData.score * 0.1).toFixed(1);
     
     const recommendation = rankIndex === 0 ? 'Proceed with acquisition' :
                           rankIndex === 1 ? 'Strong secondary option' :
@@ -1428,10 +1428,10 @@ const locationName = getLocationName(scoreData.originalIndex);
       'Rank': `${rankIndex + 1}${rankIndex === 0 ? 'st' : rankIndex === 1 ? 'nd' : rankIndex === 2 ? 'rd' : 'th'}`,
       'Location': locationName,
       'Weighted Score': `${scoreData.score}/10`,
-      'Infrastructure Score': `${infra}/10`,
-      'Regulatory Score': `${reg}/10`,
-      'Environmental Score': `${env}/10`,
-      'Economic Score': `${econ}/10`,
+      'Infrastructure Score': `${infra}`,
+      'Regulatory Score': `${reg}`,
+      'Environmental Score': `${env}`,
+      'Economic Score': `${econ}`,
       'Recommendation': recommendation
     };
   });
